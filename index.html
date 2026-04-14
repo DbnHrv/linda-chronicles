@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medication Dispensing & Log System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Medication Dispensing & Log System</h1>
+            <div class="header-info">
+                <span id="currentDateTime"></span>
+                <span id="currentUser">Dispensed By: <select id="userSelect"><option value="Staff">Staff</option><option value="Intern">Intern</option></select></span>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <section class="dispensing-section">
+                <h2>Medication Dispensing</h2>
+                <form id="dispensingForm" class="dispensing-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="medicationSelect">Medication Name:</label>
+                            <select id="medicationSelect" required>
+                                <option value="">Select Medication...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="dosageInput">Dosage/Quantity:</label>
+                            <input type="text" id="dosageInput" placeholder="e.g., 500mg, 1 tablet" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="remarkInput">Remark:</label>
+                            <input type="text" id="remarkInput" placeholder="e.g., Patient A, Emergency stock">
+                        </div>
+                        <div class="form-group">
+                            <label>Stock Status:</label>
+                            <div class="stock-info">
+                                <span id="stockStatus">--</span>
+                                <span id="unitsRemaining" class="units-remaining">-- units remaining</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" id="dispenseBtn" class="btn btn-primary" disabled>Dispense Medication</button>
+                        <button type="button" id="refreshBtn" class="btn btn-secondary">Refresh Inventory</button>
+                    </div>
+                </form>
+
+                <div id="alertContainer" class="alert-container"></div>
+            </section>
+
+            <section class="inventory-section">
+                <h2>Current Inventory</h2>
+                <div class="inventory-controls">
+                    <input type="text" id="inventorySearch" placeholder="Search medications..." class="search-input">
+                    <button id="addInventoryBtn" class="btn btn-secondary">Add New Medication</button>
+                </div>
+                <div class="table-container">
+                    <table id="inventoryTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Medication ID</th>
+                                <th>Medication Name</th>
+                                <th>Dosage</th>
+                                <th>Units Remaining</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="logs-section">
+                <h2>Recent Dispensing Logs (Last 10)</h2>
+                <div class="table-container">
+                    <table id="logsTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Medication ID</th>
+                                <th>Medication Name</th>
+                                <th>Dosage Dispensed</th>
+                                <th>Date & Time</th>
+                                <th>Dispensed By</th>
+                                <th>Remark</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal for adding new medication -->
+    <div id="addMedicationModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Add New Medication</h3>
+            <form id="addMedicationForm">
+                <div class="form-group">
+                    <label for="newMedicationName">Medication Name:</label>
+                    <input type="text" id="newMedicationName" required>
+                </div>
+                <div class="form-group">
+                    <label for="newMedicationDosage">Dosage:</label>
+                    <input type="text" id="newMedicationDosage" placeholder="e.g., 500mg" required>
+                </div>
+                <div class="form-group">
+                    <label for="newMedicationQuantity">Initial Quantity:</label>
+                    <input type="number" id="newMedicationQuantity" min="0" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Add Medication</button>
+                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
