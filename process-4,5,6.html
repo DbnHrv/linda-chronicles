@@ -1,0 +1,2568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pharmact — Internship Management System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #151820;
+    --surface2: #1c2030;
+    --surface3: #222840;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --accent: #4fffb0;
+    --accent2: #00c8ff;
+    --accent3: #a78bfa;
+    --warn: #f59e0b;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --text: #e8eaf0;
+    --text2: #9ca3b8;
+    --text3: #5a6070;
+    --sidebar-w: 260px;
+    --header-h: 64px;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    z-index: 100;
+  }
+
+  .sidebar-logo {
+    padding: 20px 20px 16px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: #0d0f14; font-weight: 700;
+  }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--text); }
+  .logo-sub { font-size: 10px; color: var(--text3); letter-spacing: .08em; text-transform: uppercase; }
+
+  .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 10px; }
+  .nav-section-label {
+    font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--text3); padding: 14px 10px 6px; font-weight: 600;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: all .15s; color: var(--text2);
+    font-size: 13.5px; font-weight: 400; margin-bottom: 2px;
+    border: none; background: none; width: 100%; text-align: left;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(79,255,176,.1); color: var(--accent); font-weight: 500; }
+  .nav-item .icon { width: 18px; text-align: center; font-size: 14px; opacity: .7; }
+  .nav-item.active .icon { opacity: 1; }
+  .nav-badge {
+    margin-left: auto; background: var(--accent); color: #0d0f14;
+    font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px;
+  }
+
+  .sidebar-footer {
+    padding: 14px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .user-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent3), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; color: white; flex-shrink: 0;
+  }
+  .user-name { font-size: 13px; font-weight: 500; }
+  .user-role { font-size: 11px; color: var(--text3); }
+
+  /* ── MAIN ── */
+  .main { margin-left: var(--sidebar-w); min-height: 100vh; }
+
+  .topbar {
+    height: var(--header-h);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 28px;
+    gap: 16px; position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-title { font-family: 'DM Serif Display', serif; font-size: 20px; flex: 1; }
+  .topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 16px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    border: none; transition: all .15s; font-family: inherit;
+  }
+  .btn-primary { background: var(--accent); color: #0d0f14; }
+  .btn-primary:hover { background: #3de8a0; transform: translateY(-1px); }
+  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+  .btn-danger { background: rgba(239,68,68,.15); color: var(--danger); border: 1px solid rgba(239,68,68,.3); }
+  .btn-danger:hover { background: rgba(239,68,68,.25); }
+  .btn-warn { background: rgba(245,158,11,.15); color: var(--warn); border: 1px solid rgba(245,158,11,.3); }
+  .btn-sm { padding: 5px 11px; font-size: 12px; }
+
+  .notif-btn {
+    width: 36px; height: 36px; border-radius: var(--radius-sm);
+    background: var(--surface2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative; color: var(--text2);
+    font-size: 15px;
+  }
+  .notif-dot {
+    position: absolute; top: 6px; right: 6px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--surface);
+  }
+
+  .content { padding: 28px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .card-title { font-family: 'DM Serif Display', serif; font-size: 16px; }
+  .card-sub { font-size: 12px; color: var(--text3); }
+  .card-body { padding: 22px; }
+
+  /* ── GRID ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+
+  /* ── STAT CARDS ── */
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    position: relative; overflow: hidden;
+  }
+  .stat-card::before {
+    content:''; position: absolute; top:0; left:0; right:0; height:2px;
+  }
+  .stat-card.green::before { background: var(--accent); }
+  .stat-card.blue::before { background: var(--accent2); }
+  .stat-card.purple::before { background: var(--accent3); }
+  .stat-card.warn::before { background: var(--warn); }
+
+  .stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing:.08em; font-weight:600; }
+  .stat-value { font-size: 32px; font-family: 'DM Serif Display', serif; margin: 8px 0 4px; line-height:1; }
+  .stat-change { font-size: 12px; color: var(--text3); }
+  .stat-change.up { color: var(--success); }
+  .stat-change.down { color: var(--danger); }
+  .stat-icon {
+    position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
+    font-size: 28px; opacity: .12;
+  }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding: 0 22px; }
+  .tab {
+    padding: 12px 16px; font-size: 13px; font-weight: 500; cursor: pointer;
+    color: var(--text3); border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: all .15s; background: none; border-top:none; border-left:none; border-right:none;
+    font-family: inherit;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── FORMS ── */
+  .form-group { margin-bottom: 18px; }
+  .form-label {
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--text3); text-transform: uppercase; letter-spacing:.06em;
+    margin-bottom: 7px;
+  }
+  .form-control {
+    width: 100%; background: var(--surface2);
+    border: 1px solid var(--border2); border-radius: var(--radius-sm);
+    color: var(--text); padding: 9px 12px; font-size: 13.5px;
+    font-family: inherit; transition: border-color .15s;
+    outline: none;
+  }
+  .form-control:focus { border-color: var(--accent); }
+  .form-control::placeholder { color: var(--text3); }
+  select.form-control { cursor: pointer; }
+  textarea.form-control { resize: vertical; min-height: 90px; }
+
+  .form-row { display: grid; gap: 16px; }
+  .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  /* ── TABLES ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead th {
+    text-align: left; padding: 10px 14px;
+    font-size: 11px; font-weight: 600; letter-spacing:.07em;
+    text-transform: uppercase; color: var(--text3);
+    border-bottom: 1px solid var(--border); background: var(--surface2);
+  }
+  tbody td {
+    padding: 11px 14px; border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,.02); }
+
+  /* ── BADGES / STATUS ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+  .badge.verified { background: rgba(34,197,94,.15); color: var(--success); }
+  .badge.pending { background: rgba(245,158,11,.15); color: var(--warn); }
+  .badge.rejected { background: rgba(239,68,68,.15); color: var(--danger); }
+  .badge.uploaded { background: rgba(0,200,255,.15); color: var(--accent2); }
+  .badge.not-uploaded { background: rgba(255,255,255,.05); color: var(--text3); }
+  .badge.active { background: rgba(79,255,176,.12); color: var(--accent); }
+  .badge.inactive { background: rgba(255,255,255,.05); color: var(--text3); }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* ── PROGRESS ── */
+  .progress-bar { height: 6px; background: var(--surface3); border-radius: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 10px; transition: width .3s; }
+  .progress-fill.green { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .progress-fill.warn { background: var(--warn); }
+  .progress-fill.danger { background: var(--danger); }
+
+  /* ── RATING STARS ── */
+  .stars { display: flex; gap: 3px; }
+  .star { font-size: 16px; cursor: pointer; color: var(--text3); transition: color .1s; }
+  .star.filled { color: var(--warn); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: var(--radius); width: 100%; max-width: 680px;
+    max-height: 90vh; overflow-y: auto;
+    transform: translateY(20px); transition: transform .2s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-header {
+    padding: 20px 24px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; background: var(--surface); z-index: 2;
+  }
+  .modal-title { font-family: 'DM Serif Display', serif; font-size: 18px; }
+  .modal-close {
+    width: 30px; height: 30px; border-radius: 6px; background: var(--surface2);
+    border: none; color: var(--text2); cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-close:hover { color: var(--text); }
+  .modal-body { padding: 24px; }
+  .modal-footer {
+    padding: 16px 24px; border-top: 1px solid var(--border);
+    display: flex; justify-content: flex-end; gap: 10px;
+  }
+
+  /* ── WIZARD STEPS ── */
+  .wizard-steps {
+    display: flex; align-items: center; gap: 0; margin-bottom: 28px;
+  }
+  .wizard-step {
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+  }
+  .step-circle {
+    width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: var(--text3); transition: all .2s;
+    flex-shrink: 0;
+  }
+  .step-circle.done { background: var(--accent); border-color: var(--accent); color: #0d0f14; }
+  .step-circle.active { border-color: var(--accent); color: var(--accent); }
+  .step-label { font-size: 12px; font-weight: 500; color: var(--text3); white-space: nowrap; }
+  .step-label.active { color: var(--text); }
+  .step-connector { flex: 1; height: 1px; background: var(--border2); margin: 0 10px; }
+
+  /* ── NOTIFICATION FEED ── */
+  .notif-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 0; border-bottom: 1px solid var(--border);
+  }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-icon {
+    width: 34px; height: 34px; border-radius: 8px; flex-shrink:0;
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+  }
+  .notif-icon.info { background: rgba(0,200,255,.1); color: var(--accent2); }
+  .notif-icon.warn { background: rgba(245,158,11,.1); color: var(--warn); }
+  .notif-icon.danger { background: rgba(239,68,68,.1); color: var(--danger); }
+  .notif-icon.success { background: rgba(79,255,176,.1); color: var(--accent); }
+  .notif-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .notif-desc { font-size: 12px; color: var(--text3); }
+  .notif-time { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+  /* ── SCHEDULE TABLE ── */
+  .schedule-table input[type="time"],
+  .schedule-table input[type="text"] {
+    background: var(--surface3); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); padding: 5px 8px;
+    font-size: 12px; width: 100%; font-family: inherit;
+    outline: none;
+  }
+  .schedule-table input:focus { border-color: var(--accent); }
+
+  /* ── SIGNATURE ── */
+  #signatureCanvas {
+    border: 2px dashed var(--border2); border-radius: 8px;
+    background: var(--surface2); cursor: crosshair; display: block;
+    width: 100%;
+  }
+
+  /* ── UPLOAD ZONE ── */
+  .upload-zone {
+    border: 2px dashed var(--border2); border-radius: 8px;
+    padding: 24px; text-align: center; cursor: pointer;
+    transition: all .2s; background: var(--surface2);
+  }
+  .upload-zone:hover { border-color: var(--accent); background: rgba(79,255,176,.04); }
+  .upload-zone-icon { font-size: 28px; color: var(--text3); margin-bottom: 10px; }
+  .upload-zone-text { font-size: 13px; color: var(--text3); }
+
+  /* ── DRAG-DROP ROTATIONS ── */
+  .rotation-board { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 8px; }
+  .rotation-col {
+    min-width: 200px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 14px; flex-shrink: 0;
+  }
+  .rotation-col-title {
+    font-size: 12px; font-weight: 600; text-transform: uppercase;
+    letter-spacing:.08em; color: var(--text3); margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .rotation-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+    cursor: grab; font-size: 12.5px; transition: all .15s;
+  }
+  .rotation-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .rotation-card:active { cursor: grabbing; }
+  .rotation-card-name { font-weight: 500; margin-bottom: 2px; }
+  .rotation-card-meta { color: var(--text3); font-size: 11px; }
+
+  /* ── CALENDAR ── */
+  .mini-cal { font-size: 13px; }
+  .cal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+  .cal-day {
+    text-align: center; padding: 6px 2px; border-radius: 6px;
+    cursor: pointer; font-size: 12px; transition: all .1s;
+  }
+  .cal-day:hover { background: var(--surface3); }
+  .cal-day.today { background: rgba(79,255,176,.15); color: var(--accent); font-weight: 700; }
+  .cal-day.has-event { position: relative; }
+  .cal-day.has-event::after {
+    content:''; position: absolute; bottom: 2px; left:50%; transform: translateX(-50%);
+    width: 4px; height: 4px; border-radius: 50%; background: var(--accent);
+  }
+  .cal-day-label { color: var(--text3); font-size: 10px; font-weight: 600; text-transform: uppercase; }
+
+  /* ── PAGE SECTIONS ── */
+  .page-section { display: none; }
+  .page-section.active { display: block; }
+
+  /* ── MISC ── */
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+  .text-accent { color: var(--accent); }
+  .text-muted { color: var(--text3); }
+  .text-sm { font-size: 12px; }
+  .flex { display: flex; }
+  .flex-col { flex-direction: column; }
+  .items-center { align-items: center; }
+  .justify-between { justify-content: space-between; }
+  .gap-2 { gap: 8px; }
+  .gap-3 { gap: 12px; }
+  .gap-4 { gap: 16px; }
+  .mb-4 { margin-bottom: 16px; }
+  .mb-6 { margin-bottom: 24px; }
+  .mt-4 { margin-top: 16px; }
+  .ml-auto { margin-left: auto; }
+
+  /* ── HOUR TRACKER ── */
+  .hour-tracker {
+    background: var(--surface2); border-radius: var(--radius-sm); padding: 16px;
+  }
+  .hour-nums { display: flex; justify-content: space-between; font-size: 12px; color: var(--text3); margin-bottom: 6px; }
+  .hour-count { font-family: 'DM Serif Display', serif; font-size: 22px; }
+
+  /* ── DISCIPLINARY ── */
+  .warning-severity {
+    display: flex; gap: 8px; margin-top: 8px;
+  }
+  .severity-opt {
+    flex: 1; padding: 10px; border-radius: 8px; border: 2px solid var(--border);
+    text-align: center; cursor: pointer; font-size: 12px; font-weight: 500;
+    transition: all .15s; color: var(--text3);
+  }
+  .severity-opt:hover { border-color: var(--border2); color: var(--text); }
+  .severity-opt.active.warn { border-color: var(--warn); color: var(--warn); background: rgba(245,158,11,.08); }
+  .severity-opt.active.danger { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,.08); }
+  .severity-opt.active.critical { border-color: var(--accent3); color: var(--accent3); background: rgba(167,139,250,.08); }
+
+  /* ── INTERN PROFILE CHIP ── */
+  .intern-chip {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface2); border-radius: 8px; padding: 10px 12px;
+    border: 1px solid var(--border);
+  }
+  .intern-avatar {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg,#4fffb0,#00c8ff);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #0d0f14;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+  @media (max-width: 1024px) {
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 768px) {
+    :root { --sidebar-w: 0px; }
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════════════ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><i class="fa-solid fa-pills"></i></div>
+    <div>
+      <div class="logo-text">Pharmacy</div>
+      <div class="logo-sub">Management System</div>
+    </div>
+  </div>
+
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <button class="nav-item active" onclick="showPage('dashboard')">
+      <span class="icon"><i class="fa-solid fa-gauge-high"></i></span> Dashboard
+    </button>
+    <button class="nav-item" onclick="showPage('notifications')">
+      <span class="icon"><i class="fa-solid fa-bell"></i></span> Notifications
+      <span class="nav-badge">5</span>
+    </button>
+
+    <div class="nav-section-label">Job Interview</div>
+    <button class="nav-item" onclick="showPage('applications')">
+      <span class="icon"><i class="fa-solid fa-file-circle-plus"></i></span> Applications
+    </button>
+    <button class="nav-item" onclick="showPage('schedule-form')">
+      <span class="icon"><i class="fa-solid fa-calendar-days"></i></span> Schedule Form
+    </button>
+    <button class="nav-item" onclick="showPage('interviews')">
+      <span class="icon"><i class="fa-solid fa-video"></i></span> Interviews
+    </button>
+    <button class="nav-item" onclick="showPage('evaluation')">
+      <span class="icon"><i class="fa-solid fa-star-half-stroke"></i></span> Evaluations
+    </button>
+
+    <div class="nav-section-label">Onboarding</div>
+    <button class="nav-item" onclick="showPage('welcome')">
+      <span class="icon"><i class="fa-solid fa-hand-wave"></i></span> Welcome Guide
+    </button>
+    <button class="nav-item" onclick="showPage('profile-wizard')">
+      <span class="icon"><i class="fa-solid fa-id-card"></i></span> Employee Profile
+    </button>
+    <button class="nav-item" onclick="showPage('documents')">
+      <span class="icon"><i class="fa-solid fa-folder-open"></i></span> Documents
+    </button>
+    <button class="nav-item" onclick="showPage('signature')">
+      <span class="icon"><i class="fa-solid fa-signature"></i></span> E-Signature
+    </button>
+
+    <div class="nav-section-label">Internship Schedule</div>
+    <button class="nav-item" onclick="showPage('rotations')">
+      <span class="icon"><i class="fa-solid fa-rotate"></i></span> Rotations
+    </button>
+    <button class="nav-item" onclick="showPage('shifts')">
+      <span class="icon"><i class="fa-solid fa-clock"></i></span> Shifts & Hours
+    </button>
+    <button class="nav-item" onclick="showPage('preceptors')">
+      <span class="icon"><i class="fa-solid fa-user-doctor"></i></span> Preceptors
+    </button>
+    <button class="nav-item" onclick="showPage('disciplinary')">
+      <span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span> Disciplinary
+    </button>
+    <button class="nav-item" onclick="showPage('moa')">
+      <span class="icon"><i class="fa-solid fa-file-contract"></i></span> MOA Compliance
+    </button>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-avatar">AP</div>
+    <div>
+      <div class="user-name">Name</div>
+      <div class="user-role">Human Resource</div>
+    </div>
+    <i class="fa-solid fa-ellipsis ml-auto text-muted" style="font-size:13px;cursor:pointer;"></i>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════
+     MAIN
+══════════════════════════════════════════════ -->
+<main class="main">
+  <header class="topbar">
+    <span class="topbar-title" id="pageTitle">Dashboard</span>
+    <div class="topbar-actions">
+      <div class="notif-btn" onclick="showPage('notifications')">
+        <i class="fa-solid fa-bell"></i>
+        <div class="notif-dot"></div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openModal('evalModal')">
+        <i class="fa-solid fa-plus"></i> New Evaluation
+      </button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ════════════ DASHBOARD ════════════ -->
+    <section class="page-section active" id="page-dashboard">
+      <div class="grid-4 mb-6">
+        <div class="stat-card green">
+          <div class="stat-label">Active Interns</div>
+          <div class="stat-value">24</div>
+          <div class="stat-change up"><i class="fa-solid fa-arrow-up"></i> 3 this month</div>
+          <i class="fa-solid fa-user-graduate stat-icon"></i>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Pending Applications</div>
+          <div class="stat-value">11</div>
+          <div class="stat-change">6 need review</div>
+          <i class="fa-solid fa-file-pen stat-icon"></i>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-label">Evaluations Due</div>
+          <div class="stat-value">7</div>
+          <div class="stat-change down"><i class="fa-solid fa-clock"></i> 2 overdue</div>
+          <i class="fa-solid fa-star stat-icon"></i>
+        </div>
+        <div class="stat-card warn">
+          <div class="stat-label">Document Alerts</div>
+          <div class="stat-value">4</div>
+          <div class="stat-change">Require action</div>
+          <i class="fa-solid fa-folder-open stat-icon"></i>
+        </div>
+      </div>
+
+      <div class="grid-2 mb-6">
+        <!-- Intern Hour Progress -->
+        <div class="card">
+          <div class="card-header">
+            <i class="fa-solid fa-hourglass-half text-accent"></i>
+            <div>
+              <div class="card-title">Intern Hour Tracking</div>
+              <div class="card-sub">Progress vs course-specific targets</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div style="margin-bottom:18px;" id="hourList">
+              <!-- populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="card">
+          <div class="card-header">
+            <i class="fa-solid fa-bell text-accent"></i>
+            <div>
+              <div class="card-title">Notification Feed</div>
+              <div class="card-sub">Recent alerts & updates</div>
+            </div>
+          </div>
+          <div class="card-body" style="padding:12px 22px;">
+            <div class="notif-item">
+              <div class="notif-icon warn"><i class="fa-solid fa-clock"></i></div>
+              <div>
+                <div class="notif-title">Shift Change Request</div>
+                <div class="notif-desc">Maria Santos requests a swap for Friday 3 PM shift</div>
+                <div class="notif-time">2 minutes ago</div>
+              </div>
+            </div>
+            <div class="notif-item">
+              <div class="notif-icon danger"><i class="fa-solid fa-file-circle-xmark"></i></div>
+              <div>
+                <div class="notif-title">Document Rejected</div>
+                <div class="notif-desc">Carlos Reyes — Class 12th Certificate unclear scan</div>
+                <div class="notif-time">1 hour ago</div>
+              </div>
+            </div>
+            <div class="notif-item">
+              <div class="notif-icon success"><i class="fa-solid fa-circle-check"></i></div>
+              <div>
+                <div class="notif-title">Evaluation Submitted</div>
+                <div class="notif-desc">Dr. Lim submitted Q2 eval for Ana Delacruz — 4.5★</div>
+                <div class="notif-time">3 hours ago</div>
+              </div>
+            </div>
+            <div class="notif-item">
+              <div class="notif-icon info"><i class="fa-solid fa-rotate"></i></div>
+              <div>
+                <div class="notif-title">Rotation Assigned</div>
+                <div class="notif-desc">3 interns moved to Pharmacy Assistant this week</div>
+                <div class="notif-time">Yesterday</div>
+              </div>
+            </div>
+            <div class="notif-item">
+              <div class="notif-icon warn"><i class="fa-solid fa-id-badge"></i></div>
+              <div>
+                <div class="notif-title">Certification Expiring</div>
+                <div class="notif-desc">BLS Cert for 2 interns expires in 14 days</div>
+                <div class="notif-time">2 days ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Interns Table -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fa-solid fa-table-list text-accent"></i>
+          <div class="card-title">Active Intern Roster</div>
+          <button class="btn btn-ghost btn-sm ml-auto">View All</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Intern</th>
+                <th>School / Course</th>
+                <th>Department</th>
+                <th>Hours Done</th>
+                <th>Target</th>
+                <th>Progress</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="flex items-center gap-2">
+                    <div class="intern-avatar">MS</div>
+                    <div>
+                      <div style="font-weight:500;font-size:13px;">Maria Santos</div>
+                      <div class="text-muted text-sm">ID: INT-2024-001</div>
+                    </div>
+                  </div>
+                </td>
+                <td><div style="font-size:13px;">UCC — Pharmacy</div></td>
+                <td><span class="badge active">Pharmacist</span></td>
+                <td><strong>820</strong></td>
+                <td>1,575 hrs</td>
+                <td style="min-width:100px;">
+                  <div class="progress-bar"><div class="progress-fill green" style="width:52%"></div></div>
+                  <div class="text-sm text-muted mt-1">52%</div>
+                </td>
+                <td><span class="badge verified"><span class="badge-dot"></span>On Track</span></td>
+                <td><button class="btn btn-ghost btn-sm" onclick="openModal('evalModal')"><i class="fa-solid fa-star"></i></button></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="flex items-center gap-2">
+                    <div class="intern-avatar" style="background:linear-gradient(135deg,#a78bfa,#00c8ff)">CR</div>
+                    <div>
+                      <div style="font-weight:500;font-size:13px;">Carlos Reyes</div>
+                      <div class="text-muted text-sm">ID: INT-2024-002</div>
+                    </div>
+                  </div>
+                </td>
+                <td><div style="font-size:13px;">PLM — BS Pharmacy</div></td>
+                <td><span class="badge active">Pharmacy Technician</span></td>
+                <td><strong>1,100</strong></td>
+                <td>1,575 hrs</td>
+                <td style="min-width:100px;">
+                  <div class="progress-bar"><div class="progress-fill green" style="width:70%"></div></div>
+                  <div class="text-sm text-muted mt-1">70%</div>
+                </td>
+                <td><span class="badge verified"><span class="badge-dot"></span>On Track</span></td>
+                <td><button class="btn btn-ghost btn-sm" onclick="openModal('evalModal')"><i class="fa-solid fa-star"></i></button></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="flex items-center gap-2">
+                    <div class="intern-avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">AD</div>
+                    <div>
+                      <div style="font-weight:500;font-size:13px;">Ana Delacruz</div>
+                      <div class="text-muted text-sm">ID: INT-2024-003</div>
+                    </div>
+                  </div>
+                </td>
+                <td><div style="font-size:13px;">UCC — Computer Science</div></td>
+                <td><span class="badge active">IT Systems</span></td>
+                <td><strong>380</strong></td>
+                <td>500 hrs</td>
+                <td style="min-width:100px;">
+                  <div class="progress-bar"><div class="progress-fill warn" style="width:76%"></div></div>
+                  <div class="text-sm text-muted mt-1">76%</div>
+                </td>
+                <td><span class="badge pending"><span class="badge-dot"></span>Near Goal</span></td>
+                <td><button class="btn btn-ghost btn-sm" onclick="openModal('evalModal')"><i class="fa-solid fa-star"></i></button></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="flex items-center gap-2">
+                    <div class="intern-avatar" style="background:linear-gradient(135deg,#22c55e,#a78bfa)">JL</div>
+                    <div>
+                      <div style="font-weight:500;font-size:13px;">Jose Lim</div>
+                      <div class="text-muted text-sm">ID: INT-2024-004</div>
+                    </div>
+                  </div>
+                </td>
+                <td><div style="font-size:13px;">FEU — Accountancy</div></td>
+                <td><span class="badge" style="background:rgba(167,139,250,.15);color:var(--accent3)">Finance</span></td>
+                <td><strong>210</strong></td>
+                <td>400 hrs</td>
+                <td style="min-width:100px;">
+                  <div class="progress-bar"><div class="progress-fill green" style="width:53%"></div></div>
+                  <div class="text-sm text-muted mt-1">53%</div>
+                </td>
+                <td><span class="badge rejected"><span class="badge-dot"></span>Behind</span></td>
+                <td><button class="btn btn-ghost btn-sm" onclick="openModal('evalModal')"><i class="fa-solid fa-star"></i></button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ UCC SCHEDULE FORM ════════════ -->
+    <section class="page-section" id="page-schedule-form">
+      <div class="card" style="max-width:860px;margin:auto;">
+        <div class="card-header">
+          <i class="fa-solid fa-calendar-days text-accent"></i>
+          <div>
+            <div class="card-title">Student Trainee Schedule Form</div>
+            <div class="card-sub">Pharmacy Internship Programme</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Header Info -->
+          <div class="form-row cols-2 mb-4">
+            <div class="form-group">
+              <label class="form-label">Trainee Name</label>
+              <input type="text" class="form-control" placeholder="Full name of trainee">
+            </div>
+            <div class="form-group">
+              <label class="form-label">School</label>
+              <input type="text" class="form-control" value="Union Christian College" placeholder="Institution name">
+            </div>
+          </div>
+          <div class="form-row cols-3 mb-4">
+            <div class="form-group">
+              <label class="form-label">Address</label>
+              <input type="text" class="form-control" placeholder="Home / permanent address">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Course</label>
+              <select class="form-control" onchange="updateHourGoal(this.value)">
+                <option value="">— Select Course —</option>
+                <option value="pharmacy">BS Pharmacy</option>
+                <option value="computer_science">Computer Science</option>
+                <option value="accountancy">Accountancy</option>
+                <option value="nursing">Nursing</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Year Level</label>
+              <select class="form-control">
+                <option>1st Year</option>
+                <option>2nd Year</option>
+                <option>3rd Year</option>
+                <option selected>4th Year</option>
+                <option>5th Year</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row cols-3 mb-4">
+            <div class="form-group">
+              <label class="form-label">Required Hours</label>
+              <input type="number" class="form-control" id="requiredHoursField" placeholder="e.g. 1575" value="1575">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Graduating Semester?</label>
+              <div style="display:flex;gap:12px;margin-top:8px;">
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="graduating" value="yes"> Yes
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                  <input type="radio" name="graduating" value="no" checked> No
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Semester / School Year</label>
+              <input type="text" class="form-control" placeholder="e.g. 2nd Sem, 2024–2025">
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div style="font-family:'DM Serif Display',serif;font-size:15px;margin-bottom:14px;">
+            Weekly Training Schedule
+          </div>
+
+          <!-- Schedule Table -->
+          <div class="table-wrap schedule-table">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:120px;">Day</th>
+                  <th>Time In</th>
+                  <th>Time Out</th>
+                  <th>Department / Area</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="font-weight:600;color:var(--text);">Monday</td>
+                  <td><input type="time" value="08:00"></td>
+                  <td><input type="time" value="17:00"></td>
+                  <td>
+                    <select style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:5px 8px;font-size:12px;width:100%;font-family:inherit;">
+                      <option>Pharmacist</option>
+                      <option>Pharmacy Technician</option>
+                      <option>Pharmacy Assistant</option>
+                      <option>Pharmacy Clerk</option>
+                    </select>
+                  </td>
+                  <td><input type="text" placeholder="Add notes..."></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600;color:var(--text);">Tuesday</td>
+                  <td><input type="time" value="08:00"></td>
+                  <td><input type="time" value="17:00"></td>
+                  <td>
+                    <select style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:5px 8px;font-size:12px;width:100%;font-family:inherit;">
+                      <option>Pharmacist</option>
+                      <option>Pharmacy Technician</option>
+                      <option selected>Pharmacy Assistant</option>
+                      <option>Pharmacy Clerk</option>
+                    </select>
+                  </td>
+                  <td><input type="text" placeholder="Add notes..."></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600;color:var(--text);">Wednesday</td>
+                  <td><input type="time" value="08:00"></td>
+                  <td><input type="time" value="17:00"></td>
+                  <td>
+                    <select style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:5px 8px;font-size:12px;width:100%;font-family:inherit;">
+                      <option selected>Pharmacist</option>
+                      <option>Pharmacy Technician</option>
+                      <option>Pharmacy Assistant</option>
+                      <option>Pharmacy Clerk</option>
+                    </select>
+                  </td>
+                  <td><input type="text" placeholder="Add notes..."></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600;color:var(--text);">Thursday</td>
+                  <td><input type="time" value="08:00"></td>
+                  <td><input type="time" value="17:00"></td>
+                  <td>
+                    <select style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:5px 8px;font-size:12px;width:100%;font-family:inherit;">
+                      <option>Pharmacist</option>
+                      <option selected>Pharmacy Technician</option>
+                      <option>Pharmacy Assistant</option>
+                      <option>Pharmacy Clerk</option>
+                    </select>
+                  </td>
+                  <td><input type="text" placeholder="Add notes..."></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600;color:var(--text);">Friday</td>
+                  <td><input type="time" value="08:00"></td>
+                  <td><input type="time" value="13:00"></td>
+                  <td>
+                    <select style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:5px 8px;font-size:12px;width:100%;font-family:inherit;">
+                      <option>Pharmacist</option>
+                      <option>Pharmacy Technician</option>
+                      <option>Pharmacy Assistant</option>
+                      <option selected>Pharmacy Clerk</option>
+                    </select>
+                  </td>
+                  <td><input type="text" placeholder="Half day"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="divider"></div>
+          <div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:20px;">
+            <i class="fa-solid fa-circle-info" style="color:var(--accent2);"></i>
+            <div id="hourGoalDisplay" style="font-size:13px;color:var(--text2);">
+              Course-specific hour goal: <strong style="color:var(--accent);">1,575 hours</strong> (default — Pharmacy track)
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button class="btn btn-ghost">Save Draft</button>
+            <button class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Submit Schedule</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ APPLICATIONS ════════════ -->
+    <section class="page-section" id="page-applications">
+      <div class="card mb-6">
+        <div class="card-header">
+          <i class="fa-solid fa-file-circle-plus text-accent"></i>
+          <div class="card-title">Applicant Portal</div>
+          <button class="btn btn-primary btn-sm ml-auto"><i class="fa-solid fa-plus"></i> New Application</button>
+        </div>
+        <div class="tabs">
+          <button class="tab active">All (11)</button>
+          <button class="tab">Under Review (6)</button>
+          <button class="tab">Interview Scheduled (3)</button>
+          <button class="tab">Accepted (2)</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Applicant</th>
+                <th>Course</th>
+                <th>Applied</th>
+                <th>Documents</th>
+                <th>Interview</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div style="font-weight:500;">Reyna Pascual</div>
+                  <div class="text-muted text-sm">reyna.pascual@ucc.edu.ph</div>
+                </td>
+                <td>BS Pharmacy — UCC</td>
+                <td>Apr 10, 2025</td>
+                <td><span class="badge verified"><span class="badge-dot"></span>Complete</span></td>
+                <td>Apr 18 · Virtual</td>
+                <td><span class="badge pending"><span class="badge-dot"></span>Under Review</span></td>
+                <td>
+                  <button class="btn btn-ghost btn-sm">View</button>
+                  <button class="btn btn-primary btn-sm" onclick="openModal('evalModal')">Evaluate</button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="font-weight:500;">Marco Villanueva</div>
+                  <div class="text-muted text-sm">marco.v@plm.edu.ph</div>
+                </td>
+                <td>Computer Science — PLM</td>
+                <td>Apr 9, 2025</td>
+                <td><span class="badge uploaded"><span class="badge-dot"></span>Partial</span></td>
+                <td>Not Scheduled</td>
+                <td><span class="badge not-uploaded"><span class="badge-dot"></span>Pending</span></td>
+                <td>
+                  <button class="btn btn-ghost btn-sm">View</button>
+                  <button class="btn btn-ghost btn-sm">Schedule</button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="font-weight:500;">Lena Corpuz</div>
+                  <div class="text-muted text-sm">lena.c@feu.edu.ph</div>
+                </td>
+                <td>Accountancy — FEU</td>
+                <td>Apr 7, 2025</td>
+                <td><span class="badge verified"><span class="badge-dot"></span>Complete</span></td>
+                <td>Apr 15 · In-Person</td>
+                <td><span class="badge active"><span class="badge-dot"></span>Accepted</span></td>
+                <td>
+                  <button class="btn btn-ghost btn-sm">View</button>
+                  <button class="btn btn-primary btn-sm" onclick="openModal('evalModal')">Evaluate</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Application Form -->
+      <div class="card" style="max-width:700px;">
+        <div class="card-header">
+          <i class="fa-solid fa-user-plus text-accent"></i>
+          <div class="card-title">New Intern Application</div>
+        </div>
+        <div class="card-body">
+          <div class="form-row cols-2 mb-4">
+            <div class="form-group">
+              <label class="form-label">First Name</label>
+              <input type="text" class="form-control" placeholder="Given name">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name</label>
+              <input type="text" class="form-control" placeholder="Family name">
+            </div>
+          </div>
+          <div class="form-row cols-2 mb-4">
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" class="form-control" placeholder="school@email.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Contact Number</label>
+              <input type="tel" class="form-control" placeholder="+63 9XX XXX XXXX">
+            </div>
+          </div>
+          <div class="form-row cols-3 mb-4">
+            <div class="form-group">
+              <label class="form-label">School / University</label>
+              <input type="text" class="form-control" placeholder="Institution">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Course</label>
+              <select class="form-control">
+                <option>BS Pharmacy</option>
+                <option>Computer Science</option>
+                <option>Accountancy</option>
+                <option>Nursing</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Year Level</label>
+              <select class="form-control">
+                <option>3rd Year</option>
+                <option selected>4th Year</option>
+                <option>5th Year</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group mb-4">
+            <label class="form-label">Cover Letter / Personal Statement</label>
+            <textarea class="form-control" rows="4" placeholder="Brief statement of intent..."></textarea>
+          </div>
+          <div class="form-group mb-4">
+            <label class="form-label">Upload Resume / CV</label>
+            <div class="upload-zone">
+              <div class="upload-zone-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+              <div class="upload-zone-text">Drag & drop or <strong style="color:var(--accent);">browse</strong> — PDF, DOC (max 5 MB)</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button class="btn btn-ghost">Clear</button>
+            <button class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Submit Application</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ INTERVIEWS ════════════ -->
+    <section class="page-section" id="page-interviews">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <i class="fa-solid fa-video text-accent"></i>
+            <div class="card-title">Schedule Interview</div>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Applicant</label>
+              <select class="form-control">
+                <option>Reyna Pascual</option>
+                <option>Marco Villanueva</option>
+                <option>Select applicant...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Interview Type</label>
+              <div style="display:flex;gap:10px;margin-top:6px;">
+                <label style="flex:1;padding:12px;border:2px solid var(--accent);border-radius:8px;cursor:pointer;text-align:center;font-size:13px;background:rgba(79,255,176,.06);">
+                  <input type="radio" name="itype" checked style="display:none;">
+                  <i class="fa-solid fa-video" style="color:var(--accent);"></i><br>Virtual
+                </label>
+                <label style="flex:1;padding:12px;border:2px solid var(--border2);border-radius:8px;cursor:pointer;text-align:center;font-size:13px;">
+                  <input type="radio" name="itype" style="display:none;">
+                  <i class="fa-solid fa-building"></i><br>In-Person
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Video Conference Link</label>
+              <input type="url" class="form-control" placeholder="https://meet.google.com/xxx-xxxx">
+            </div>
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label class="form-label">Interview Date</label>
+                <input type="date" class="form-control">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Time Slot</label>
+                <select class="form-control">
+                  <option>9:00 AM</option>
+                  <option>10:00 AM</option>
+                  <option>1:00 PM</option>
+                  <option>2:00 PM</option>
+                  <option>3:00 PM</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Assigned Interviewer</label>
+              <select class="form-control">
+                <option>Dr. Rosa Lim (Chief Pharmacist)</option>
+                <option>Dr. Mark Tan (Clinical Supervisor)</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;">
+              <i class="fa-solid fa-calendar-check"></i> Schedule Interview
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <i class="fa-solid fa-calendar-days text-accent"></i>
+            <div class="card-title">Interview Calendar — April 2025</div>
+          </div>
+          <div class="card-body">
+            <div class="mini-cal">
+              <div class="cal-header">
+                <button class="btn btn-ghost btn-sm"><i class="fa-solid fa-chevron-left"></i></button>
+                <strong>April 2025</strong>
+                <button class="btn btn-ghost btn-sm"><i class="fa-solid fa-chevron-right"></i></button>
+              </div>
+              <div class="cal-grid" style="margin-bottom:8px;">
+                <div class="cal-day cal-day-label">Su</div>
+                <div class="cal-day cal-day-label">Mo</div>
+                <div class="cal-day cal-day-label">Tu</div>
+                <div class="cal-day cal-day-label">We</div>
+                <div class="cal-day cal-day-label">Th</div>
+                <div class="cal-day cal-day-label">Fr</div>
+                <div class="cal-day cal-day-label">Sa</div>
+              </div>
+              <div class="cal-grid" id="calGrid"></div>
+            </div>
+            <div class="divider"></div>
+            <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:12px;">Upcoming Interviews</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div class="intern-chip">
+                <div class="intern-avatar" style="background:linear-gradient(135deg,#4fffb0,#00c8ff)">RP</div>
+                <div>
+                  <div style="font-size:13px;font-weight:500;">Reyna Pascual</div>
+                  <div class="text-muted text-sm">Apr 18 · 10:00 AM · Virtual</div>
+                </div>
+                <span class="badge pending ml-auto">Upcoming</span>
+              </div>
+              <div class="intern-chip">
+                <div class="intern-avatar" style="background:linear-gradient(135deg,#a78bfa,#00c8ff)">LC</div>
+                <div>
+                  <div style="font-size:13px;font-weight:500;">Lena Corpuz</div>
+                  <div class="text-muted text-sm">Apr 15 · 2:00 PM · In-Person</div>
+                </div>
+                <span class="badge active ml-auto">Today</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ PROFILE WIZARD ════════════ -->
+    <section class="page-section" id="page-profile-wizard">
+      <div class="card" style="max-width:820px;margin:auto;">
+        <div class="card-header">
+          <i class="fa-solid fa-id-card text-accent"></i>
+          <div class="card-title">Employee / Intern Profile Wizard</div>
+        </div>
+        <div class="card-body">
+          <!-- Steps -->
+          <div class="wizard-steps mb-6">
+            <div class="wizard-step" onclick="wizardStep(1)">
+              <div class="step-circle done" id="ws1">1</div>
+              <div class="step-label active" id="wl1">Personal Details</div>
+            </div>
+            <div class="step-connector"></div>
+            <div class="wizard-step" onclick="wizardStep(2)">
+              <div class="step-circle active" id="ws2">2</div>
+              <div class="step-label active" id="wl2">Family Details</div>
+            </div>
+            <div class="step-connector"></div>
+            <div class="wizard-step" onclick="wizardStep(3)">
+              <div class="step-circle" id="ws3">3</div>
+              <div class="step-label" id="wl3">Education & Experience</div>
+            </div>
+            <div class="step-connector"></div>
+            <div class="wizard-step" onclick="wizardStep(4)">
+              <div class="step-circle" id="ws4">4</div>
+              <div class="step-label" id="wl4">Review & Submit</div>
+            </div>
+          </div>
+
+          <!-- Step 1 -->
+          <div id="step-1" class="wizard-panel">
+            <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:18px;">Personal Details</div>
+            <div class="form-row cols-3 mb-4">
+              <div class="form-group">
+                <label class="form-label">First Name</label>
+                <input type="text" class="form-control">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Middle Name</label>
+                <input type="text" class="form-control">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Last Name</label>
+                <input type="text" class="form-control">
+              </div>
+            </div>
+            <div class="form-row cols-3 mb-4">
+              <div class="form-group">
+                <label class="form-label">Date of Birth</label>
+                <input type="date" class="form-control">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Blood Group</label>
+                <select class="form-control">
+                  <option>A+</option><option>A-</option>
+                  <option>B+</option><option>B-</option>
+                  <option>AB+</option><option>AB-</option>
+                  <option>O+</option><option>O-</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Gender</label>
+                <select class="form-control">
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Prefer not to say</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row cols-2 mb-4">
+              <div class="form-group">
+                <label class="form-label">Contact Number</label>
+                <input type="tel" class="form-control" placeholder="+63 9XX XXX XXXX">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control">
+              </div>
+            </div>
+            <div class="form-group mb-4">
+              <label class="form-label">Permanent Address</label>
+              <textarea class="form-control" rows="2" placeholder="Complete address"></textarea>
+            </div>
+            <div class="form-row cols-2 mb-4">
+              <div class="form-group">
+                <label class="form-label">Emergency Contact Name</label>
+                <input type="text" class="form-control">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Emergency Contact Number</label>
+                <input type="tel" class="form-control">
+              </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;">
+              <button class="btn btn-primary" onclick="wizardStep(2)">Next: Family Details <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div id="step-2" class="wizard-panel" style="display:none;">
+            <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:18px;">Family Details</div>
+            <div class="form-row cols-2 mb-4">
+              <div class="form-group">
+                <label class="form-label">Father's Name</label>
+                <input type="text" class="form-control">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Father's Occupation</label>
+                <input type="text" class="form-control">
+              </div>
+            </div>
+            <div class="form-row cols-2 mb-4">
+              <div class="form-group">
+                <label class="form-label">Mother's Name</label>
+                <input type="text" class="form-control">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Mother's Occupation</label>
+                <input type="text" class="form-control">
+              </div>
+            </div>
+
+            <div class="divider"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div style="font-family:'DM Serif Display',serif;font-size:15px;">Siblings</div>
+              <button class="btn btn-ghost btn-sm" onclick="addSibling()"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+            <div class="table-wrap" style="margin-bottom:20px;">
+              <table id="siblingsTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Relationship</th>
+                    <th>Occupation / School</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="siblingsBody">
+                  <tr>
+                    <td>1</td>
+                    <td><input type="text" class="form-control" style="min-width:130px;" placeholder="Full name"></td>
+                    <td><input type="number" class="form-control" style="width:70px;" placeholder="Age"></td>
+                    <td>
+                      <select class="form-control">
+                        <option>Brother</option><option>Sister</option>
+                      </select>
+                    </td>
+                    <td><input type="text" class="form-control" style="min-width:150px;" placeholder="School / occupation"></td>
+                    <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()"><i class="fa-solid fa-trash"></i></button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <button class="btn btn-ghost" onclick="wizardStep(1)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+              <button class="btn btn-primary" onclick="wizardStep(3)">Next: Education <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div id="step-3" class="wizard-panel" style="display:none;">
+            <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:18px;">Educational Background</div>
+            <div class="table-wrap" style="margin-bottom:20px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Level</th>
+                    <th>Institution</th>
+                    <th>Year Graduated</th>
+                    <th>Honors / Awards</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="font-weight:600;">Elementary</td>
+                    <td><input type="text" class="form-control" style="min-width:200px;"></td>
+                    <td><input type="number" class="form-control" style="width:90px;" placeholder="Year"></td>
+                    <td><input type="text" class="form-control" style="min-width:150px;"></td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight:600;">High School</td>
+                    <td><input type="text" class="form-control" style="min-width:200px;"></td>
+                    <td><input type="number" class="form-control" style="width:90px;" placeholder="Year"></td>
+                    <td><input type="text" class="form-control" style="min-width:150px;"></td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight:600;">College</td>
+                    <td><input type="text" class="form-control" style="min-width:200px;"></td>
+                    <td><input type="number" class="form-control" style="width:90px;" placeholder="Year"></td>
+                    <td><input type="text" class="form-control" style="min-width:150px;"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="divider"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div style="font-family:'DM Serif Display',serif;font-size:15px;">Prior Work / OJT Experience</div>
+              <button class="btn btn-ghost btn-sm" onclick="addExperience()"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+            <div class="table-wrap">
+              <table id="expTable">
+                <thead>
+                  <tr>
+                    <th>Company / Hospital</th>
+                    <th>Role</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Department</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="expBody">
+                  <tr>
+                    <td><input type="text" class="form-control" style="min-width:160px;"></td>
+                    <td><input type="text" class="form-control" style="min-width:120px;"></td>
+                    <td><input type="month" class="form-control"></td>
+                    <td><input type="month" class="form-control"></td>
+                    <td><input type="text" class="form-control" style="min-width:120px;"></td>
+                    <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()"><i class="fa-solid fa-trash"></i></button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:20px;">
+              <button class="btn btn-ghost" onclick="wizardStep(2)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+              <button class="btn btn-primary" onclick="wizardStep(4)">Review & Submit <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div id="step-4" class="wizard-panel" style="display:none;">
+            <div style="font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:18px;">Review & Submit</div>
+            <div style="background:var(--surface2);border-radius:8px;padding:18px;margin-bottom:20px;font-size:13.5px;line-height:1.7;color:var(--text2);">
+              By submitting this profile, I confirm that all information provided is accurate and complete. I understand that any false information may result in disqualification or termination of internship. I agree to abide by the rules and regulations of the pharmacy and the Memorandum of Agreement.
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <button class="btn btn-ghost" onclick="wizardStep(3)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+              <div style="display:flex;gap:10px;">
+                <button class="btn btn-ghost">Save Draft</button>
+                <button class="btn btn-primary"><i class="fa-solid fa-check"></i> Submit Profile</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ DOCUMENTS ════════════ -->
+    <section class="page-section" id="page-documents">
+      <div class="card">
+        <div class="card-header">
+          <i class="fa-solid fa-folder-open text-accent"></i>
+          <div>
+            <div class="card-title">Document Submission Center</div>
+            <div class="card-sub">Upload and track required intern documents</div>
+          </div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+            <span class="badge verified"><span class="badge-dot"></span>4 Verified</span>
+            <span class="badge pending"><span class="badge-dot"></span>2 Pending</span>
+            <span class="badge rejected"><span class="badge-dot"></span>1 Rejected</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;gap:12px;margin-bottom:20px;">
+            <select class="form-control" style="max-width:280px;">
+              <option>Maria Santos — INT-2024-001</option>
+              <option>Carlos Reyes — INT-2024-002</option>
+              <option>Ana Delacruz — INT-2024-003</option>
+            </select>
+          </div>
+
+          <div id="docList" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ E-SIGNATURE ════════════ -->
+    <section class="page-section" id="page-signature">
+      <div class="card" style="max-width:720px;margin:auto;">
+        <div class="card-header">
+          <i class="fa-solid fa-signature text-accent"></i>
+          <div class="card-title">Digital Signature & Declaration</div>
+        </div>
+        <div class="card-body">
+          <div style="background:var(--surface2);border-radius:8px;padding:18px;margin-bottom:22px;font-size:13.5px;line-height:1.8;color:var(--text2);">
+            <strong style="display:block;margin-bottom:8px;color:var(--text);font-family:'DM Serif Display',serif;font-size:16px;">Declaration & Confidentiality Agreement</strong>
+            I, the undersigned intern, solemnly declare that:
+            <ul style="margin:10px 0 10px 20px;list-style:disc;display:flex;flex-direction:column;gap:6px;">
+              <li>All information provided in my application and profile is true, correct, and complete to the best of my knowledge.</li>
+              <li>I understand and agree to maintain strict confidentiality of all patient information, proprietary data, and internal processes encountered during my internship.</li>
+              <li>I will comply with all policies, procedures, and ethical standards of the pharmacy establishment and its governing bodies.</li>
+              <li>I acknowledge receipt of the Memorandum of Agreement and agree to fulfill all hour requirements specified therein.</li>
+              <li>I understand that any violation of these terms may result in immediate withdrawal from the program.</li>
+            </ul>
+            I hereby affix my electronic signature as a legally binding acknowledgment of the above declarations.
+          </div>
+
+          <div class="form-row cols-2 mb-4">
+            <div class="form-group">
+              <label class="form-label">Full Name (as printed)</label>
+              <input type="text" class="form-control" placeholder="Your complete name">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date Signed</label>
+              <input type="date" class="form-control">
+            </div>
+          </div>
+
+          <div class="form-group mb-4">
+            <label class="form-label">Electronic Signature</label>
+            <canvas id="signatureCanvas" width="640" height="160"></canvas>
+            <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end;">
+              <button class="btn btn-ghost btn-sm" onclick="clearSignature()"><i class="fa-solid fa-eraser"></i> Clear</button>
+              <button class="btn btn-ghost btn-sm" onclick="downloadSig()"><i class="fa-solid fa-download"></i> Save PNG</button>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button class="btn btn-ghost">Cancel</button>
+            <button class="btn btn-primary"><i class="fa-solid fa-lock"></i> Submit Signed Declaration</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ WELCOME GUIDE ════════════ -->
+    <section class="page-section" id="page-welcome">
+      <div style="max-width:820px;margin:auto;">
+        <div style="background:linear-gradient(135deg,rgba(79,255,176,.12),rgba(0,200,255,.08));border:1px solid rgba(79,255,176,.2);border-radius:var(--radius);padding:32px;margin-bottom:24px;text-align:center;">
+          <div style="font-size:40px;margin-bottom:12px;">💊</div>
+          <div style="font-family:'DM Serif Display',serif;font-size:28px;margin-bottom:8px;">Welcome to Group 2 Pharmacy!</div>
+          <div style="color:var(--text2);font-size:14px;">Your personalized orientation guide for the Pharmacy Internship Programme</div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><i class="fa-solid fa-building text-accent"></i><div class="card-title">Orientation</div></div>
+            <div class="card-body" style="font-size:13.5px;line-height:1.7;color:var(--text2);">
+              Orientation is held on your <strong style="color:var(--text)">first day</strong> at 8:00 AM in the Main Conference Room (Ground Floor). Please bring two valid IDs and your signed MOA. Dress code is business casual with closed-toe shoes.
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><i class="fa-solid fa-parking text-accent"></i><div class="card-title">Parking & Access</div></div>
+            <div class="card-body" style="font-size:13.5px;line-height:1.7;color:var(--text2);">
+              Intern parking is available at <strong style="color:var(--text)">Lot B (East Wing)</strong>. Display your intern parking pass on your dashboard. The main entrance badge system is programmed with your ID within 24 hours of signing your onboarding documents.
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><i class="fa-solid fa-id-badge text-accent"></i><div class="card-title">ID & Uniform</div></div>
+            <div class="card-body" style="font-size:13.5px;line-height:1.7;color:var(--text2);">
+              Your intern ID will be issued on Day 1. Wear your <strong style="color:var(--text)">white pharmacy coat</strong> at all times in clinical areas. Your full name and "INTERN" label must be visible on your name tag.
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><i class="fa-solid fa-phone text-accent"></i><div class="card-title">Key Contacts</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+              <div><strong style="color:var(--text)">Internship Coordinator:</strong><br><span style="color:var(--text2);">Dr. Rosa Lim — ext. 201</span></div>
+              <div><strong style="color:var(--text)">HR Office:</strong><br><span style="color:var(--text2);">Mila Cruz — ext. 105</span></div>
+              <div><strong style="color:var(--text)">Emergency / Security:</strong><br><span style="color:var(--text2);">ext. 911 | 0917-000-0000</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ ROTATIONS ════════════ -->
+    <section class="page-section" id="page-rotations">
+      <div class="card">
+        <div class="card-header">
+          <i class="fa-solid fa-rotate text-accent"></i>
+          <div class="card-title">Department Rotation Board</div>
+          <div style="margin-left:auto;font-size:12px;color:var(--text3);">Drag interns between departments</div>
+        </div>
+        <div class="card-body">
+          <div class="rotation-board" id="rotationBoard">
+            <!-- Columns populated by JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ SHIFTS & HOURS ════════════ -->
+    <section class="page-section" id="page-shifts">
+      <div class="grid-2 mb-6">
+        <div class="card">
+          <div class="card-header">
+            <i class="fa-solid fa-clock text-accent"></i>
+            <div class="card-title">Log Shift</div>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Intern</label>
+              <select class="form-control" onchange="updateHourGoalDisplay(this)">
+                <option value="pharmacy">Maria Santos (BS Pharmacy)</option>
+                <option value="computer_science">Ana Delacruz (Computer Science)</option>
+                <option value="accountancy">Jose Lim (Accountancy)</option>
+              </select>
+            </div>
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label class="form-label">Shift Date</label>
+                <input type="date" class="form-control">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Department</label>
+                <select class="form-control">
+                  <option>Pharmacist</option>
+                  <option>Pharmacy Technician</option>
+                  <option>Pharmacy Assistant</option>
+                  <option>Pharmacy Clerk</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label class="form-label">Shift Start</label>
+                <input type="time" class="form-control" value="08:00" id="shiftStart">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Shift End</label>
+                <input type="time" class="form-control" value="17:00" id="shiftEnd">
+              </div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;">
+              <div style="color:var(--text3);margin-bottom:4px;">Hours for this shift</div>
+              <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--accent);" id="shiftHoursCalc">9.0 hrs</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:16px;">
+              <div style="font-size:12px;color:var(--text3);margin-bottom:6px;">MOA Hour Goal (course-specific)</div>
+              <div style="font-size:18px;font-weight:600;" id="moaGoalDisplay">1,575 hours <span style="font-size:12px;color:var(--text3);font-weight:400;">(BS Pharmacy)</span></div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;"><i class="fa-solid fa-clock"></i> Log Shift</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <i class="fa-solid fa-chart-bar text-accent"></i>
+            <div class="card-title">Hour Progress Tracker</div>
+          </div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:16px;">
+            <div id="hourTrackers"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shift Log Table -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fa-solid fa-table text-accent"></i>
+          <div class="card-title">Shift History</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Intern</th>
+                <th>Date</th>
+                <th>Department</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Hours</th>
+                <th>Preceptor</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Maria Santos</td>
+                <td>Apr 14, 2025</td>
+                <td>Pharmacist</td>
+                <td>08:00</td>
+                <td>17:00</td>
+                <td><strong>9.0</strong></td>
+                <td>Dr. Lim</td>
+                <td><span class="badge verified">Approved</span></td>
+              </tr>
+              <tr>
+                <td>Carlos Reyes</td>
+                <td>Apr 14, 2025</td>
+                <td>Pharmacy Technician</td>
+                <td>07:00</td>
+                <td>15:00</td>
+                <td><strong>8.0</strong></td>
+                <td>Dr. Tan</td>
+                <td><span class="badge verified">Approved</span></td>
+              </tr>
+              <tr>
+                <td>Ana Delacruz</td>
+                <td>Apr 14, 2025</td>
+                <td>Pharmacy Assistant</td>
+                <td>09:00</td>
+                <td>18:00</td>
+                <td><strong>9.0</strong></td>
+                <td>Dr. Lim</td>
+                <td><span class="badge pending">Pending</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ DISCIPLINARY ════════════ -->
+    <section class="page-section" id="page-disciplinary">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <i class="fa-solid fa-triangle-exclamation" style="color:var(--warn);"></i>
+            <div>
+              <div class="card-title">Warning / Disciplinary Notice</div>
+              <div class="card-sub">Grounds for Withdrawal — MOA Page 4</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Select Intern</label>
+              <select class="form-control">
+                <option>Maria Santos — INT-2024-001</option>
+                <option>Carlos Reyes — INT-2024-002</option>
+                <option>Ana Delacruz — INT-2024-003</option>
+                <option>Jose Lim — INT-2024-004</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Grounds for Warning / Withdrawal</label>
+              <select class="form-control" id="withdrawalGrounds">
+                <option value="">— Select Category —</option>
+                <option>1. Wilful disobedience or insubordination</option>
+                <option>2. Gross or habitual neglect of duties</option>
+                <option>3. Fraud or willful breach of trust</option>
+                <option>4. Commission of a crime or offense against any person</option>
+                <option>5. Causing damage to the employer's interest</option>
+                <option>6. Contracting a contagious disease prejudicial to others</option>
+                <option>7. Immoral or indecent conduct</option>
+                <option>8. Dishonesty</option>
+                <option>9. Drunkenness or use of prohibited substances</option>
+                <option>10. Unauthorized possession of deadly weapons</option>
+                <option>11. Gambling within the premises</option>
+                <option>12. Absences without official leave (AWOL)</option>
+                <option>13. Tardiness / early departure (habitual)</option>
+                <option>14. Violation of pharmacy rules and regulations</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Severity Level</label>
+              <div class="warning-severity">
+                <div class="severity-opt active warn" onclick="setSeverity(this,'warn')">
+                  <i class="fa-solid fa-circle-exclamation"></i><br>Warning
+                </div>
+                <div class="severity-opt" onclick="setSeverity(this,'danger')">
+                  <i class="fa-solid fa-ban"></i><br>Suspension
+                </div>
+                <div class="severity-opt" onclick="setSeverity(this,'critical')">
+                  <i class="fa-solid fa-xmark-circle"></i><br>Withdrawal
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Incident Date</label>
+              <input type="date" class="form-control">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Incident Description</label>
+              <textarea class="form-control" rows="4" placeholder="Describe the incident, evidence, and witnesses..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Preceptor / Reporter</label>
+              <select class="form-control">
+                <option>Dr. Rosa Lim</option>
+                <option>Dr. Mark Tan</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+              <button class="btn btn-ghost">Cancel</button>
+              <button class="btn btn-warn"><i class="fa-solid fa-paper-plane"></i> Issue Notice</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <i class="fa-solid fa-list-check text-accent"></i>
+            <div class="card-title">Disciplinary Log</div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Intern</th>
+                    <th>Ground</th>
+                    <th>Severity</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Jose Lim</td>
+                    <td style="font-size:12px;">13. Habitual tardiness</td>
+                    <td><span class="badge pending">Warning</span></td>
+                    <td>Apr 3</td>
+                    <td><span class="badge uploaded">Acknowledged</span></td>
+                  </tr>
+                  <tr>
+                    <td>Carlos Reyes</td>
+                    <td style="font-size:12px;">2. Neglect of duties</td>
+                    <td><span class="badge pending">Warning</span></td>
+                    <td>Mar 28</td>
+                    <td><span class="badge pending">Pending Review</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ EVALUATIONS ════════════ -->
+    <section class="page-section" id="page-evaluation">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <i class="fa-solid fa-star text-accent"></i>
+            <div class="card-title">Submit Preceptor Evaluation</div>
+          </div>
+          <div class="card-body" id="evalFormBody">
+            <!-- Full eval form inline -->
+            <div class="form-group">
+              <label class="form-label">Intern</label>
+              <select class="form-control">
+                <option>Maria Santos — INT-2024-001</option>
+                <option>Carlos Reyes — INT-2024-002</option>
+                <option>Ana Delacruz — INT-2024-003</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Evaluation Period</label>
+              <select class="form-control">
+                <option>Mid-Term Q1</option>
+                <option>End-of-Rotation Q1</option>
+                <option>Mid-Term Q2</option>
+                <option>Final Evaluation</option>
+              </select>
+            </div>
+            <div id="ratingCriteriaInline"></div>
+            <div class="form-group">
+              <label class="form-label">Preceptor Notes</label>
+              <textarea class="form-control" rows="4" placeholder="Detailed comments on performance..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Overall Recommendation</label>
+              <select class="form-control">
+                <option>Pass — Continue Internship</option>
+                <option>Pass with Conditions</option>
+                <option>Requires Improvement</option>
+                <option>Fail — Review Required</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;"><i class="fa-solid fa-paper-plane"></i> Submit Evaluation</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <i class="fa-solid fa-chart-line text-accent"></i>
+            <div class="card-title">Evaluation History</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Intern</th>
+                  <th>Period</th>
+                  <th>Rating</th>
+                  <th>Preceptor</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Maria Santos</td>
+                  <td>Mid-Term Q1</td>
+                  <td><span style="color:var(--warn);">★★★★☆ 4.0</span></td>
+                  <td>Dr. Lim</td>
+                  <td>Mar 15</td>
+                </tr>
+                <tr>
+                  <td>Carlos Reyes</td>
+                  <td>End-Rotation Q1</td>
+                  <td><span style="color:var(--warn);">★★★★★ 4.8</span></td>
+                  <td>Dr. Tan</td>
+                  <td>Mar 30</td>
+                </tr>
+                <tr>
+                  <td>Ana Delacruz</td>
+                  <td>Mid-Term Q2</td>
+                  <td><span style="color:var(--warn);">★★★☆☆ 3.2</span></td>
+                  <td>Dr. Lim</td>
+                  <td>Apr 10</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ PRECEPTORS ════════════ -->
+    <section class="page-section" id="page-preceptors">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <i class="fa-solid fa-user-doctor text-accent"></i>
+            <div class="card-title">Preceptor Portal</div>
+          </div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:12px;">
+            <div class="intern-chip">
+              <div class="intern-avatar" style="background:linear-gradient(135deg,#4fffb0,#00c8ff);width:40px;height:40px;font-size:14px;">RL</div>
+              <div>
+                <div style="font-weight:500;">Dr. Rosa Lim</div>
+                <div class="text-muted text-sm">Chief Pharmacist · Pharmacist & Pharmacy Technician</div>
+              </div>
+              <span class="badge active ml-auto">Available</span>
+            </div>
+            <div class="intern-chip">
+              <div class="intern-avatar" style="background:linear-gradient(135deg,#a78bfa,#00c8ff);width:40px;height:40px;font-size:14px;">MT</div>
+              <div>
+                <div style="font-weight:500;">Dr. Mark Tan</div>
+                <div class="text-muted text-sm">Clinical Supervisor · Pharmacy Assistant</div>
+              </div>
+              <span class="badge pending ml-auto">On Leave</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <i class="fa-solid fa-calendar-check text-accent"></i>
+            <div class="card-title">Preceptor Availability</div>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Preceptor</label>
+              <select class="form-control">
+                <option>Dr. Rosa Lim</option>
+                <option>Dr. Mark Tan</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Available Dates</label>
+              <input type="date" class="form-control">
+            </div>
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label class="form-label">Available From</label>
+                <input type="time" class="form-control" value="08:00">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Available Until</label>
+                <input type="time" class="form-control" value="17:00">
+              </div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;">Update Availability</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ MOA COMPLIANCE ════════════ -->
+    <section class="page-section" id="page-moa">
+      <div class="card" style="max-width:760px;margin:auto;">
+        <div class="card-header">
+          <i class="fa-solid fa-file-contract text-accent"></i>
+          <div>
+            <div class="card-title">Memorandum of Agreement — Compliance</div>
+            <div class="card-sub">Course-specific hour goals per MOA Page 2</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="grid-3 mb-6">
+            <div style="background:var(--surface2);border-radius:10px;padding:18px;border:1px solid rgba(79,255,176,.2);">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:600;margin-bottom:6px;">Computer Science</div>
+              <div style="font-family:'DM Serif Display',serif;font-size:28px;">500</div>
+              <div class="text-muted text-sm">Required hours</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:10px;padding:18px;border:1px solid rgba(0,200,255,.2);">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent2);font-weight:600;margin-bottom:6px;">Accountancy</div>
+              <div style="font-family:'DM Serif Display',serif;font-size:28px;">400</div>
+              <div class="text-muted text-sm">Required hours</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:10px;padding:18px;border:1px solid rgba(167,139,250,.2);">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent3);font-weight:600;margin-bottom:6px;">Pharmacy / Default</div>
+              <div style="font-family:'DM Serif Display',serif;font-size:28px;">1,575</div>
+              <div class="text-muted text-sm">Required hours</div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Intern</th>
+                  <th>Course</th>
+                  <th>MOA Signed</th>
+                  <th>Goal</th>
+                  <th>Logged</th>
+                  <th>Compliance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Maria Santos</td>
+                  <td>BS Pharmacy</td>
+                  <td><span class="badge verified">Signed</span></td>
+                  <td>1,575</td>
+                  <td>820</td>
+                  <td>
+                    <div class="progress-bar" style="width:120px;"><div class="progress-fill green" style="width:52%"></div></div>
+                    <div class="text-sm text-muted">52%</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Ana Delacruz</td>
+                  <td>Computer Science</td>
+                  <td><span class="badge verified">Signed</span></td>
+                  <td>500</td>
+                  <td>380</td>
+                  <td>
+                    <div class="progress-bar" style="width:120px;"><div class="progress-fill warn" style="width:76%"></div></div>
+                    <div class="text-sm text-muted">76%</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Jose Lim</td>
+                  <td>Accountancy</td>
+                  <td><span class="badge verified">Signed</span></td>
+                  <td>400</td>
+                  <td>210</td>
+                  <td>
+                    <div class="progress-bar" style="width:120px;"><div class="progress-fill green" style="width:53%"></div></div>
+                    <div class="text-sm text-muted">53%</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════ NOTIFICATIONS PAGE ════════════ -->
+    <section class="page-section" id="page-notifications">
+      <div class="card" style="max-width:680px;margin:auto;">
+        <div class="card-header">
+          <i class="fa-solid fa-bell text-accent"></i>
+          <div class="card-title">All Notifications</div>
+          <button class="btn btn-ghost btn-sm ml-auto">Mark all read</button>
+        </div>
+        <div class="card-body" style="padding:12px 22px;">
+          <div class="notif-item">
+            <div class="notif-icon warn"><i class="fa-solid fa-clock"></i></div>
+            <div>
+              <div class="notif-title">Shift Change Request</div>
+              <div class="notif-desc">Maria Santos requests a swap for Friday 3 PM shift</div>
+              <div class="notif-time">2 minutes ago</div>
+            </div>
+            <div style="display:flex;gap:6px;margin-left:auto;flex-shrink:0;">
+              <button class="btn btn-ghost btn-sm">Deny</button>
+              <button class="btn btn-primary btn-sm">Approve</button>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon danger"><i class="fa-solid fa-file-circle-xmark"></i></div>
+            <div>
+              <div class="notif-title">Document Rejected</div>
+              <div class="notif-desc">Carlos Reyes — Class 12th Certificate: unclear scan. Please re-upload.</div>
+              <div class="notif-time">1 hour ago</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon success"><i class="fa-solid fa-circle-check"></i></div>
+            <div>
+              <div class="notif-title">Evaluation Submitted</div>
+              <div class="notif-desc">Dr. Lim submitted Q2 evaluation for Ana Delacruz — overall rating: 4.5★</div>
+              <div class="notif-time">3 hours ago</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon info"><i class="fa-solid fa-rotate"></i></div>
+            <div>
+              <div class="notif-title">Rotation Assigned</div>
+              <div class="notif-desc">3 interns moved to Pharmacy Assistant department this week</div>
+              <div class="notif-time">Yesterday, 4:30 PM</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon warn"><i class="fa-solid fa-id-badge"></i></div>
+            <div>
+              <div class="notif-title">Certification Expiring Soon</div>
+              <div class="notif-desc">BLS Certification for Maria Santos and Carlos Reyes expires in 14 days</div>
+              <div class="notif-time">2 days ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /content -->
+</main>
+
+<!-- ══════════════════════════════════════════════
+     EVALUATION MODAL
+══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="evalModal" onclick="closeModalOnBg(event,'evalModal')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Preceptor Evaluation</div>
+      <button class="modal-close" onclick="closeModal('evalModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row cols-2 mb-4">
+        <div class="form-group">
+          <label class="form-label">Intern</label>
+          <select class="form-control">
+            <option>Maria Santos — INT-2024-001</option>
+            <option>Carlos Reyes — INT-2024-002</option>
+            <option>Ana Delacruz — INT-2024-003</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Evaluation Period</label>
+          <select class="form-control">
+            <option>Mid-Term Q1</option>
+            <option>End-of-Rotation Q1</option>
+            <option>Final Evaluation</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="ratingCriteria"></div>
+
+      <div class="form-group">
+        <label class="form-label">Preceptor Notes</label>
+        <textarea class="form-control" rows="4" placeholder="Detailed performance comments..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Overall Recommendation</label>
+        <select class="form-control">
+          <option>Pass — Continue Internship</option>
+          <option>Pass with Conditions</option>
+          <option>Requires Improvement</option>
+          <option>Fail — Review Required</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('evalModal')">Cancel</button>
+      <button class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Submit Evaluation</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── NAVIGATION ──
+const pageTitles = {
+  'dashboard': 'Dashboard',
+  'schedule-form': 'UCC Student Schedule Form',
+  'applications': 'Applicant Portal',
+  'interviews': 'Interview Management',
+  'evaluation': 'Preceptor Evaluations',
+  'welcome': 'Welcome Guide',
+  'profile-wizard': 'Employee Profile Wizard',
+  'documents': 'Document Submission Center',
+  'signature': 'Electronic Signature',
+  'rotations': 'Department Rotations',
+  'shifts': 'Shifts & Hour Tracking',
+  'preceptors': 'Preceptor Portal',
+  'disciplinary': 'Disciplinary Module',
+  'moa': 'MOA Compliance',
+  'notifications': 'Notifications',
+};
+
+function showPage(id) {
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const sec = document.getElementById('page-' + id);
+  if (sec) sec.classList.add('active');
+  document.getElementById('pageTitle').textContent = pageTitles[id] || id;
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.textContent.trim().toLowerCase().includes(id.replace('-', ' ')) ||
+        n.getAttribute('onclick')?.includes(id)) {
+      n.classList.add('active');
+    }
+  });
+}
+
+// ── MODAL ──
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModalOnBg(e, id) { if (e.target.id === id) closeModal(id); }
+
+// ── WIZARD ──
+function wizardStep(n) {
+  [1,2,3,4].forEach(i => {
+    const panel = document.getElementById('step-' + i);
+    if (panel) panel.style.display = i === n ? 'block' : 'none';
+    const circle = document.getElementById('ws' + i);
+    const label = document.getElementById('wl' + i);
+    if (circle) {
+      circle.classList.remove('done','active');
+      if (i < n) circle.classList.add('done');
+      else if (i === n) circle.classList.add('active');
+    }
+    if (label) {
+      label.classList.toggle('active', i <= n);
+    }
+  });
+}
+
+// ── HOUR GOAL LOGIC (MOA-based) ──
+function getHourGoal(course) {
+  const map = {
+    'computer_science': 500,
+    'accountancy': 400,
+    'pharmacy': 1575,
+    'nursing': 1575,
+    'other': 1575,
+  };
+  return map[course] || 1575;
+}
+
+function updateHourGoal(course) {
+  const goal = getHourGoal(course);
+  const names = {
+    'computer_science': 'Computer Science',
+    'accountancy': 'Accountancy',
+    'pharmacy': 'BS Pharmacy',
+    'nursing': 'Nursing',
+    'other': 'Other',
+    '': 'Default',
+  };
+  document.getElementById('requiredHoursField').value = goal;
+  document.getElementById('hourGoalDisplay').innerHTML =
+    `Course-specific hour goal: <strong style="color:var(--accent);">${goal.toLocaleString()} hours</strong> (${names[course] || 'Default'} track)`;
+}
+
+function updateHourGoalDisplay(sel) {
+  const val = sel.value;
+  const goal = getHourGoal(val);
+  const labels = {'pharmacy':'BS Pharmacy','computer_science':'Computer Science','accountancy':'Accountancy'};
+  document.getElementById('moaGoalDisplay').innerHTML =
+    `${goal.toLocaleString()} hours <span style="font-size:12px;color:var(--text3);font-weight:400;">(${labels[val] || 'Pharmacy'})</span>`;
+}
+
+// ── SHIFT CALC ──
+function calcShiftHours() {
+  const s = document.getElementById('shiftStart');
+  const e = document.getElementById('shiftEnd');
+  if (!s || !e) return;
+  const [sh,sm] = s.value.split(':').map(Number);
+  const [eh,em] = e.value.split(':').map(Number);
+  const hrs = ((eh*60+em) - (sh*60+sm)) / 60;
+  const el = document.getElementById('shiftHoursCalc');
+  if (el) el.textContent = hrs > 0 ? hrs.toFixed(1) + ' hrs' : '—';
+}
+document.addEventListener('change', e => {
+  if (e.target.id === 'shiftStart' || e.target.id === 'shiftEnd') calcShiftHours();
+});
+
+// ── RATING CRITERIA ──
+const criteria = [
+  'Clinical Knowledge & Application',
+  'Professional Attitude & Ethics',
+  'Communication Skills',
+  'Time Management',
+  'Teamwork & Collaboration',
+];
+
+function buildRatingCriteria(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = criteria.map((c,i) => `
+    <div class="form-group">
+      <label class="form-label">${c}</label>
+      <div class="stars" id="stars_${containerId}_${i}">
+        ${[1,2,3,4,5].map(s => `<span class="star" onclick="setRating('${containerId}',${i},${s})">★</span>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function setRating(container, criterion, rating) {
+  const stars = document.querySelectorAll(`#stars_${container}_${criterion} .star`);
+  stars.forEach((s,i) => s.classList.toggle('filled', i < rating));
+}
+
+buildRatingCriteria('ratingCriteria');
+buildRatingCriteria('ratingCriteriaInline');
+
+// ── CALENDAR ──
+function buildCal() {
+  const grid = document.getElementById('calGrid');
+  if (!grid) return;
+  const events = [15, 18, 22];
+  const today = 14;
+  let html = '';
+  for (let i = 1; i <= 2; i++) html += `<div></div>`; // offset for April (starts Tuesday)
+  for (let d = 1; d <= 30; d++) {
+    const cls = d === today ? 'cal-day today' : events.includes(d) ? 'cal-day has-event' : 'cal-day';
+    html += `<div class="${cls}">${d}</div>`;
+  }
+  grid.innerHTML = html;
+}
+buildCal();
+
+// ── INTERN HOUR LIST (Dashboard) ──
+const internData = [
+  { name: 'Maria Santos', course: 'pharmacy', logged: 820 },
+  { name: 'Carlos Reyes', course: 'pharmacy', logged: 1100 },
+  { name: 'Ana Delacruz', course: 'computer_science', logged: 380 },
+  { name: 'Jose Lim', course: 'accountancy', logged: 210 },
+];
+
+function buildHourList() {
+  const el = document.getElementById('hourList');
+  const el2 = document.getElementById('hourTrackers');
+  if (!el) return;
+  const html = internData.map(intern => {
+    const goal = getHourGoal(intern.course);
+    const pct = Math.min(100, Math.round((intern.logged / goal) * 100));
+    const fillClass = pct >= 90 ? 'warn' : 'green';
+    return `
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+          <div style="font-size:13px;font-weight:500;">${intern.name}</div>
+          <div style="font-size:12px;color:var(--text3);">${intern.logged.toLocaleString()} / ${goal.toLocaleString()} hrs</div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${pct}%"></div></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px;">${pct}% complete</div>
+      </div>
+    `;
+  }).join('');
+  el.innerHTML = html;
+  if (el2) el2.innerHTML = html;
+}
+buildHourList();
+
+// ── ROTATION BOARD ──
+const depts = ['Pharmacist', 'Pharmacy Technician', 'Pharmacy Assistant', 'Pharmacy Clerk', 'Unassigned'];
+const deptInterns = {
+  'Pharmacist': [{ name: 'Maria Santos', id: 'INT-2024-001' }],
+  'Pharmacy Technician': [{ name: 'Carlos Reyes', id: 'INT-2024-002' }],
+  'Pharmacy Assistant': [],
+  'Pharmacy Clerk': [{ name: 'Lena Corpuz', id: 'INT-2024-010' }],
+  'Unassigned': [{ name: 'Jose Lim', id: 'INT-2024-004' }, { name: 'Reyna Pascual', id: 'INT-2024-011' }],
+};
+
+function buildRotationBoard() {
+  const board = document.getElementById('rotationBoard');
+  if (!board) return;
+  board.innerHTML = depts.map(dept => `
+    <div class="rotation-col" ondragover="event.preventDefault()" ondrop="dropIntern(event,'${dept}')">
+      <div class="rotation-col-title">
+        ${dept}
+        <span style="background:var(--surface3);padding:2px 8px;border-radius:20px;font-size:11px;">
+          ${(deptInterns[dept]||[]).length}
+        </span>
+      </div>
+      ${(deptInterns[dept]||[]).map(intern => `
+        <div class="rotation-card" draggable="true" ondragstart="dragIntern(event,'${intern.name}','${dept}')">
+          <div class="rotation-card-name">${intern.name}</div>
+          <div class="rotation-card-meta">${intern.id}</div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+buildRotationBoard();
+
+let draggedIntern = null, draggedFrom = null;
+function dragIntern(e, name, from) {
+  draggedIntern = name; draggedFrom = from;
+}
+function dropIntern(e, to) {
+  if (!draggedIntern || draggedFrom === to) return;
+  const intern = deptInterns[draggedFrom].find(i => i.name === draggedIntern);
+  if (intern) {
+    deptInterns[draggedFrom] = deptInterns[draggedFrom].filter(i => i.name !== draggedIntern);
+    deptInterns[to].push(intern);
+  }
+  buildRotationBoard();
+}
+
+// ── DOCUMENT CHECKLIST ──
+const docs = [
+  { name: 'Class 10th Certificate', status: 'verified' },
+  { name: 'Class 12th Certificate', status: 'rejected' },
+  { name: 'Bachelor\'s Degree / Diploma', status: 'uploaded' },
+  { name: 'Government-Issued ID', status: 'verified' },
+  { name: 'Passport-size Photo (2x2)', status: 'verified' },
+  { name: 'Medical Certificate', status: 'pending' },
+  { name: 'PRC Board Rating (if applicable)', status: 'not-uploaded' },
+  { name: 'NBI Clearance', status: 'verified' },
+  { name: 'Certificate of Enrollment', status: 'uploaded' },
+  { name: 'MOA (Signed Copy)', status: 'pending' },
+];
+
+const statusLabel = { verified:'Verified', rejected:'Rejected', uploaded:'Uploaded', pending:'Pending Review', 'not-uploaded':'Not Uploaded' };
+
+function buildDocList() {
+  const el = document.getElementById('docList');
+  if (!el) return;
+  el.innerHTML = docs.map(doc => `
+    <div style="display:flex;align-items:center;gap:12px;background:var(--surface2);border-radius:8px;padding:12px 16px;border:1px solid var(--border);">
+      <i class="fa-solid fa-file-lines" style="color:var(--text3);font-size:18px;"></i>
+      <div style="flex:1;font-size:13.5px;font-weight:500;">${doc.name}</div>
+      <span class="badge ${doc.status}"><span class="badge-dot"></span>${statusLabel[doc.status]}</span>
+      <div style="display:flex;gap:6px;">
+        ${doc.status === 'not-uploaded' || doc.status === 'rejected' ? 
+          `<button class="btn btn-primary btn-sm"><i class="fa-solid fa-upload"></i> Upload</button>` :
+          `<button class="btn btn-ghost btn-sm"><i class="fa-solid fa-eye"></i> View</button>`
+        }
+        ${doc.status === 'uploaded' || doc.status === 'pending' ? 
+          `<button class="btn btn-ghost btn-sm" style="color:var(--success);border-color:rgba(34,197,94,.3);">
+            <i class="fa-solid fa-circle-check"></i> Verify
+          </button>` : ''
+        }
+        ${doc.status === 'uploaded' || doc.status === 'pending' ?
+          `<button class="btn btn-danger btn-sm"><i class="fa-solid fa-xmark"></i></button>` : ''
+        }
+      </div>
+    </div>
+  `).join('');
+}
+buildDocList();
+
+// ── SIGNATURE CANVAS ──
+const canvas = document.getElementById('signatureCanvas');
+if (canvas) {
+  const ctx = canvas.getContext('2d');
+  let drawing = false;
+  ctx.strokeStyle = '#4fffb0';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+
+  canvas.addEventListener('mousedown', e => { drawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); });
+  canvas.addEventListener('mousemove', e => {
+    if (!drawing) return;
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.stroke();
+  });
+  canvas.addEventListener('mouseup', () => drawing = false);
+  canvas.addEventListener('mouseleave', () => drawing = false);
+
+  // Touch support
+  canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const r = canvas.getBoundingClientRect();
+    drawing = true; ctx.beginPath();
+    ctx.moveTo(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+  });
+  canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (!drawing) return;
+    const r = canvas.getBoundingClientRect();
+    ctx.lineTo(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+    ctx.stroke();
+  });
+  canvas.addEventListener('touchend', () => drawing = false);
+}
+
+function clearSignature() {
+  const c = document.getElementById('signatureCanvas');
+  if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height);
+}
+
+function downloadSig() {
+  const c = document.getElementById('signatureCanvas');
+  if (!c) return;
+  const a = document.createElement('a');
+  a.download = 'signature.png';
+  a.href = c.toDataURL();
+  a.click();
+}
+
+// ── SIBLINGS / EXPERIENCE ──
+let sibCount = 2, expCount = 2;
+function addSibling() {
+  const tbody = document.getElementById('siblingsBody');
+  if (!tbody) return;
+  sibCount++;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${sibCount}</td>
+    <td><input type="text" class="form-control" style="min-width:130px;" placeholder="Full name"></td>
+    <td><input type="number" class="form-control" style="width:70px;" placeholder="Age"></td>
+    <td><select class="form-control"><option>Brother</option><option>Sister</option></select></td>
+    <td><input type="text" class="form-control" style="min-width:150px;" placeholder="School / occupation"></td>
+    <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()"><i class="fa-solid fa-trash"></i></button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function addExperience() {
+  const tbody = document.getElementById('expBody');
+  if (!tbody) return;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" class="form-control" style="min-width:160px;"></td>
+    <td><input type="text" class="form-control" style="min-width:120px;"></td>
+    <td><input type="month" class="form-control"></td>
+    <td><input type="month" class="form-control"></td>
+    <td><input type="text" class="form-control" style="min-width:120px;"></td>
+    <td><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()"><i class="fa-solid fa-trash"></i></button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+// ── DISCIPLINARY SEVERITY ──
+function setSeverity(el, type) {
+  document.querySelectorAll('.severity-opt').forEach(o => o.classList.remove('active','warn','danger','critical'));
+  el.classList.add('active', type);
+}
+
+// ── TABS ──
+document.querySelectorAll('.tabs').forEach(tabs => {
+  tabs.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+});
+</script>
+</body>
+</html>
