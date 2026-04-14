@@ -1,0 +1,923 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --teal-50: #e8f7f4; --teal-100: #c0ead8; --teal-200: #6fcba8; --teal-500: #0d8c69; --teal-700: #065c46; --teal-900: #03302a;
+    --slate-50: #f4f6f8; --slate-100: #e8ecf0; --slate-200: #d0d7e0; --slate-400: #8a96a8; --slate-600: #4a5568; --slate-800: #1a202c;
+    --amber-50: #fffbeb; --amber-200: #fcd34d; --amber-600: #d97706;
+    --sky-50: #f0f9ff; --sky-200: #bae6fd; --sky-600: #0284c7;
+    --rose-50: #fff1f2; --rose-200: #fecdd3; --rose-600: #e11d48;
+    --violet-50: #f5f3ff; --violet-200: #ddd6fe; --violet-600: #7c3aed;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .pims-root {
+    font-family: var(--font);
+    background: var(--slate-50);
+    min-height: 600px;
+    color: var(--slate-800);
+    font-size: 13px;
+  }
+
+  /* NAV */
+  .top-nav {
+    background: white;
+    border-bottom: 1px solid var(--slate-100);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 20px;
+    height: 50px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-brand {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; font-weight: 600; color: var(--teal-700);
+    letter-spacing: -0.3px;
+  }
+  .nav-brand .pill {
+    background: var(--teal-50); color: var(--teal-500);
+    font-size: 10px; padding: 2px 7px; border-radius: 20px;
+    font-family: var(--mono); font-weight: 500;
+  }
+  .nav-tabs { display: flex; gap: 2px; }
+  .nav-tab {
+    padding: 6px 14px; border-radius: 6px; cursor: pointer;
+    font-size: 12px; font-weight: 500; color: var(--slate-400);
+    border: none; background: none; transition: all .15s;
+  }
+  .nav-tab:hover { background: var(--slate-50); color: var(--slate-600); }
+  .nav-tab.active { background: var(--teal-50); color: var(--teal-700); }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .role-badge {
+    font-size: 11px; padding: 3px 10px; border-radius: 20px;
+    font-weight: 500; cursor: pointer; transition: all .15s;
+  }
+  .role-hr { background: var(--violet-50); color: var(--violet-600); border: 1px solid var(--violet-200); }
+  .role-intern { background: var(--sky-50); color: var(--sky-600); border: 1px solid var(--sky-200); }
+  .avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600;
+  }
+  .av-hr { background: var(--violet-200); color: var(--violet-600); }
+  .av-intern { background: var(--teal-100); color: var(--teal-700); }
+
+  /* LAYOUT */
+  .page-shell { display: flex; min-height: calc(600px - 50px); }
+  .sidebar {
+    width: 180px; min-width: 180px;
+    background: white;
+    border-right: 1px solid var(--slate-100);
+    padding: 16px 0;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .sidebar-section {
+    padding: 0 12px 8px;
+    font-size: 10px; font-weight: 600; letter-spacing: .8px;
+    color: var(--slate-400); text-transform: uppercase;
+    margin-top: 10px;
+  }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 16px; cursor: pointer;
+    font-size: 12px; font-weight: 500;
+    color: var(--slate-600);
+    border-left: 2px solid transparent;
+    transition: all .15s;
+  }
+  .sidebar-item:hover { background: var(--slate-50); color: var(--slate-800); }
+  .sidebar-item.active {
+    background: var(--teal-50); color: var(--teal-700);
+    border-left-color: var(--teal-500);
+  }
+  .sidebar-item .ico { font-size: 14px; width: 18px; text-align: center; }
+  .sidebar-item .badge {
+    margin-left: auto; background: var(--teal-500); color: white;
+    font-size: 9px; padding: 1px 5px; border-radius: 10px; min-width: 16px; text-align: center;
+  }
+
+  .main-content { flex: 1; overflow: hidden; }
+  .page { display: none; padding: 20px; animation: fadeIn .2s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* COMMON */
+  .page-header { margin-bottom: 18px; }
+  .page-title { font-size: 18px; font-weight: 600; color: var(--slate-800); letter-spacing: -.4px; }
+  .page-sub { font-size: 12px; color: var(--slate-400); margin-top: 3px; }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--slate-600); margin-bottom: 10px; }
+
+  /* GRID / STATS */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
+  .stat-card {
+    background: white; border: 1px solid var(--slate-100);
+    border-radius: 10px; padding: 14px 16px;
+  }
+  .stat-label { font-size: 11px; color: var(--slate-400); font-weight: 500; margin-bottom: 6px; }
+  .stat-value { font-size: 22px; font-weight: 600; color: var(--slate-800); letter-spacing: -1px; }
+  .stat-sub { font-size: 11px; color: var(--slate-400); margin-top: 3px; }
+  .stat-teal .stat-value { color: var(--teal-500); }
+  .stat-amber .stat-value { color: var(--amber-600); }
+  .stat-rose .stat-value { color: var(--rose-600); }
+
+  /* CARDS */
+  .card {
+    background: white; border: 1px solid var(--slate-100);
+    border-radius: 10px; padding: 16px;
+    margin-bottom: 12px;
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 7px; cursor: pointer;
+    font-size: 12px; font-weight: 500; font-family: var(--font);
+    border: 1px solid transparent; transition: all .15s;
+  }
+  .btn-primary { background: var(--teal-500); color: white; }
+  .btn-primary:hover { background: var(--teal-700); }
+  .btn-outline { background: white; color: var(--slate-600); border-color: var(--slate-200); }
+  .btn-outline:hover { background: var(--slate-50); }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+  .btn-danger { background: var(--rose-50); color: var(--rose-600); border-color: var(--rose-200); }
+  .btn-amber { background: var(--amber-50); color: var(--amber-600); border-color: var(--amber-200); }
+
+  /* TAGS / BADGES */
+  .tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600;
+  }
+  .tag-teal { background: var(--teal-50); color: var(--teal-500); }
+  .tag-amber { background: var(--amber-50); color: var(--amber-600); }
+  .tag-rose { background: var(--rose-50); color: var(--rose-600); }
+  .tag-sky { background: var(--sky-50); color: var(--sky-600); }
+  .tag-violet { background: var(--violet-50); color: var(--violet-600); }
+  .tag-slate { background: var(--slate-100); color: var(--slate-600); }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .data-table th { text-align: left; padding: 8px 12px; background: var(--slate-50); color: var(--slate-400); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; }
+  .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--slate-100); color: var(--slate-600); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--slate-50); }
+
+  /* FORM */
+  .form-group { margin-bottom: 12px; }
+  .form-label { display: block; font-size: 11px; font-weight: 600; color: var(--slate-600); margin-bottom: 5px; letter-spacing: .3px; }
+  .form-label .req { color: var(--rose-600); }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; padding: 8px 11px; border: 1px solid var(--slate-200);
+    border-radius: 7px; font-size: 12px; font-family: var(--font);
+    color: var(--slate-800); background: white;
+    transition: border .15s;
+    outline: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--teal-500);
+    box-shadow: 0 0 0 3px rgba(13,140,105,.08);
+  }
+  .form-textarea { resize: vertical; min-height: 72px; }
+  .form-hint { font-size: 10px; color: var(--slate-400); margin-top: 4px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+  /* TASK BANDS */
+  .task-band {
+    border-radius: 10px; margin-bottom: 10px; overflow: hidden;
+    border: 1px solid var(--slate-100);
+  }
+  .task-band-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; font-size: 12px; font-weight: 600;
+    cursor: pointer; user-select: none;
+  }
+  .task-band-header .arrow { margin-left: auto; font-size: 10px; transition: transform .2s; }
+  .task-band-header.open .arrow { transform: rotate(180deg); }
+  .band-before-lunch .task-band-header { background: var(--teal-50); color: var(--teal-700); }
+  .band-daily .task-band-header { background: var(--sky-50); color: var(--sky-600); }
+  .band-before-close .task-band-header { background: var(--amber-50); color: var(--amber-600); }
+  .band-weekly .task-band-header { background: var(--violet-50); color: var(--violet-600); }
+  .task-band-body { background: white; }
+  .task-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 14px; border-bottom: 1px solid var(--slate-100);
+    font-size: 12px;
+  }
+  .task-row:last-child { border-bottom: none; }
+  .task-row .task-check {
+    width: 16px; height: 16px; border-radius: 4px;
+    border: 1.5px solid var(--slate-200); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all .15s;
+  }
+  .task-row .task-check.done { background: var(--teal-500); border-color: var(--teal-500); color: white; font-size: 9px; }
+  .task-name { flex: 1; color: var(--slate-700); }
+  .task-name.done { text-decoration: line-through; color: var(--slate-400); }
+  .task-time { font-family: var(--mono); font-size: 10px; color: var(--slate-400); }
+  .task-assignee { font-size: 10px; color: var(--slate-400); }
+
+  /* PROGRESS */
+  .progress-bar {
+    height: 5px; background: var(--slate-100); border-radius: 10px; overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: var(--teal-500); border-radius: 10px; transition: width .4s; }
+  .progress-fill.amber { background: var(--amber-600); }
+  .progress-fill.rose { background: var(--rose-600); }
+
+  /* TIMELINE */
+  .timeline-item {
+    display: flex; gap: 12px; margin-bottom: 14px;
+  }
+  .timeline-dot {
+    width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0;
+    background: var(--teal-500);
+  }
+  .timeline-dot.pending { background: var(--amber-200); border: 2px solid var(--amber-600); width: 10px; height: 10px; margin-top: 3px; }
+  .timeline-line {
+    width: 1px; background: var(--slate-100); margin: 0 3px;
+  }
+  .timeline-content { flex: 1; }
+  .timeline-meta { font-size: 10px; color: var(--slate-400); }
+  .timeline-text { font-size: 12px; color: var(--slate-600); margin-top: 2px; }
+
+  /* ORIENTATION STEPS */
+  .orientation-step {
+    display: flex; gap: 12px; padding: 12px;
+    border: 1px solid var(--slate-100); border-radius: 8px;
+    margin-bottom: 8px; background: white; cursor: pointer;
+    transition: all .15s;
+  }
+  .orientation-step:hover { border-color: var(--teal-200); }
+  .orientation-step.active { border-color: var(--teal-500); background: var(--teal-50); }
+  .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--slate-100); color: var(--slate-400);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+  .orientation-step.active .step-num { background: var(--teal-500); color: white; }
+  .orientation-step.done .step-num { background: var(--teal-50); color: var(--teal-500); }
+  .step-content .step-title { font-size: 12px; font-weight: 600; color: var(--slate-700); }
+  .step-content .step-desc { font-size: 11px; color: var(--slate-400); margin-top: 2px; }
+
+  /* LIVE FORM special */
+  .live-form-banner {
+    background: var(--teal-500); color: white;
+    padding: 10px 16px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .live-clock {
+    font-family: var(--mono); font-size: 18px; font-weight: 500;
+    letter-spacing: 1px;
+  }
+  .timer-badge {
+    font-family: var(--mono); font-size: 12px;
+    background: rgba(255,255,255,.2); padding: 3px 10px; border-radius: 6px;
+  }
+  .checkbox-group {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .checkbox-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border: 1px solid var(--slate-100); border-radius: 6px;
+    cursor: pointer; transition: all .15s; font-size: 12px;
+  }
+  .checkbox-item:hover { background: var(--slate-50); }
+  .checkbox-item input { accent-color: var(--teal-500); }
+  .validation-error { font-size: 10px; color: var(--rose-600); margin-top: 3px; display: none; }
+  .validation-error.show { display: block; }
+  .submit-success {
+    display: none; background: var(--teal-50); border: 1px solid var(--teal-200);
+    border-radius: 8px; padding: 14px; text-align: center;
+    color: var(--teal-700); font-size: 13px;
+  }
+  .submit-success.show { display: block; }
+  .submit-success .big-check { font-size: 28px; margin-bottom: 6px; }
+  .submit-success .success-title { font-weight: 600; font-size: 14px; }
+
+  /* RULES list */
+  .rule-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px; border: 1px solid var(--slate-100);
+    border-radius: 8px; margin-bottom: 6px; background: white;
+  }
+  .rule-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--slate-100); color: var(--slate-600);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; flex-shrink: 0;
+  }
+  .rule-text { font-size: 12px; color: var(--slate-700); flex: 1; }
+  .rule-actions { display: flex; gap: 4px; }
+
+  /* LOG MONITOR */
+  .log-row {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 10px 12px; border-bottom: 1px solid var(--slate-100);
+    font-size: 12px;
+  }
+  .log-time { font-family: var(--mono); font-size: 10px; color: var(--slate-400); min-width: 54px; margin-top: 1px; }
+  .log-intern { font-weight: 600; color: var(--slate-700); min-width: 80px; }
+  .log-detail { color: var(--slate-600); flex: 1; }
+  .log-task { font-size: 10px; color: var(--slate-400); }
+
+  /* SCROLLABLE */
+  .scroll-area { max-height: 340px; overflow-y: auto; }
+  .scroll-area::-webkit-scrollbar { width: 4px; }
+  .scroll-area::-webkit-scrollbar-track { background: transparent; }
+  .scroll-area::-webkit-scrollbar-thumb { background: var(--slate-200); border-radius: 4px; }
+
+  /* INTERN TASK CARD */
+  .intern-task {
+    border: 1px solid var(--slate-100); border-radius: 8px;
+    padding: 12px; margin-bottom: 8px; background: white;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer; transition: all .15s;
+  }
+  .intern-task:hover { border-color: var(--teal-200); box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+  .intern-task .task-icon {
+    width: 34px; height: 34px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .icon-teal { background: var(--teal-50); }
+  .icon-sky { background: var(--sky-50); }
+  .icon-amber { background: var(--amber-50); }
+  .icon-violet { background: var(--violet-50); }
+  .intern-task-info { flex: 1; }
+  .intern-task-name { font-size: 12px; font-weight: 600; color: var(--slate-700); }
+  .intern-task-meta { font-size: 11px; color: var(--slate-400); margin-top: 2px; }
+  .intern-task-status { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 30px; color: var(--slate-400); font-size: 12px; }
+  .empty .empty-icon { font-size: 28px; margin-bottom: 8px; }
+
+  /* NOTIFICATION DOT */
+  .notif { position: relative; }
+  .notif-dot {
+    position: absolute; top: -2px; right: -2px;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--rose-600); border: 1.5px solid white;
+  }
+
+  .divider { border: none; border-top: 1px solid var(--slate-100); margin: 14px 0; }
+
+  .inline-tip {
+    display: flex; align-items: flex-start; gap: 8px;
+    background: var(--sky-50); border: 1px solid var(--sky-200);
+    border-radius: 7px; padding: 10px 12px; font-size: 11px;
+    color: var(--sky-600); margin-bottom: 12px;
+  }
+</style>
+
+<div class="pims-root">
+  <!-- TOP NAV -->
+  <div class="top-nav">
+    <div class="nav-brand">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="16" height="16" rx="4" fill="#0d8c69" opacity=".15"/><path d="M10 5v10M5 10h10" stroke="#0d8c69" stroke-width="2" stroke-linecap="round"/></svg>
+      PharmIntern
+      <span class="pill">v1.0</span>
+    </div>
+    <div class="nav-center" style="flex:1;text-align:center;font-size:12px;color:var(--slate-400);font-weight:500">HR administration</div>
+    <div class="nav-right">
+      <span class="role-badge role-hr" id="role-indicator">HR Admin</span>
+      <div class="avatar av-hr" id="user-avatar">MA</div>
+    </div>
+  </div>
+
+  <div class="page-shell">
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+      <div id="sidebar-content"></div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content" id="main-content"></div>
+  </div>
+</div>
+
+<script>
+let currentPage = 'hr-dashboard';
+
+const hrPages = [
+  { id: 'hr-dashboard', label: 'Dashboard', ico: '⬡', section: 'Overview' },
+  { id: 'house-rules', label: 'House Rules', ico: '📋', section: 'Management' },
+  { id: 'orientation', label: 'Orientation', ico: '🎓', section: 'Management' },
+  { id: 'task-management', label: 'Tasks', ico: '✓', section: 'Management', badge: '3' },
+  { id: 'log-monitor', label: 'Log Monitor', ico: '📊', section: 'Reports' },
+];
+
+function renderSidebar() {
+  const pages = hrPages;
+  const el = document.getElementById('sidebar-content');
+  let html = '';
+  let lastSection = '';
+  pages.forEach(p => {
+    if (p.section !== lastSection) {
+      html += `<div class="sidebar-section">${p.section}</div>`;
+      lastSection = p.section;
+    }
+    html += `<div class="sidebar-item ${p.id===currentPage?'active':''}" onclick="navigate('${p.id}')" id="nav-${p.id}">
+      <span class="ico">${p.ico}</span>
+      <span>${p.label}</span>
+      ${p.badge ? `<span class="badge">${p.badge}</span>` : ''}
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function navigate(pageId) {
+  currentPage = pageId;
+  renderSidebar();
+  document.getElementById('main-content').innerHTML = renderPage(pageId);
+  if (pageId === 'task-management') initTaskToggles();
+}
+
+function renderPage(id) {
+  const pages = {
+    'hr-dashboard': renderHRDashboard,
+    'house-rules': renderHouseRules,
+    'orientation': renderOrientation,
+    'task-management': renderTaskManagement,
+    'log-monitor': renderLogMonitor,
+  };
+  return (pages[id] || (() => '<div class="page active"><p>Page not found</p></div>'))();
+}
+
+function renderHRDashboard() {
+  return `<div class="page active">
+    <div class="page-header">
+      <div class="page-title">HR Dashboard</div>
+      <div class="page-sub">Tuesday, April 14, 2026 · Pharmacy Internship Program</div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card stat-teal">
+        <div class="stat-label">Active Interns</div>
+        <div class="stat-value">8</div>
+        <div class="stat-sub">4 present today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Tasks Completed</div>
+        <div class="stat-value">24</div>
+        <div class="stat-sub">of 32 today</div>
+      </div>
+      <div class="stat-card stat-amber">
+        <div class="stat-label">Pending Logs</div>
+        <div class="stat-value">3</div>
+        <div class="stat-sub">awaiting review</div>
+      </div>
+      <div class="stat-card stat-rose">
+        <div class="stat-label">Overdue Tasks</div>
+        <div class="stat-value">1</div>
+        <div class="stat-sub">before-lunch slot</div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header">
+          <span class="section-title">Today's Task Progress</span>
+          <button class="btn btn-outline btn-sm" onclick="navigate('task-management')">View All</button>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:11px;color:var(--slate-400)">
+            <span>Before Lunch</span><span style="font-weight:600;color:var(--teal-500)">6 / 8</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:75%"></div></div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:11px;color:var(--slate-400)">
+            <span>Daily Tasks</span><span style="font-weight:600;color:var(--sky-600)">10 / 12</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:83%;background:var(--sky-600)"></div></div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:11px;color:var(--slate-400)">
+            <span>Before Close</span><span style="font-weight:600;color:var(--amber-600)">4 / 8</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill amber" style="width:50%"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:11px;color:var(--slate-400)">
+            <span>Weekly</span><span style="font-weight:600;color:var(--violet-600)">4 / 4</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--violet-600)"></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="section-title">Recent Activity</span>
+          <button class="btn btn-outline btn-sm" onclick="navigate('log-monitor')">Full Log</button>
+        </div>
+        <div class="scroll-area" style="max-height:170px">
+          ${[
+            {t:'09:14', name:'J. Reyes', act:'Submitted morning log', task:'Before Lunch · Pill Counting'},
+            {t:'09:02', name:'A. Santos', act:'Completed task', task:'Daily · Inventory Check'},
+            {t:'08:45', name:'M. Cruz', act:'Submitted morning log', task:'Before Lunch · Label Check'},
+            {t:'08:30', name:'J. Reyes', act:'Started session', task:''},
+          ].map(l => `<div class="log-row">
+            <span class="log-time">${l.t}</span>
+            <span class="log-intern">${l.name}</span>
+            <div><div class="log-detail">${l.act}</div><div class="log-task">${l.task}</div></div>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="section-title">Intern Status — Today</span>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Intern</th><th>Status</th><th>Current Task</th><th>Logs Submitted</th><th>Completion</th><th></th></tr></thead>
+        <tbody>
+          ${[
+            {n:'Juan Reyes', s:'Present', t:'Pill Counting', logs:2, pct:75},
+            {n:'Ana Santos', s:'Present', t:'Label Verification', logs:3, pct:90},
+            {n:'Mark Cruz', s:'Late', t:'Stock Sorting', logs:1, pct:40},
+            {n:'Lea Tan', s:'Absent', t:'—', logs:0, pct:0},
+          ].map(i => `<tr>
+            <td><strong>${i.n}</strong></td>
+            <td><span class="tag ${i.s==='Present'?'tag-teal':i.s==='Late'?'tag-amber':'tag-rose'}">${i.s}</span></td>
+            <td>${i.t}</td>
+            <td style="font-family:var(--mono)">${i.logs}</td>
+            <td style="width:120px"><div class="progress-bar" style="width:100px"><div class="progress-fill ${i.pct<50?'rose':i.pct<80?'amber':''}" style="width:${i.pct}%"></div></div></td>
+            <td><button class="btn btn-outline btn-sm" onclick="navigate('log-monitor')">View</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderHouseRules() {
+  return `<div class="page active">
+    <div class="page-header" style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div class="page-title">House Rules Management</div>
+        <div class="page-sub">Define and manage internship conduct guidelines</div>
+      </div>
+      <button class="btn btn-primary" onclick="addRule()">＋ Add Rule</button>
+    </div>
+    <div class="two-col">
+      <div>
+        <div class="section-title" style="margin-bottom:10px">Published Rules <span class="tag tag-teal" style="margin-left:6px">6 Active</span></div>
+        <div id="rules-list">
+          ${[
+            {n:1, text:'Interns must report at least 15 minutes before shift start.', cat:'Attendance'},
+            {n:2, text:'Proper pharmacy attire (white coat, closed shoes, hair net) must be worn at all times.', cat:'Attire'},
+            {n:3, text:'Mobile phones are not to be used on the dispensing floor during work hours.', cat:'Conduct'},
+            {n:4, text:'All task logs must be submitted before the end of each slot (before lunch / before close).', cat:'Compliance'},
+            {n:5, text:'Interns must not handle prescriptions or dispense medications without licensed supervision.', cat:'Safety'},
+            {n:6, text:'Confidentiality of all patient and pharmacy data must be maintained at all times.', cat:'Privacy'},
+          ].map(r => `
+          <div class="rule-item">
+            <div class="rule-num">${r.n}</div>
+            <div style="flex:1">
+              <div class="rule-text">${r.text}</div>
+              <span class="tag tag-slate" style="margin-top:5px">${r.cat}</span>
+            </div>
+            <div class="rule-actions">
+              <button class="btn btn-outline btn-sm">Edit</button>
+              <button class="btn btn-danger btn-sm">✕</button>
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div>
+        <div class="section-title" style="margin-bottom:10px">Add New Rule</div>
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label">Rule Category <span class="req">*</span></label>
+            <select class="form-select">
+              <option>Attendance</option>
+              <option>Attire</option>
+              <option>Conduct</option>
+              <option>Compliance</option>
+              <option>Safety</option>
+              <option>Privacy</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Rule Description <span class="req">*</span></label>
+            <textarea class="form-textarea" placeholder="State the rule clearly and concisely..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Visibility</label>
+            <select class="form-select">
+              <option>Visible to All Interns</option>
+              <option>HR Internal Only</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" style="width:100%">Save Rule</button>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <div class="section-title" style="margin-bottom:10px">Acknowledgement Tracker</div>
+          <table class="data-table">
+            <thead><tr><th>Intern</th><th>Acknowledged</th><th>Date</th></tr></thead>
+            <tbody>
+              <tr><td>Juan Reyes</td><td><span class="tag tag-teal">Yes</span></td><td style="font-family:var(--mono);font-size:11px">Apr 01</td></tr>
+              <tr><td>Ana Santos</td><td><span class="tag tag-teal">Yes</span></td><td style="font-family:var(--mono);font-size:11px">Apr 01</td></tr>
+              <tr><td>Mark Cruz</td><td><span class="tag tag-amber">Pending</span></td><td style="font-family:var(--mono);font-size:11px">—</td></tr>
+              <tr><td>Lea Tan</td><td><span class="tag tag-rose">No</span></td><td style="font-family:var(--mono);font-size:11px">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderOrientation() {
+  return `<div class="page active">
+    <div class="page-header" style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div class="page-title">Orientation Module</div>
+        <div class="page-sub">Manage company orientation content and intern progress</div>
+      </div>
+      <button class="btn btn-primary">＋ Add Module</button>
+    </div>
+    <div class="two-col">
+      <div>
+        <div class="section-title" style="margin-bottom:10px">Orientation Modules</div>
+        ${[
+          {n:1, title:'Welcome & Company Overview', desc:'Pharmacy background, mission & values', done:true, time:'30 min'},
+          {n:2, title:'Pharmacy Layout & Zones', desc:'Dispensing, storage, consultation areas', done:true, time:'45 min'},
+          {n:3, title:'Drug Classification Basics', desc:'OTC, Rx, controlled substances overview', done:false, time:'60 min', active:true},
+          {n:4, title:'Documentation & Record-Keeping', desc:'Log forms, prescription handling protocols', done:false, time:'45 min'},
+          {n:5, title:'Safety & Emergency Protocols', desc:'Fire exits, drug spill procedures, first aid', done:false, time:'30 min'},
+        ].map(m => `<div class="orientation-step ${m.active?'active':m.done?'done':''}" onclick="selectOriStep(this)">
+          <div class="step-num">${m.done ? '✓' : m.n}</div>
+          <div class="step-content" style="flex:1">
+            <div class="step-title">${m.title}</div>
+            <div class="step-desc">${m.desc}</div>
+          </div>
+          <div style="text-align:right">
+            <span class="tag ${m.done?'tag-teal':m.active?'tag-sky':'tag-slate'}">${m.done?'Done':m.active?'Active':'Pending'}</span>
+            <div style="font-size:10px;color:var(--slate-400);margin-top:4px">${m.time}</div>
+          </div>
+        </div>`).join('')}
+      </div>
+      <div>
+        <div class="section-title" style="margin-bottom:10px">Module Details — Drug Classification</div>
+        <div class="card">
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <span class="tag tag-sky">Active</span>
+            <span class="tag tag-slate">60 min</span>
+            <span class="tag tag-amber">In Progress</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Module Title</label>
+            <input class="form-input" value="Drug Classification Basics">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Content / Script</label>
+            <textarea class="form-textarea" style="min-height:100px">Cover the three main drug categories: Over-the-Counter (OTC), Prescription-only (Rx), and Controlled Substances. Explain labeling requirements and intern handling restrictions.</textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Presenter</label>
+            <input class="form-input" value="Maria Aquino, RPh">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Scheduled Date</label>
+              <input class="form-input" type="date" value="2026-04-15">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Duration</label>
+              <input class="form-input" value="60 minutes">
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" style="flex:1">Save Changes</button>
+            <button class="btn btn-outline">Preview</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:10px">
+          <div class="section-title" style="margin-bottom:10px">Intern Completion</div>
+          <div class="progress-bar" style="margin-bottom:8px"><div class="progress-fill" style="width:50%"></div></div>
+          <div style="font-size:11px;color:var(--slate-400);margin-bottom:10px">4 of 8 interns completed all orientation modules</div>
+          <table class="data-table">
+            <thead><tr><th>Intern</th><th>Progress</th><th>Last</th></tr></thead>
+            <tbody>
+              <tr><td>J. Reyes</td><td><span class="tag tag-teal">5/5</span></td><td style="font-size:10px;font-family:var(--mono)">Apr 12</td></tr>
+              <tr><td>A. Santos</td><td><span class="tag tag-sky">3/5</span></td><td style="font-size:10px;font-family:var(--mono)">Apr 11</td></tr>
+              <tr><td>M. Cruz</td><td><span class="tag tag-amber">2/5</span></td><td style="font-size:10px;font-family:var(--mono)">Apr 10</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderTaskManagement() {
+  const bands = [
+    {
+      id:'bl', cls:'band-before-lunch', label:'Before Lunch Tasks', ico:'🌅', time:'8:00 – 12:00',
+      tasks: [
+        {id:'bl1', name:'Pill Counting & Verification', assignee:'J. Reyes, A. Santos', duration:'30 min'},
+        {id:'bl2', name:'Label Accuracy Check', assignee:'M. Cruz', duration:'20 min'},
+        {id:'bl3', name:'Morning Drug Tray Setup', assignee:'All Interns', duration:'15 min'},
+        {id:'bl4', name:'Expired Stock Spot Check', assignee:'L. Tan', duration:'20 min'},
+      ]
+    },
+    {
+      id:'d', cls:'band-daily', label:'Daily Tasks (All Day)', ico:'📅', time:'8:00 – 17:00',
+      tasks: [
+        {id:'d1', name:'Patient Queue Assistance', assignee:'Rotation', duration:'Ongoing'},
+        {id:'d2', name:'Prescription Filing & Organization', assignee:'A. Santos', duration:'15 min'},
+        {id:'d3', name:'Drug Counseling Observation', assignee:'All Interns', duration:'As needed'},
+      ]
+    },
+    {
+      id:'cl', cls:'band-before-close', label:'Before Closing Tasks', ico:'🌙', time:'16:00 – 18:00',
+      tasks: [
+        {id:'cl1', name:'End-of-Day Inventory Count', assignee:'J. Reyes', duration:'30 min'},
+        {id:'cl2', name:'Refrigerator Temperature Log', assignee:'M. Cruz', duration:'10 min'},
+        {id:'cl3', name:'Dispensing Area Cleanup', assignee:'All Interns', duration:'20 min'},
+      ]
+    },
+    {
+      id:'wk', cls:'band-weekly', label:'Weekly Tasks', ico:'📆', time:'Every Monday',
+      tasks: [
+        {id:'wk1', name:'Full Shelf Audit & FEFO Check', assignee:'All Interns', duration:'60 min'},
+        {id:'wk2', name:'Waste Disposal Documentation', assignee:'J. Reyes', duration:'30 min'},
+        {id:'wk3', name:'Weekly Progress Report Submission', assignee:'All Interns', duration:'30 min'},
+      ]
+    },
+  ];
+
+  return `<div class="page active">
+    <div class="page-header" style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div class="page-title">Task Management</div>
+        <div class="page-sub">Pharmacy routine task scheduler — organized by time slot</div>
+      </div>
+      <button class="btn btn-primary">＋ Add Task</button>
+    </div>
+    <div class="inline-tip">
+      <span>ℹ</span>
+      <span>Tasks are structured by pharmacy workflow slots. Click any task band to expand or collapse. Assign tasks to individual interns or all interns.</span>
+    </div>
+    ${bands.map(b => `
+    <div class="task-band ${b.cls}" id="band-${b.id}">
+      <div class="task-band-header open" onclick="toggleBand('${b.id}')">
+        <span>${b.ico}</span>
+        <span>${b.label}</span>
+        <span class="tag tag-slate">${b.time}</span>
+        <span class="tag tag-teal">${b.tasks.length} tasks</span>
+        <span class="arrow">▾</span>
+      </div>
+      <div class="task-band-body" id="body-${b.id}">
+        <table class="data-table">
+          <thead><tr><th>Task Name</th><th>Assigned To</th><th>Duration</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${b.tasks.map(t => `<tr>
+              <td><strong>${t.name}</strong></td>
+              <td><span style="font-size:11px">${t.assignee}</span></td>
+              <td><span class="tag tag-slate">${t.duration}</span></td>
+              <td><span class="tag ${b.id==='d'?'tag-teal':'tag-amber'}">${b.id==='d'?'Active':'Pending'}</span></td>
+              <td style="display:flex;gap:4px">
+                <button class="btn btn-outline btn-sm">Edit</button>
+                <button class="btn btn-danger btn-sm">✕</button>
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        <div style="padding:10px 14px;border-top:1px solid var(--slate-100);display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm">＋ Add to this slot</button>
+          <button class="btn btn-outline btn-sm">Assign All</button>
+        </div>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function renderLogMonitor() {
+  return `<div class="page active">
+    <div class="page-header" style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div class="page-title">Activity Log Monitor</div>
+        <div class="page-sub">Real-time intern task submissions — Internship Routine Database</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <select class="form-select" style="width:120px;padding:6px 10px;font-size:12px">
+          <option>All Interns</option>
+          <option>J. Reyes</option>
+          <option>A. Santos</option>
+        </select>
+        <select class="form-select" style="width:130px;padding:6px 10px;font-size:12px">
+          <option>All Slots</option>
+          <option>Before Lunch</option>
+          <option>Daily</option>
+          <option>Before Close</option>
+          <option>Weekly</option>
+        </select>
+        <button class="btn btn-outline btn-sm">Export CSV</button>
+      </div>
+    </div>
+    <div class="stats-row" style="grid-template-columns:repeat(3,1fr)">
+      <div class="stat-card stat-teal">
+        <div class="stat-label">Logs Today</div>
+        <div class="stat-value">12</div>
+        <div class="stat-sub">across 4 interns</div>
+      </div>
+      <div class="stat-card stat-amber">
+        <div class="stat-label">Pending Review</div>
+        <div class="stat-value">3</div>
+        <div class="stat-sub">flagged for attention</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Avg Submission Time</div>
+        <div class="stat-value">8:42</div>
+        <div class="stat-sub">AM for morning logs</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="section-title">Submission Log — April 14, 2026</span>
+        <span class="tag tag-teal">Live</span>
+      </div>
+      <div class="scroll-area">
+        <table class="data-table">
+          <thead><tr><th>Time</th><th>Intern</th><th>Task</th><th>Slot</th><th>Duration</th><th>Status</th><th>Notes</th><th></th></tr></thead>
+          <tbody>
+            ${[
+              {t:'09:14',n:'J. Reyes',task:'Pill Counting & Verification',slot:'Before Lunch',dur:'28 min',s:'Reviewed',note:'All counts matched'},
+              {t:'09:02',n:'A. Santos',task:'Prescription Filing',slot:'Daily',dur:'14 min',s:'Reviewed',note:''},
+              {t:'08:55',n:'M. Cruz',task:'Morning Drug Tray Setup',slot:'Before Lunch',dur:'16 min',s:'Pending',note:'Tray 3 incomplete'},
+              {t:'08:45',n:'J. Reyes',task:'Label Accuracy Check',slot:'Before Lunch',dur:'21 min',s:'Reviewed',note:''},
+              {t:'08:30',n:'A. Santos',task:'Patient Queue Assistance',slot:'Daily',dur:'Ongoing',s:'Active',note:''},
+              {t:'08:22',n:'M. Cruz',task:'Expired Stock Check',slot:'Before Lunch',dur:'18 min',s:'Flagged',note:'Found 2 expired items'},
+            ].map(l => `<tr>
+              <td style="font-family:var(--mono);font-size:11px">${l.t}</td>
+              <td><strong>${l.n}</strong></td>
+              <td>${l.task}</td>
+              <td><span class="tag tag-slate" style="font-size:10px">${l.slot}</span></td>
+              <td style="font-family:var(--mono);font-size:11px">${l.dur}</td>
+              <td><span class="tag ${l.s==='Reviewed'?'tag-teal':l.s==='Active'?'tag-sky':l.s==='Flagged'?'tag-rose':'tag-amber'}">${l.s}</span></td>
+              <td style="font-size:11px;color:var(--slate-400)">${l.note}</td>
+              <td><button class="btn btn-outline btn-sm">Review</button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ---- LOGIC ----
+
+function toggleBand(id) {
+  const body = document.getElementById('body-' + id);
+  const header = body.previousElementSibling;
+  if (body.style.display === 'none') {
+    body.style.display = '';
+    header.classList.add('open');
+  } else {
+    body.style.display = 'none';
+    header.classList.remove('open');
+  }
+}
+
+function toggleCheck(id) {
+  const chk = document.getElementById('chk-' + id);
+  const name = document.getElementById('tname-' + id);
+  if (!chk) return;
+  const isDone = chk.classList.toggle('done');
+  chk.textContent = isDone ? '✓' : '';
+  if (name) {
+    name.classList.toggle('done', isDone);
+    name.style.textDecoration = isDone ? 'line-through' : '';
+    name.style.color = isDone ? 'var(--slate-400)' : '';
+  }
+}
+
+function selectOriStep(el) {
+  document.querySelectorAll('.orientation-step').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function addRule() {}
+
+function initTaskToggles() {}
+
+// Init
+renderSidebar();
+navigate('hr-dashboard');
+</script>
