@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   
+    <title>Customer Health Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+        body { font-family: 'Outfit', sans-serif; }
+        .bg-gradient-soft { background: linear-gradient(180deg, #f3f6fb 0%, #eef4f8 100%); }
+        
+        /* Modal Animation & Styling */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .modal-backdrop.active { display: flex; }
+        .modal-content {
+            transform: scale(0.95);
+            transition: all 0.3s ease-out;
+        }
+        .modal-backdrop.active .modal-content { transform: scale(1); }
+    </style>
+</head>
+<body class="bg-gradient-soft min-h-screen">
+
+    <nav class="bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="bg-emerald-600 p-2 rounded-xl text-white shadow-lg shadow-emerald-200">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+                <span class="text-xl font-bold text-slate-800 tracking-tight">PharmDesk</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <button class="relative p-2 text-slate-400 hover:text-emerald-600 transition">
+                    <i class="fas fa-bell"></i>
+                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                </button>
+                <div class="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm overflow-hidden">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Kyla" alt="User Avatar">
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-6 md:p-8">
+        <section class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800">Hello, Kyla A. Alfaro!</h1>
+                <p class="text-slate-500 font-medium">Manage your health and prescriptions in one place.</p>
+            </div>
+            <button onclick="openPrescriptionModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-emerald-200 transition transform hover:-translate-y-1 flex items-center gap-3">
+                <i class="fas fa-plus-circle"></i> Present New Prescription
+            </button>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-12 space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Active Orders</p>
+                        <h3 class="text-2xl font-bold text-slate-800">02</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">For Pickup</p>
+                        <h3 class="text-2xl font-bold text-emerald-600">01</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Savings</p>
+                        <h3 class="text-2xl font-bold text-emerald-600">₱150.00</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="p-6 border-b border-slate-50 flex justify-between items-center">
+                        <h2 class="font-bold text-slate-800">Recent Prescription Requests</h2>
+                        <a href="#" class="text-xs font-bold text-emerald-600 hover:underline">View All</a>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                <tr>
+                                    <th class="px-6 py-4">Request ID</th>
+                                    <th class="px-6 py-4">Date</th>
+                                    <th class="px-6 py-4">Medication</th>
+                                    <th class="px-6 py-4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm divide-y divide-slate-50">
+                                <tr>
+                                    <td class="px-6 py-4 font-bold text-slate-700">#RX-8821</td>
+                                    <td class="px-6 py-4 text-slate-500">April 14, 2026</td>
+                                    <td class="px-6 py-4 font-semibold">Metformin 500mg</td>
+                                    <td class="px-6 py-4">
+                                        <span class="px-3 py-1 bg-emerald-100 text-emerald-600 rounded-full text-[10px] font-black uppercase">Verifying</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="prescriptionModal" class="modal-backdrop">
+        <div class="modal-content bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden">
+            <div class="bg-emerald-600 p-8 text-white relative">
+                <button onclick="closePrescriptionModal()" class="absolute top-6 right-6 text-white/80 hover:text-white transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mb-4">
+                    <i class="fas fa-file-medical text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold">Present Prescription</h2>
+                <p class="text-emerald-100 text-sm mt-1">Please provide the details from your medical form.</p>
+            </div>
+
+            <form id="submissionForm" class="p-8 space-y-6">
+                <div class="group relative border-4 border-dashed border-slate-100 rounded-3xl p-8 text-center hover:bg-emerald-50/50 transition-all cursor-pointer">
+                    <input type="file" id="rxImage" class="absolute inset-0 opacity-0 cursor-pointer z-10" required>
+                    <div class="space-y-2">
+                        <div class="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto text-emerald-600">
+                            <i class="fas fa-camera text-xl"></i>
+                        </div>
+                        <p class="text-sm font-bold text-slate-700">Take a photo or Upload</p>
+                        <p class="text-[10px] text-slate-400 font-medium">Ensure doctor's signature is visible</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Patient Name</label>
+                        <input type="text" value="Kyla A. Alfaro" class="w-full mt-1 px-5 py-3.5 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-600/20 outline-none font-medium text-slate-700">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Address</label>
+                        <input type="text" placeholder="House No, Street, Barangay..." class="w-full mt-1 px-5 py-3.5 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-600/20 outline-none font-medium text-slate-700">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-100 transition-all flex items-center justify-center gap-2">
+                    Submit to Pharmacist <i class="fas fa-paper-plane text-xs"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('prescriptionModal');
+        const form = document.getElementById('submissionForm');
+
+        function openPrescriptionModal() {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closePrescriptionModal() {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modal when clicking outside of the content
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closePrescriptionModal();
+        });
+
+        // Handle Submission
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Success! Your prescription has been presented. Please wait for verification at the counter.');
+            closePrescriptionModal();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,468 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Poppins","Segoe UI",Arial,sans-serif;background:linear-gradient(180deg,#f3f6fb 0%,#eef4f8 100%);color:var(--color-text-primary);line-height:1.4}
+.db{padding:1rem;max-width:1320px;margin:0 auto}
+.app-shell{display:grid;grid-template-columns:240px 1fr;gap:14px;align-items:start}
+.sidebar{background:rgba(255,255,255,.95);border:1px solid rgba(15,40,70,.08);border-radius:14px;padding:14px 10px;box-shadow:0 10px 24px rgba(16,47,87,.06);position:sticky;top:12px}
+.side-brand{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:600;padding:8px 10px;margin-bottom:10px}
+.side-brand-dot{width:11px;height:11px;border-radius:50%;background:#1D9E75}
+.side-nav{display:flex;flex-direction:column;gap:6px}
+.side-btn{width:100%;text-align:left;padding:10px 12px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--color-text-secondary);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s ease}
+.side-btn:hover{background:#f4f8fb;color:var(--color-text-primary)}
+.side-btn.active{background:#eaf6f1;border-color:#9fe1cb;color:#0f6e56}
+.side-section{margin-top:14px;padding:0 10px}
+.side-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:7px}
+.side-note{font-size:12px;color:var(--color-text-secondary);line-height:1.6}
+.workspace{min-width:0}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(255,255,255,.88);border:1px solid rgba(15,40,70,.08);border-radius:14px;backdrop-filter:blur(8px);box-shadow:0 10px 24px rgba(16,47,87,.06);margin-bottom:1.2rem}
+.logo{font-size:15px;font-weight:600;color:var(--color-text-primary);display:flex;align-items:center;gap:8px;letter-spacing:.01em}
+.logo-dot{width:10px;height:10px;border-radius:50%;background:#1D9E75}
+.user-info{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--color-text-secondary)}
+.avatar{width:32px;height:32px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#0F6E56;border:1px solid #9FE1CB}
+.steps{display:flex;align-items:center;gap:0;padding:8px 10px;margin-bottom:1.25rem;overflow-x:auto;background:rgba(255,255,255,.7);border:1px solid rgba(15,40,70,.08);border-radius:12px}
+.step{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--border-radius-md);cursor:pointer;font-size:13px;font-weight:500;color:var(--color-text-secondary);white-space:nowrap;border:1px solid transparent;transition:all .2s ease}
+.step.active{background:var(--color-background-primary);border-color:rgba(15,40,70,.12);color:var(--color-text-primary);box-shadow:0 2px 10px rgba(16,47,87,.08)}
+.step-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.step.active .step-num{background:#1D9E75;color:#fff}
+.step.done .step-num{background:#9FE1CB;color:#0F6E56}
+.step.done{color:var(--color-text-secondary)}
+.arrow{color:var(--color-border-secondary);margin:0 4px;font-size:12px}
+.main{padding:0 6px}
+.dashboard-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 6px 1rem}
+.dash-card{background:rgba(255,255,255,.88);border:1px solid rgba(15,40,70,.08);border-radius:10px;padding:11px 12px}
+.dash-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:4px}
+.dash-value{font-size:18px;font-weight:600;color:var(--color-text-primary)}
+.dash-sub{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+.panel{display:none}
+.panel.active{display:block}
+.card{background:rgba(255,255,255,.94);border:1px solid rgba(15,40,70,.08);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem;box-shadow:0 6px 18px rgba(16,47,87,.06)}
+.card-title{font-size:14px;font-weight:600;color:var(--color-text-primary);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.badge{font-size:11px;padding:3px 8px;border-radius:var(--border-radius-md);font-weight:400}
+.badge-green{background:#E1F5EE;color:#0F6E56}
+.badge-amber{background:#FAEEDA;color:#854F0B}
+.badge-red{background:#FCEBEB;color:#A32D2D}
+.badge-blue{background:#E6F1FB;color:#185FA5}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.metric{background:rgba(255,255,255,.8);border:1px solid rgba(15,40,70,.08);border-radius:10px;padding:12px 14px;box-shadow:0 4px 14px rgba(16,47,87,.05);transition:transform .15s ease,box-shadow .15s ease}
+.metric:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(16,47,87,.08)}
+.metric-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
+.metric-val{font-size:22px;font-weight:500;color:var(--color-text-primary)}
+.metric-sub{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 10px;font-size:11px;font-weight:600;color:var(--color-text-secondary);border-bottom:1px solid var(--color-border-tertiary);text-transform:uppercase;letter-spacing:0.04em;background:rgba(240,245,250,.8)}
+td{padding:10px;border-bottom:1px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even) td{background:rgba(245,248,252,.55)}
+tr:hover td{background:var(--color-background-secondary)}
+.pr-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.pr-meta{font-size:12px;color:var(--color-text-secondary);line-height:1.8}
+.pr-meta strong{color:var(--color-text-primary);font-weight:500}
+.section-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group label{font-size:12px;color:var(--color-text-secondary)}
+.form-group input,.form-group select{font-size:13px;padding:8px 10px;border:1px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);outline:none;transition:border-color .15s ease,box-shadow .15s ease}
+.form-group input:focus,.form-group select:focus{border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,.14)}
+.btn{font-size:13px;padding:9px 16px;border-radius:10px;cursor:pointer;border:1px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);font-weight:500;transition:all .15s ease}
+.btn:hover{background:var(--color-background-secondary);transform:translateY(-1px)}
+.btn-primary{background:#1D9E75;border-color:#0F6E56;color:#fff;font-weight:600;box-shadow:0 8px 16px rgba(15,110,86,.2)}
+.btn-primary:hover{background:#0F6E56}
+.btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem}
+.po-box{background:#E1F5EE;border:0.5px solid #9FE1CB;border-radius:var(--border-radius-lg);padding:1.25rem;margin-bottom:1rem}
+.po-num{font-size:20px;font-weight:500;color:#085041;margin-bottom:4px}
+.po-sub{font-size:13px;color:#0F6E56}
+.inv-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.inv-row:last-child{border-bottom:none}
+.inv-name{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.inv-detail{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.prog-bar{height:6px;border-radius:3px;background:var(--color-background-secondary);overflow:hidden;margin-top:6px;width:100px}
+.prog-fill{height:100%;border-radius:3px}
+.avail-card{border-radius:var(--border-radius-md);padding:12px 14px;display:flex;align-items:center;gap:12px;border:1px solid var(--color-border-tertiary);margin-bottom:8px;background:rgba(255,255,255,.86)}
+.avail-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.avail-text .name{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.avail-text .status{font-size:12px;margin-top:2px}
+.nav-btn-row{display:flex;gap:8px;margin-top:1.5rem}
+.inline-input{width:100%;padding:6px 8px;border:1px solid #d3dce8;border-radius:7px;background:#fff;color:var(--color-text-primary);font-size:12px}
+.qty-input,.price-input{max-width:120px}
+.table-actions{display:flex;gap:6px;justify-content:flex-end}
+.btn-mini{font-size:11px;padding:6px 8px;border-radius:8px;border:1px solid #c8d5e4;background:#fff;color:#26445f;cursor:pointer}
+.btn-mini:hover{background:#f1f6fb}
+.btn-mini.danger{color:#9d2f2f;border-color:#e7c7c7}
+.btn-mini.primary{background:#1d9e75;border-color:#0f6e56;color:#fff}
+.report-card{background:#fff;border:1px solid #bac8d8;border-radius:10px;padding:0;overflow:hidden}
+.report-header{padding:14px 16px;border-bottom:1px solid #cfd8e3;background:#f8fbff}
+.report-title{font-size:28px;text-align:center;font-weight:600;color:#283649;letter-spacing:.02em}
+.report-meta-row{display:flex;justify-content:space-between;gap:10px;margin-top:8px;font-size:12px;color:#42576d}
+.report-org{line-height:1.6}
+.report-period{text-align:right}
+.report-table th{background:#e9eff6;color:#2a435c;border-bottom:1px solid #bfcddc}
+.report-table td{font-size:12px;border-bottom:1px solid #dde5ee;background:#fff}
+.report-table tr:nth-child(even) td{background:#f9fcff}
+.report-total{padding:10px 16px;text-align:right;background:#f4f8fc;border-top:1px solid #d3deea;font-weight:600;color:#23425b}
+@media (max-width:980px){
+  .app-shell{grid-template-columns:1fr}
+  .sidebar{position:static}
+  .side-nav{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .side-section{display:none}
+  .dashboard-strip{grid-template-columns:repeat(2,1fr)}
+  .grid3{grid-template-columns:1fr 1fr}
+  .pr-header{flex-direction:column;gap:12px}
+}
+@media (max-width:760px){
+  .db{padding:1rem .7rem 1.5rem}
+  .topbar{margin-bottom:.8rem}
+  .topbar{flex-direction:column;align-items:flex-start;gap:10px;padding:12px 14px}
+  .steps{padding:6px}
+  .step{font-size:12px;padding:8px 10px}
+  .main{padding:0}
+  .dashboard-strip{grid-template-columns:1fr}
+  .grid2,.grid3,.form-row{grid-template-columns:1fr}
+  .btn-row{flex-wrap:wrap;justify-content:stretch}
+  .btn-row .btn{flex:1 1 100%;text-align:center}
+  .inv-row{flex-direction:column;align-items:flex-start;gap:8px}
+  .table-actions{justify-content:flex-start}
+}
+</style>
+
+<div class="db">
+<div class="app-shell">
+<aside class="sidebar">
+  <div class="side-brand"><div class="side-brand-dot"></div>PharmDesk</div>
+  <div class="side-nav">
+    <button class="side-btn active" data-step="0" onclick="goto(0)">Requisition Report</button>
+    <button class="side-btn" data-step="1" onclick="goto(1)">Order Details</button>
+    <button class="side-btn" data-step="2" onclick="goto(2)">Generate PO</button>
+    <button class="side-btn" data-step="3" onclick="goto(3)">Inventory</button>
+    <button class="side-btn" data-step="4" onclick="goto(4)">Availability</button>
+  </div>
+  <div class="side-section">
+    <div class="side-label">Dashboard Notes</div>
+    <div class="side-note">This panel tracks requisition flow from request to inventory confirmation with responsive controls.</div>
+  </div>
+</aside>
+
+<section class="workspace">
+<div class="topbar">
+  <div class="logo"><div class="logo-dot"></div>PharmDesk — Building 1, Pharmacy Department</div>
+  <div class="user-info">
+    <div class="avatar">CM</div>
+    <span>Crizza Mae C. Kim</span>
+    <span style="padding:3px 8px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-size:11px">Pharmacist</span>
+  </div>
+</div>
+
+<div class="steps">
+  <div class="step done" onclick="goto(0)" id="s0"><div class="step-num">✓</div>Requisition Report</div>
+  <div class="arrow">›</div>
+  <div class="step active" onclick="goto(1)" id="s1"><div class="step-num">2</div>Order Details</div>
+  <div class="arrow">›</div>
+  <div class="step" onclick="goto(2)" id="s2"><div class="step-num">3</div>Generate PO</div>
+  <div class="arrow">›</div>
+  <div class="step" onclick="goto(3)" id="s3"><div class="step-num">4</div>Product Inventory</div>
+  <div class="arrow">›</div>
+  <div class="step" onclick="goto(4)" id="s4"><div class="step-num">5</div>Availability Check</div>
+</div>
+
+<div class="dashboard-strip">
+  <div class="dash-card"><div class="dash-label">Current Requisition</div><div class="dash-value">PR-0000001</div><div class="dash-sub">Submitted Feb 16, 2024</div></div>
+  <div class="dash-card"><div class="dash-label">Approved Budget</div><div class="dash-value">₱1,000,000</div><div class="dash-sub">Utilization 99.99%</div></div>
+  <div class="dash-card"><div class="dash-label">Line Items</div><div class="dash-value">5</div><div class="dash-sub">All items validated</div></div>
+  <div class="dash-card"><div class="dash-label">Workflow Status</div><div class="dash-value" style="font-size:16px;color:#0F6E56">In Progress</div><div class="dash-sub">Waiting inventory handoff</div></div>
+</div>
+
+<div class="main">
+
+  <!-- PANEL 0: Requisition Report -->
+  <div class="panel" id="p0">
+    <div class="card">
+      <div class="pr-header">
+        <div>
+          <div class="card-title">Purchase Requisition <span class="badge badge-amber">Pending Review</span></div>
+          <div class="pr-meta">
+            <strong>PR No.</strong> 0000001 &nbsp;|&nbsp; <strong>Date:</strong> February 16, 2024<br>
+            <strong>Department:</strong> Pharmacy — Building 1 &nbsp;|&nbsp; <strong>Requested by:</strong> Crizza Mae C. Kim<br>
+            <strong>Justification:</strong> Mid-year medicine stock replenishment
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">Approved Budget</div>
+          <div style="font-size:20px;font-weight:500;color:#0F6E56">Php 1,000,000.00</div>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Item No.</th><th>Item to be Purchased</th><th>Qty (pcs)</th><th>Unit Price</th><th>Total Price</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>0001</td><td>Metformin Hydrochloride 500 mg Tablet</td><td>40,000</td><td>0.54</td><td style="font-weight:500">21,600.00</td><td><span class="badge badge-amber">Pending</span></td></tr>
+          <tr><td>0002</td><td>Gliclazide MR 60 mg Tablet</td><td>30,000</td><td>9.28</td><td style="font-weight:500">278,400.00</td><td><span class="badge badge-amber">Pending</span></td></tr>
+          <tr><td>0003</td><td>Methyldopa 250 mg Tablet</td><td>30,000</td><td>9.18</td><td style="font-weight:500">275,400.00</td><td><span class="badge badge-amber">Pending</span></td></tr>
+          <tr><td>0004</td><td>Diltiazem 60 mg Tablet</td><td>31,000</td><td>12.00</td><td style="font-weight:500">372,000.00</td><td><span class="badge badge-amber">Pending</span></td></tr>
+          <tr><td>0005</td><td>Metoprolol Tartrate 100 mg Tablet</td><td>33,900</td><td>1.55</td><td style="font-weight:500">52,545.00</td><td><span class="badge badge-amber">Pending</span></td></tr>
+        </tbody>
+      </table>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px;padding-top:10px;border-top:0.5px solid var(--color-border-tertiary)">
+        <div style="text-align:right">
+          <div style="font-size:12px;color:var(--color-text-secondary)">Total Amount</div>
+          <div style="font-size:18px;font-weight:500;color:var(--color-text-primary)">Php 999,945.00</div>
+          <div style="font-size:11px;color:#0F6E56;margin-top:2px">Within approved budget</div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn">Reject</button>
+      <button class="btn btn-primary" onclick="goto(1)">Approve & Create Order ›</button>
+    </div>
+  </div>
+
+  <!-- PANEL 1: Order Details -->
+  <div class="panel active" id="p1">
+    <div class="grid3" style="margin-bottom:1rem">
+      <div class="metric"><div class="metric-label">PR Reference</div><div class="metric-val" style="font-size:16px">PR-0000001</div><div class="metric-sub">Feb 16, 2024</div></div>
+      <div class="metric"><div class="metric-label">Total Items</div><div class="metric-val">5</div><div class="metric-sub">Medicine types</div></div>
+      <div class="metric"><div class="metric-label">Order Value</div><div class="metric-val" style="font-size:16px">₱999,945</div><div class="metric-sub">of ₱1,000,000 budget</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Order Details</div>
+      <div class="form-row">
+        <div class="form-group"><label>Supplier Name</label><input type="text" value="MedPharma Supply Co." /></div>
+        <div class="form-group"><label>Supplier Contact</label><input type="text" value="+63 82 123 4567" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Delivery Date</label><input type="date" value="2024-03-01" /></div>
+        <div class="form-group"><label>Payment Terms</label><select><option>30 days net</option><option>60 days net</option><option>COD</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Delivery Address</label><input type="text" value="Building 1, Pharmacy Dept., Requisition Office" /></div>
+        <div class="form-group"><label>Priority Level</label><select><option>Normal</option><option>Urgent</option><option>Critical</option></select></div>
+      </div>
+      <div style="margin-top:4px">
+        <div class="form-group"><label>Remarks / Special Instructions</label><input type="text" placeholder="e.g. cold chain required, fragile packaging..." /></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Item Order Summary</div>
+      <table>
+        <thead><tr><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Verify</th><th>Actions</th></tr></thead>
+        <tbody id="orderTableBody">
+          <tr data-editing="false"><td>Metformin HCl 500 mg</td><td><input class="inline-input qty-input" type="number" value="40000" readonly></td><td><input class="inline-input price-input" type="number" step="0.01" value="0.54" readonly></td><td class="line-total">₱21,600.00</td><td><input type="checkbox" checked /></td><td><div class="table-actions"><button class="btn-mini" onclick="toggleRowEdit(this)">Edit</button><button class="btn-mini danger" onclick="deleteRow(this)">Delete</button></div></td></tr>
+          <tr data-editing="false"><td>Gliclazide MR 60 mg</td><td><input class="inline-input qty-input" type="number" value="30000" readonly></td><td><input class="inline-input price-input" type="number" step="0.01" value="9.28" readonly></td><td class="line-total">₱278,400.00</td><td><input type="checkbox" checked /></td><td><div class="table-actions"><button class="btn-mini" onclick="toggleRowEdit(this)">Edit</button><button class="btn-mini danger" onclick="deleteRow(this)">Delete</button></div></td></tr>
+          <tr data-editing="false"><td>Methyldopa 250 mg</td><td><input class="inline-input qty-input" type="number" value="30000" readonly></td><td><input class="inline-input price-input" type="number" step="0.01" value="9.18" readonly></td><td class="line-total">₱275,400.00</td><td><input type="checkbox" checked /></td><td><div class="table-actions"><button class="btn-mini" onclick="toggleRowEdit(this)">Edit</button><button class="btn-mini danger" onclick="deleteRow(this)">Delete</button></div></td></tr>
+          <tr data-editing="false"><td>Diltiazem 60 mg</td><td><input class="inline-input qty-input" type="number" value="31000" readonly></td><td><input class="inline-input price-input" type="number" step="0.01" value="12" readonly></td><td class="line-total">₱372,000.00</td><td><input type="checkbox" checked /></td><td><div class="table-actions"><button class="btn-mini" onclick="toggleRowEdit(this)">Edit</button><button class="btn-mini danger" onclick="deleteRow(this)">Delete</button></div></td></tr>
+          <tr data-editing="false"><td>Metoprolol Tartrate 100 mg</td><td><input class="inline-input qty-input" type="number" value="33900" readonly></td><td><input class="inline-input price-input" type="number" step="0.01" value="1.55" readonly></td><td class="line-total">₱52,545.00</td><td><input type="checkbox" checked /></td><td><div class="table-actions"><button class="btn-mini" onclick="toggleRowEdit(this)">Edit</button><button class="btn-mini danger" onclick="deleteRow(this)">Delete</button></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="goto(0)">‹ Back</button>
+      <button class="btn btn-primary" onclick="goto(2)">Generate Purchase Order ›</button>
+    </div>
+  </div>
+
+  <!-- PANEL 2: Generate PO -->
+  <div class="panel" id="p2">
+    <div class="po-box">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-size:11px;color:#0F6E56;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Purchase Order Generated</div>
+          <div class="po-num">PO-2024-00001</div>
+          <div class="po-sub">Building 1, Pharmacy Department — Feb 16, 2024</div>
+        </div>
+        <span class="badge badge-green" style="font-size:12px;padding:5px 12px">Approved</span>
+      </div>
+    </div>
+    <div class="grid2" style="margin-bottom:1rem">
+      <div class="card" style="margin-bottom:0">
+        <div class="section-label">Supplier Details</div>
+        <div style="font-size:13px;line-height:2;color:var(--color-text-primary)">
+          <div><span style="color:var(--color-text-secondary)">Name: </span>MedPharma Supply Co.</div>
+          <div><span style="color:var(--color-text-secondary)">Contact: </span>+63 82 123 4567</div>
+          <div><span style="color:var(--color-text-secondary)">Terms: </span>30 days net</div>
+          <div><span style="color:var(--color-text-secondary)">Delivery: </span>March 1, 2024</div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:0">
+        <div class="section-label">Order Summary</div>
+        <div style="font-size:13px;line-height:2;color:var(--color-text-primary)">
+          <div><span style="color:var(--color-text-secondary)">PR No.: </span>0000001</div>
+          <div><span style="color:var(--color-text-secondary)">PO No.: </span>PO-2024-00001</div>
+          <div><span style="color:var(--color-text-secondary)">Total Items: </span>5 types</div>
+          <div><span style="color:var(--color-text-secondary)">Total Amount: </span><strong>₱999,945.00</strong></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">PO Line Items</div>
+      <table>
+        <thead><tr><th>Item No.</th><th>Description</th><th>Qty</th><th>Unit</th><th>Unit Price</th><th>Total</th></tr></thead>
+        <tbody>
+          <tr><td>0001</td><td>Metformin HCl 500 mg Tablet</td><td>40,000</td><td>PCS</td><td>₱0.54</td><td>₱21,600.00</td></tr>
+          <tr><td>0002</td><td>Gliclazide MR 60 mg Tablet</td><td>30,000</td><td>PCS</td><td>₱9.28</td><td>₱278,400.00</td></tr>
+          <tr><td>0003</td><td>Methyldopa 250 mg Tablet</td><td>30,000</td><td>PCS</td><td>₱9.18</td><td>₱275,400.00</td></tr>
+          <tr><td>0004</td><td>Diltiazem 60 mg Tablet</td><td>31,000</td><td>PCS</td><td>₱12.00</td><td>₱372,000.00</td></tr>
+          <tr><td>0005</td><td>Metoprolol Tartrate 100 mg Tablet</td><td>33,900</td><td>PCS</td><td>₱1.55</td><td>₱52,545.00</td></tr>
+        </tbody>
+      </table>
+      <div style="display:flex;justify-content:flex-end;padding-top:12px;border-top:0.5px solid var(--color-border-tertiary);margin-top:8px;gap:24px">
+        <div style="text-align:right"><div style="font-size:12px;color:var(--color-text-secondary)">Budget</div><div style="font-size:15px;font-weight:500">₱1,000,000.00</div></div>
+        <div style="text-align:right"><div style="font-size:12px;color:var(--color-text-secondary)">Order Total</div><div style="font-size:15px;font-weight:500">₱999,945.00</div></div>
+        <div style="text-align:right"><div style="font-size:12px;color:var(--color-text-secondary)">Remaining</div><div style="font-size:15px;font-weight:500;color:#0F6E56">₱55.00</div></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="goto(1)">‹ Back</button>
+      <button class="btn">Print PO</button>
+      <button class="btn btn-primary" onclick="goto(3)">Send to Inventory ›</button>
+    </div>
+  </div>
+
+  <!-- PANEL 3: Product Inventory -->
+  <div class="panel" id="p3">
+    <div class="grid3" style="margin-bottom:1rem">
+      <div class="metric"><div class="metric-label">Total SKUs</div><div class="metric-val">5</div><div class="metric-sub">Incoming from PO</div></div>
+      <div class="metric"><div class="metric-label">Units Ordered</div><div class="metric-val">164,900</div><div class="metric-sub">Total pieces</div></div>
+      <div class="metric"><div class="metric-label">ETA</div><div class="metric-val" style="font-size:15px">Mar 1</div><div class="metric-sub">Expected delivery</div></div>
+    </div>
+    <div class="report-card">
+      <div class="report-header">
+        <div class="report-title">Inventory Summary</div>
+        <div class="report-meta-row">
+          <div class="report-org"><strong>Pro Pharmacy</strong><br>Building 1, Pharmacy Department<br>Requisition Office</div>
+          <div class="report-period"><strong>Date:</strong> Feb 16, 2024<br><strong>Report Period:</strong> Nov 01, 2024 to Nov 30, 2024</div>
+        </div>
+      </div>
+      <table class="report-table">
+        <thead><tr><th>Item No.</th><th>Trade Name</th><th>Generic Name</th><th>Strength</th><th>Form</th><th>Qty Disp</th><th>On Hand Value</th><th>Actions</th></tr></thead>
+        <tbody id="inventoryTableBody">
+          <tr data-editing="false"><td>0001</td><td><input class="inline-input" value="METFORMIN HYDROCHLORIDE 500 MG TABLET" readonly></td><td><input class="inline-input" value="METFORMIN HCL" readonly></td><td><input class="inline-input" value="500MG" readonly></td><td><input class="inline-input" value="TABLET" readonly></td><td><input class="inline-input qty-input" type="number" value="40000" readonly></td><td class="on-hand-value">₱21,600.00</td><td><div class="table-actions"><button class="btn-mini" onclick="toggleRowEdit(this)">Edit</button><button class="btn-mini danger" onclick="deleteRow(this)">Delete</button></div></td></tr>
+          <tr data-editing="false"><td>0002</td><td><input class="inline-input" value="GLICLAZIDE MR 60 MG TABLET" readonly></td><td><input class="inline-input" value="GLICLAZIDE MR" readonly></td><td><input class="inline-input" value="60MG" readonly></td><td><input class="inline-input" value="TABLET" readonly></td><td><input class="inline-input qty-input" type="number" value="30000" readonly></td><td class="on-hand-value">₱278,400.00</td><td><div class="table-actions"><button class="btn-mini" onclick="toggleRowEdit(this)">Edit</button><button class="btn-mini danger" onclick="deleteRow(this)">Delete</button></div></td></tr>
+          <tr data-editing="false"><td>0003</td><td><input class="inline-input" value="METHYLDOPA 250 MG TABLET" readonly></td><td><input class="inline-input" value="METHYLDOPA" readonly></td><td><input class="inline-input" value="250MG" readonly></td><td><input class="inline-input" value="TABLET" readonly></td><td><input class="inline-input qty-input" type="number" value="30320" readonly></td><td class="on-hand-value">₱275,400.00</td><td><div class="table-actions"><button class="btn-mini" onclick="toggleRowEdit(this)">Edit</button><button class="btn-mini danger" onclick="deleteRow(this)">Delete</button></div></td></tr>
+          <tr data-editing="false"><td>0004</td><td><input class="inline-input" value="DILTIAZEM 60 MG TABLET" readonly></td><td><input class="inline-input" value="DILTIAZEM" readonly></td><td><input class="inline-input" value="60MG" readonly></td><td><input class="inline-input" value="TABLET" readonly></td><td><input class="inline-input qty-input" type="number" value="33800" readonly></td><td class="on-hand-value">₱372,000.00</td><td><div class="table-actions"><button class="btn-mini" onclick="toggleRowEdit(this)">Edit</button><button class="btn-mini danger" onclick="deleteRow(this)">Delete</button></div></td></tr>
+          <tr data-editing="false"><td>0005</td><td><input class="inline-input" value="METOPROLOL TARTRATE 100 MG TABLET" readonly></td><td><input class="inline-input" value="METOPROLOL TARTRATE" readonly></td><td><input class="inline-input" value="100MG" readonly></td><td><input class="inline-input" value="TABLET" readonly></td><td><input class="inline-input qty-input" type="number" value="34400" readonly></td><td class="on-hand-value">₱52,545.00</td><td><div class="table-actions"><button class="btn-mini" onclick="toggleRowEdit(this)">Edit</button><button class="btn-mini danger" onclick="deleteRow(this)">Delete</button></div></td></tr>
+        </tbody>
+      </table>
+      <div class="report-total">Total On Hand: <span id="inventoryTotal">₱999,945.00</span></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="goto(2)">‹ Back</button>
+      <button class="btn btn-primary" onclick="goto(4)">Check Availability ›</button>
+    </div>
+  </div>
+
+  <!-- PANEL 4: Availability Check -->
+  <div class="panel" id="p4">
+    <div class="grid3" style="margin-bottom:1rem">
+      <div class="metric"><div class="metric-label">Available</div><div class="metric-val" style="color:#0F6E56">4</div><div class="metric-sub">Items in stock</div></div>
+      <div class="metric"><div class="metric-label">Low Stock</div><div class="metric-val" style="color:#854F0B">1</div><div class="metric-sub">Below threshold</div></div>
+      <div class="metric"><div class="metric-label">Out of Stock</div><div class="metric-val" style="color:#A32D2D">0</div><div class="metric-sub">No critical gaps</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Product Availability Status</div>
+      <div class="avail-card">
+        <div class="avail-icon" style="background:#E1F5EE">✓</div>
+        <div class="avail-text" style="flex:1"><div class="name">Metformin Hydrochloride 500 mg Tablet</div><div class="status" style="color:#0F6E56">Available — 48,200 pcs &nbsp;|&nbsp; Stock covers ~6 months</div></div>
+        <span class="badge badge-green">Available</span>
+      </div>
+      <div class="avail-card">
+        <div class="avail-icon" style="background:#E1F5EE">✓</div>
+        <div class="avail-text" style="flex:1"><div class="name">Gliclazide MR 60 mg Tablet</div><div class="status" style="color:#0F6E56">Available — 31,050 pcs &nbsp;|&nbsp; Stock covers ~5 months</div></div>
+        <span class="badge badge-green">Available</span>
+      </div>
+      <div class="avail-card">
+        <div class="avail-icon" style="background:#FAEEDA">!</div>
+        <div class="avail-text" style="flex:1"><div class="name">Methyldopa 250 mg Tablet</div><div class="status" style="color:#854F0B">Low stock before delivery — 320 pcs current &nbsp;|&nbsp; Order ETA: Mar 1</div></div>
+        <span class="badge badge-amber">Low Stock</span>
+      </div>
+      <div class="avail-card">
+        <div class="avail-icon" style="background:#E1F5EE">✓</div>
+        <div class="avail-text" style="flex:1"><div class="name">Diltiazem 60 mg Tablet</div><div class="status" style="color:#0F6E56">Available — 33,800 pcs &nbsp;|&nbsp; Stock covers ~5 months</div></div>
+        <span class="badge badge-green">Available</span>
+      </div>
+      <div class="avail-card">
+        <div class="avail-icon" style="background:#E1F5EE">✓</div>
+        <div class="avail-text" style="flex:1"><div class="name">Metoprolol Tartrate 100 mg Tablet</div><div class="status" style="color:#0F6E56">Available — 34,400 pcs &nbsp;|&nbsp; Stock covers ~5 months</div></div>
+        <span class="badge badge-green">Available</span>
+      </div>
+    </div>
+    <div class="card" style="background:#E1F5EE;border-color:#9FE1CB">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:50%;background:#9FE1CB;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">✓</div>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:#085041">Procurement cycle complete</div>
+          <div style="font-size:12px;color:#0F6E56;margin-top:2px">PO-2024-00001 processed. All items confirmed. Methyldopa stock is low — monitor until March 1 delivery.</div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="goto(3)">‹ Back</button>
+      <button class="btn btn-primary" onclick="sendPrompt('Generate a summary report of PO-2024-00001 including all items, availability status, and budget utilization.')">Generate Summary Report ↗</button>
+    </div>
+  </div>
+
+</div>
+</section>
+</div>
+
+<script>
+const panels=document.querySelectorAll('.panel');
+const steps=document.querySelectorAll('.step');
+const sideButtons=document.querySelectorAll('.side-btn');
+let cur=1;
+function formatCurrency(value){
+  const num=Number(value)||0;
+  return "₱"+num.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function toggleRowEdit(button){
+  const row=button.closest("tr");
+  const inputs=row.querySelectorAll("input.inline-input");
+  const isEditing=row.dataset.editing==="true";
+  if(isEditing){
+    row.dataset.editing="false";
+    inputs.forEach(input=>input.readOnly=true);
+    button.textContent="Edit";
+    button.classList.remove("primary");
+    updateRowTotals(row);
+  }else{
+    row.dataset.editing="true";
+    inputs.forEach(input=>input.readOnly=false);
+    button.textContent="Save";
+    button.classList.add("primary");
+  }
+}
+function deleteRow(button){
+  const row=button.closest("tr");
+  row.remove();
+  recalculateInventoryTotal();
+}
+function updateRowTotals(row){
+  const qty=row.querySelector(".qty-input");
+  const price=row.querySelector(".price-input");
+  const totalCell=row.querySelector(".line-total");
+  if(qty&&price&&totalCell){
+    const total=(Number(qty.value)||0)*(Number(price.value)||0);
+    totalCell.textContent=formatCurrency(total);
+  }
+  recalculateInventoryTotal();
+}
+function recalculateInventoryTotal(){
+  const invValues=[...document.querySelectorAll(".on-hand-value")].map(cell=>{
+    const raw=cell.textContent.replace(/[₱,\s]/g,"");
+    return Number(raw)||0;
+  });
+  const total=invValues.reduce((sum,val)=>sum+val,0);
+  const totalEl=document.getElementById("inventoryTotal");
+  if(totalEl)totalEl.textContent=formatCurrency(total);
+}
+function goto(n){
+  panels.forEach((p,i)=>p.classList.toggle('active',i===n));
+  steps.forEach((s,i)=>{
+    s.classList.remove('active','done');
+    if(i<n)s.classList.add('done');
+    if(i===n)s.classList.add('active');
+    s.querySelector('.step-num').textContent=i<n?'✓':(i+1);
+  });
+  sideButtons.forEach(btn=>btn.classList.toggle('active',Number(btn.dataset.step)===n));
+  cur=n;
+}
+goto(1);
+</script>
