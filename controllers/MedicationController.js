@@ -5,6 +5,7 @@ class MedicationController {
     constructor() {
         this.inventoryModel = new InventoryModel();
         this.logsModel = new LogsModel();
+        this.checkoutModel = new CheckoutModel();
         this.lowStockThreshold = 10;
         this.currentView = null;
         this.init();
@@ -125,7 +126,8 @@ class MedicationController {
             medicationName: medication.name,
             dosage: dosage,
             dispensedBy: dispensedBy,
-            remark: remark
+            remark: remark,
+            unitPrice: medication.unitPrice
         };
 
         const logSuccess = this.logsModel.addLog(logEntry);
@@ -150,6 +152,9 @@ class MedicationController {
 
         // Check for low stock alert
         this.checkLowStockAlert(medication);
+
+        // Trigger checkout for dispensed item
+        this.triggerCheckout(logEntry);
     }
 
     /**
@@ -305,6 +310,7 @@ class MedicationController {
                 <td>${medication.name}</td>
                 <td>${medication.dosage}</td>
                 <td>${medication.quantity}</td>
+                <td>${medication.unitPrice ? this.checkoutModel.formatCurrency(medication.unitPrice) : 'N/A'}</td>
                 <td>${statusBadge}</td>
                 <td>
                     <button class="btn btn-sm btn-outline-primary" onclick="medicationController.editMedication('${medication.id}')">
@@ -546,7 +552,336 @@ class MedicationController {
                 lowStock: this.inventoryModel.getLowStockMedications(this.lowStockThreshold).length,
                 outOfStock: this.inventoryModel.getOutOfStockMedications().length
             },
-            logs: this.logsModel.getStatistics()
+            logs: this.logsModel.getStatistics(),
+            checkout: this.checkoutModel.getSalesStatistics()
         };
+    }
+
+    // ==================== CHECKOUT METHODS ====================
+
+    /**
+     * Trigger checkout for dispensed item
+     */
+    triggerCheckout(dispensedItem) {
+        // Start new transaction with dispensed item
+        this.checkoutModel.startTransaction(dispensedItem);
+        
+        // Show checkout interface
+        this.showCheckoutInterface();
+        
+        // Update checkout display
+        this.updateCheckoutDisplay();
+    }
+
+    /**
+     * Show checkout interface
+     */
+    showCheckoutInterface() {
+        const checkoutModal = new bootstrap.Modal(document.getElementById('checkoutModal'));
+        checkoutModal.show();
+    }
+
+    /**
+     * Update checkout display
+     */
+    updateCheckoutDisplay() {
+        const transaction = this.checkoutModel.getCurrentTransaction();
+        if (!transaction) return;
+
+        // Update items table
+        this.renderCheckoutItems(transaction.items);
+        
+        // Update totals
+        this.updateCheckoutTotals(transaction);
+        
+        // Update customer info
+        this.updateCustomerInfo(transaction.customerInfo);
+    }
+
+    /**
+     * Render checkout items table
+     */
+    renderCheckoutItems(items) {
+        const tbody = document.getElementById('checkoutItemsBody');
+        tbody.innerHTML = '';
+
+        items.forEach((item, index) => {
+            const row = document.createElement('tr');
+            const subtotal = item.unitPrice * (item.quantity || 1);
+            
+            row.innerHTML = `
+                <td>${item.medicationName}</td>
+                <td>${item.dosage}</td>
+                <td>
+                    <input type="number" class="form-control form-control-sm" 
+                           value="${item.quantity || 1}" min="1" 
+                           onchange="medicationController.updateCheckoutItemQuantity(${index}, this.value)">
+                </td>
+                <td>${this.checkoutModel.formatCurrency(item.unitPrice)}</td>
+                <td>${this.checkoutModel.formatCurrency(subtotal)}</td>
+                <td>
+                    <button class="btn btn-sm btn-danger" onclick="medicationController.removeCheckoutItem(${index})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    }
+
+    /**
+     * Update checkout totals display
+     */
+    updateCheckoutTotals(transaction) {
+        document.getElementById('checkoutSubtotal').textContent = this.checkoutModel.formatCurrency(transaction.subtotal);
+        document.getElementById('checkoutDiscount').textContent = this.checkoutModel.formatCurrency(transaction.discount);
+        document.getElementById('checkoutVAT').textContent = this.checkoutModel.formatCurrency(transaction.vat);
+        document.getElementById('checkoutTotal').textContent = this.checkoutModel.formatCurrency(transaction.total);
+        
+        // Update total display with emphasis
+        const totalElement = document.getElementById('checkoutTotalDisplay');
+        totalElement.textContent = this.checkoutModel.formatCurrency(transaction.total);
+        totalElement.className = 'display-6 fw-bold text-primary';
+    }
+
+    /**
+     * Update customer info display
+     */
+    updateCustomerInfo(customerInfo) {
+        document.getElementById('customerName').value = customerInfo.name || '';
+        
+        // Update discount buttons
+        document.querySelectorAll('.discount-btn').forEach(btn => {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline-primary');
+        });
+        
+        if (customerInfo.type && customerInfo.type !== 'regular') {
+            const activeBtn = document.getElementById(`${customerInfo.type}Discount`);
+            if (activeBtn) {
+                activeBtn.classList.remove('btn-outline-primary');
+                activeBtn.classList.add('btn-primary');
+            }
+        }
+    }
+
+    /**
+     * Update checkout item quantity
+     */
+    updateCheckoutItemQuantity(itemIndex, quantity) {
+        const qty = parseInt(quantity);
+        if (qty > 0) {
+            this.checkoutModel.updateItemQuantity(itemIndex, qty);
+            this.updateCheckoutDisplay();
+        }
+    }
+
+    /**
+     * Remove checkout item
+     */
+    removeCheckoutItem(itemIndex) {
+        this.checkoutModel.removeItem(itemIndex);
+        
+        if (!this.checkoutModel.getCurrentTransaction()) {
+            // Close checkout if no items left
+            const checkoutModal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
+            checkoutModal.hide();
+        } else {
+            this.updateCheckoutDisplay();
+        }
+    }
+
+    /**
+     * Apply discount
+     */
+    applyDiscount(discountType) {
+        this.checkoutModel.applyDiscount(discountType);
+        this.updateCheckoutDisplay();
+    }
+
+    /**
+     * Set customer name
+     */
+    setCustomerName(customerName) {
+        this.checkoutModel.setCustomerName(customerName);
+    }
+
+    /**
+     * Set payment method
+     */
+    setPaymentMethod(paymentMethod) {
+        this.checkoutModel.setPaymentMethod(paymentMethod);
+        
+        // Show payment-specific fields
+        document.getElementById('cashPaymentFields').style.display = 
+            paymentMethod === 'cash' ? 'block' : 'none';
+        document.getElementById('cardPaymentFields').style.display = 
+            paymentMethod === 'credit_card' ? 'block' : 'none';
+        document.getElementById('insurancePaymentFields').style.display = 
+            paymentMethod === 'insurance' ? 'block' : 'none';
+    }
+
+    /**
+     * Complete transaction
+     */
+    completeTransaction() {
+        const transaction = this.checkoutModel.getCurrentTransaction();
+        if (!transaction) {
+            this.showAlert('No active transaction', 'danger');
+            return;
+        }
+
+        if (!transaction.paymentMethod) {
+            this.showAlert('Please select a payment method', 'danger');
+            return;
+        }
+
+        // Validate payment details
+        let paymentDetails = {};
+        
+        if (transaction.paymentMethod === 'cash') {
+            const cashReceived = parseFloat(document.getElementById('cashReceived').value);
+            if (!cashReceived || cashReceived < transaction.total) {
+                this.showAlert('Insufficient cash received', 'danger');
+                return;
+            }
+            paymentDetails.cashReceived = cashReceived;
+        }
+
+        // Complete transaction
+        const completedTransaction = this.checkoutModel.completeTransaction(paymentDetails);
+        
+        if (completedTransaction) {
+            this.showAlert('Transaction completed successfully!', 'success');
+            
+            // Print receipt
+            this.printReceipt(completedTransaction);
+            
+            // Close checkout modal
+            const checkoutModal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
+            checkoutModal.hide();
+            
+            // Clear payment fields
+            this.clearPaymentFields();
+        } else {
+            this.showAlert('Failed to complete transaction', 'danger');
+        }
+    }
+
+    /**
+     * Print receipt
+     */
+    printReceipt(transaction) {
+        const receiptData = this.checkoutModel.getReceiptData();
+        if (!receiptData) return;
+
+        // Create receipt HTML
+        const receiptHTML = this.generateReceiptHTML(receiptData);
+        
+        // Open print window
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(receiptHTML);
+        printWindow.document.close();
+        printWindow.print();
+    }
+
+    /**
+     * Generate receipt HTML
+     */
+    generateReceiptHTML(data) {
+        return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Pharmacy Receipt</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .receipt { max-width: 400px; margin: 0 auto; }
+                .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; }
+                .items { margin: 20px 0; }
+                .item-row { display: flex; justify-content: space-between; margin: 5px 0; }
+                .totals { border-top: 2px solid #000; padding-top: 10px; }
+                .total-row { display: flex; justify-content: space-between; margin: 5px 0; font-weight: bold; }
+                .footer { text-align: center; margin-top: 20px; font-size: 12px; }
+            </style>
+        </head>
+        <body>
+            <div class="receipt">
+                <div class="header">
+                    <h2>PHARMACY RECEIPT</h2>
+                    <p>${data.dateTime}</p>
+                    <p>Transaction ID: ${data.transactionId}</p>
+                </div>
+                
+                <div class="customer-info">
+                    <p><strong>Customer:</strong> ${data.customerName}</p>
+                    <p><strong>Type:</strong> ${data.customerType.charAt(0).toUpperCase() + data.customerType.slice(1)}</p>
+                </div>
+                
+                <div class="items">
+                    <h4>Items</h4>
+                    ${data.items.map(item => `
+                        <div class="item-row">
+                            <span>${item.name} (${item.dosage}) x${item.quantity}</span>
+                            <span>${this.checkoutModel.formatCurrency(item.subtotal)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="totals">
+                    <div class="item-row">
+                        <span>Subtotal:</span>
+                        <span>${this.checkoutModel.formatCurrency(data.subtotal)}</span>
+                    </div>
+                    ${data.discount > 0 ? `
+                        <div class="item-row">
+                            <span>Discount (${data.discountType}):</span>
+                            <span>-${this.checkoutModel.formatCurrency(data.discount)}</span>
+                        </div>
+                    ` : ''}
+                    <div class="item-row">
+                        <span>VAT (12%):</span>
+                        <span>${this.checkoutModel.formatCurrency(data.vat)}</span>
+                    </div>
+                    <div class="total-row">
+                        <span>TOTAL:</span>
+                        <span>${this.checkoutModel.formatCurrency(data.total)}</span>
+                    </div>
+                    <div class="item-row">
+                        <span>Payment Method:</span>
+                        <span>${data.paymentMethod.replace('_', ' ').toUpperCase()}</span>
+                    </div>
+                </div>
+                
+                <div class="footer">
+                    <p>Thank you for your purchase!</p>
+                    <p>Cashier: ${data.cashier}</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        `;
+    }
+
+    /**
+     * Clear payment fields
+     */
+    clearPaymentFields() {
+        document.getElementById('cashReceived').value = '';
+        document.getElementById('customerName').value = '';
+        document.getElementById('cashPaymentFields').style.display = 'none';
+        document.getElementById('cardPaymentFields').style.display = 'none';
+        document.getElementById('insurancePaymentFields').style.display = 'none';
+    }
+
+    /**
+     * Cancel checkout
+     */
+    cancelCheckout() {
+        this.checkoutModel.cancelTransaction();
+        const checkoutModal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
+        checkoutModal.hide();
+        this.clearPaymentFields();
     }
 }

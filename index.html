@@ -185,6 +185,7 @@
                                         <th>Medication Name</th>
                                         <th>Dosage</th>
                                         <th>Units Remaining</th>
+                                        <th>Unit Price</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
@@ -239,12 +240,176 @@
         </div>
     </div>
 
+    <!-- Checkout Modal -->
+    <div class="modal fade" id="checkoutModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-cash-stack"></i> Customer Checkout & Total Payables
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="row g-0">
+                        <!-- Left Side - Item Details -->
+                        <div class="col-lg-7 border-end">
+                            <div class="p-4">
+                                <h6 class="mb-3">
+                                    <i class="bi bi-receipt"></i> Itemized Summary
+                                </h6>
+                                
+                                <!-- Customer Info -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Customer Name</label>
+                                        <input type="text" id="customerName" class="form-control" 
+                                               placeholder="Enter customer name" 
+                                               onchange="medicationController.setCustomerName(this.value)">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Discount Type</label>
+                                        <div class="btn-group w-100" role="group">
+                                            <button type="button" class="btn btn-outline-primary discount-btn" 
+                                                    id="regularDiscount" onclick="medicationController.applyDiscount(null)">
+                                                Regular
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary discount-btn" 
+                                                    id="seniorDiscount" onclick="medicationController.applyDiscount('senior')">
+                                                Senior (20%)
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary discount-btn" 
+                                                    id="pwdDiscount" onclick="medicationController.applyDiscount('pwd')">
+                                                PWD (20%)
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Items Table -->
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Product Name</th>
+                                                <th>Dosage</th>
+                                                <th>Quantity</th>
+                                                <th>Unit Price</th>
+                                                <th>Subtotal</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="checkoutItemsBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Side - Receipt Style View -->
+                        <div class="col-lg-5">
+                            <div class="p-4 bg-light h-100">
+                                <div class="receipt-style">
+                                    <h6 class="text-center mb-4">
+                                        <i class="bi bi-receipt-cutoff"></i> PAYMENT SUMMARY
+                                    </h6>
+                                    
+                                    <!-- Totals Breakdown -->
+                                    <div class="mb-4">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Subtotal:</span>
+                                            <span id="checkoutSubtotal" class="fw-semibold">₱0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Discount:</span>
+                                            <span id="checkoutDiscount" class="text-danger">-₱0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>VAT (12%):</span>
+                                            <span id="checkoutVAT" class="fw-semibold">₱0.00</span>
+                                        </div>
+                                        <hr>
+                                        <div class="d-flex justify-content-between">
+                                            <span class="fs-5 fw-bold">TOTAL AMOUNT:</span>
+                                            <span id="checkoutTotalDisplay" class="display-6 fw-bold text-primary">₱0.00</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Payment Method Selection -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-semibold">Payment Method</label>
+                                        <div class="d-grid gap-2">
+                                            <button type="button" class="btn btn-outline-success" 
+                                                    onclick="medicationController.setPaymentMethod('cash')">
+                                                <i class="bi bi-cash"></i> Cash
+                                            </button>
+                                            <button type="button" class="btn btn-outline-success" 
+                                                    onclick="medicationController.setPaymentMethod('credit_card')">
+                                                <i class="bi bi-credit-card"></i> Credit Card
+                                            </button>
+                                            <button type="button" class="btn btn-outline-success" 
+                                                    onclick="medicationController.setPaymentMethod('insurance')">
+                                                <i class="bi bi-shield-check"></i> Insurance Claim
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Payment Specific Fields -->
+                                    <div id="cashPaymentFields" style="display: none;" class="mb-4">
+                                        <label class="form-label fw-semibold">Cash Received</label>
+                                        <input type="number" id="cashReceived" class="form-control" 
+                                               placeholder="Enter amount received" step="0.01">
+                                        <small class="text-muted">Enter the cash amount received from customer</small>
+                                    </div>
+
+                                    <div id="cardPaymentFields" style="display: none;" class="mb-4">
+                                        <label class="form-label fw-semibold">Card Details</label>
+                                        <input type="text" class="form-control mb-2" placeholder="Card Number">
+                                        <input type="text" class="form-control mb-2" placeholder="Cardholder Name">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <input type="text" class="form-control" placeholder="MM/YY">
+                                            </div>
+                                            <div class="col-6">
+                                                <input type="text" class="form-control" placeholder="CVV">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="insurancePaymentFields" style="display: none;" class="mb-4">
+                                        <label class="form-label fw-semibold">Insurance Details</label>
+                                        <input type="text" class="form-control mb-2" placeholder="Insurance Provider">
+                                        <input type="text" class="form-control mb-2" placeholder="Policy Number">
+                                        <input type="text" class="form-control" placeholder="Member ID">
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-success btn-lg" 
+                                                onclick="medicationController.completeTransaction()">
+                                            <i class="bi bi-check-circle"></i> Complete Transaction & Print Receipt
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" 
+                                                onclick="medicationController.cancelCheckout()">
+                                            <i class="bi bi-x-circle"></i> Cancel Transaction
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Models -->
     <script src="models/InventoryModel.js"></script>
     <script src="models/LogsModel.js"></script>
+    <script src="models/CheckoutModel.js"></script>
     
     <!-- Controller -->
     <script src="controllers/MedicationController.js"></script>

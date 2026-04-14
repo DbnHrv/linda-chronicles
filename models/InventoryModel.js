@@ -27,11 +27,11 @@ class InventoryModel {
      */
     getDefaultInventory() {
         return [
-            { id: 'MED001', name: 'Paracetamol', dosage: '500mg', quantity: 50 },
-            { id: 'MED002', name: 'Ibuprofen', dosage: '400mg', quantity: 8 },
-            { id: 'MED003', name: 'Amoxicillin', dosage: '250mg', quantity: 30 },
-            { id: 'MED004', name: 'Aspirin', dosage: '100mg', quantity: 0 },
-            { id: 'MED005', name: 'Cough Syrup', dosage: '100ml', quantity: 15 }
+            { id: 'MED001', name: 'Paracetamol', dosage: '500mg', quantity: 50, unitPrice: 15.50 },
+            { id: 'MED002', name: 'Ibuprofen', dosage: '400mg', quantity: 8, unitPrice: 22.75 },
+            { id: 'MED003', name: 'Amoxicillin', dosage: '250mg', quantity: 30, unitPrice: 45.00 },
+            { id: 'MED004', name: 'Aspirin', dosage: '100mg', quantity: 0, unitPrice: 18.25 },
+            { id: 'MED005', name: 'Cough Syrup', dosage: '100ml', quantity: 15, unitPrice: 65.00 }
         ];
     }
 
