@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaTrack Pro | PO Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body class="bg-slate-100 flex h-screen overflow-hidden">
+
+    <aside class="w-72 bg-slate-900 text-white flex flex-col no-print shadow-2xl z-50">
+        <div class="p-6 border-b border-slate-800 flex items-center gap-3">
+            <div class="bg-indigo-600 p-2 rounded-lg"><i class="fas fa-capsules text-lg"></i></div>
+            <h1 class="font-bold text-xl tracking-tight">PharmaTrack Pro</h1>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-4 space-y-6">
+            <section>
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 block">Order Details</label>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs text-slate-400">PO Number</label>
+                        <input type="text" value="PO-2024-0001" class="w-full bg-slate-800 border border-slate-700 rounded-md p-2 text-sm text-indigo-400 font-mono focus:ring-1 focus:ring-indigo-500 outline-none mt-1">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400">Vendor Selection</label>
+                        <select class="w-full bg-slate-800 border border-slate-700 rounded-md p-2 text-sm mt-1">
+                            <option>PharmaSupply Global Inc.</option>
+                            <option>Davao Med-Distribution</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-slate-800 rounded-xl p-4 border border-slate-700">
+                <label class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-2 block">Budget Status</label>
+                <p class="text-2xl font-black">₱1,000,000</p>
+                <p class="text-[10px] text-slate-400">Approved Contract Limit</p>
+                <div class="mt-4 h-1.5 w-full bg-slate-700 rounded-full overflow-hidden">
+                    <div class="bg-green-500 h-full" style="width: 99.9%"></div>
+                </div>
+                <p class="text-[10px] text-green-400 mt-2 font-bold uppercase italic text-right">99.9% Utilized</p>
+            </section>
+        </div>
+
+        <div class="p-4 border-t border-slate-800 text-center">
+            <button onclick="window.print()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-3 rounded-xl font-bold text-sm transition shadow-lg shadow-indigo-900/20">
+                <i class="fas fa-print mr-2"></i> GENERATE PO
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto p-8 flex flex-col items-center">
+        
+        <div class="bg-white w-full max-w-[800px] shadow-2xl border border-slate-200 print-container min-h-[1050px] flex flex-col p-12">
+            
+            <div class="flex justify-between items-start border-b-4 border-slate-900 pb-8">
+                <div>
+                    <h2 class="text-3xl font-black text-slate-900 uppercase">Purchase Order</h2>
+                    <p class="text-sm text-slate-500 mt-1 uppercase font-bold tracking-widest">Building 1, Pharmacy Department</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs font-bold text-slate-400 uppercase">Order ID</p>
+                    <p class="text-xl font-black mono text-indigo-600 leading-none mt-1">PO-2024-0001</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-12 py-10 border-b border-slate-100">
+                <div>
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Ship To / Billing</h4>
+                    <p class="font-bold text-slate-800">DAVAO MEDICAL</p>
+                    <p class="text-sm text-slate-600">Toril, Davao City, 8000</p>
+                    <p class="text-sm text-slate-600">Tel: (082) 291-1882</p>
+                </div>
+                <div>
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Vendor Info</h4>
+                    <p class="font-bold text-slate-800">PharmaSupply Global Inc.</p>
+                    <p class="text-sm text-slate-600">Regional Distribution Center</p>
+                    <p class="text-sm text-slate-600">Reference: PR #0000001</p>
+                </div>
+            </div>
+
+            <div class="flex-1 py-8">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-slate-900 text-white text-[10px] uppercase font-bold tracking-tighter">
+                            <th class="px-4 py-3 rounded-l-md">Description</th>
+                            <th class="px-4 py-3 text-center">Qty</th>
+                            <th class="px-4 py-3 text-right">Unit Price</th>
+                            <th class="px-4 py-3 text-right rounded-r-md">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm divide-y divide-slate-100">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800">Metformin Hydrochloride 500mg</td>
+                            <td class="px-4 py-4 text-center">40,000</td>
+                            <td class="px-4 py-4 text-right">₱0.54</td>
+                            <td class="px-4 py-4 text-right font-bold tracking-tight">₱21,600.00</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800">Gliclazide MR 60mg Tablet</td>
+                            <td class="px-4 py-4 text-center">30,000</td>
+                            <td class="px-4 py-4 text-right">₱9.28</td>
+                            <td class="px-4 py-4 text-right font-bold tracking-tight">₱278,400.00</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800">Methyldopa 250mg Tablet</td>
+                            <td class="px-4 py-4 text-center">30,000</td>
+                            <td class="px-4 py-4 text-right">₱9.18</td>
+                            <td class="px-4 py-4 text-right font-bold tracking-tight">₱275,400.00</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800">Diltiazem 60mg Tablet</td>
+                            <td class="px-4 py-4 text-center">31,000</td>
+                            <td class="px-4 py-4 text-right">₱12.00</td>
+                            <td class="px-4 py-4 text-right font-bold tracking-tight">₱372,000.00</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800">Metoprolol Tartrate 100mg Tablet</td>
+                            <td class="px-4 py-4 text-center">33,900</td>
+                            <td class="px-4 py-4 text-right">₱1.55</td>
+                            <td class="px-4 py-4 text-right font-bold tracking-tight">₱52,545.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-auto pt-10 border-t-2 border-slate-100">
+                <div class="flex justify-between items-end">
+                    <div class="space-y-4">
+                        <div class="h-10 w-48 border-b-2 border-slate-900"></div>
+                        <p class="text-[10px] font-bold uppercase text-slate-400">Authorized Signature / Crizza Mae Kim</p>
+                    </div>
+                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-right w-64">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Grand Total</p>
+                        <p class="text-3xl font-black text-slate-900">₱999,945.00</p>
+                        <p class="text-[10px] text-green-600 font-bold mt-1 uppercase italic underline">Under Budget: ₱55.00 Saved</p>
+                    </div>
+                </div>
+                <p class="text-center text-[9px] text-slate-300 mt-10 uppercase tracking-[0.2em]">Procurement generated via PharmaTrack Pro System</p>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
