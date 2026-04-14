@@ -1,6 +1,27 @@
 # Medication Dispensing & Log System
 
-A comprehensive web-based medication dispensing and logging system designed for medical facilities, pharmacies, and healthcare providers.
+A comprehensive web-based medication dispensing and logging system designed for medical facilities, pharmacies, and healthcare providers. Built with **MVC architecture** and **Bootstrap 5** for a professional, responsive interface.
+
+## Architecture
+
+### MVC Structure
+The system follows the Model-View-Controller (MVC) design pattern:
+
+- **Models** (`/models/`): Handle data management and business logic
+  - `InventoryModel.js`: Manages medication inventory data
+  - `LogsModel.js`: Manages dispensing logs and statistics
+  
+- **Views** (`/views/`): HTML templates with Bootstrap components
+  - Main interface in `index.html` with responsive Bootstrap layout
+  
+- **Controllers** (`/controllers/`): Coordinate between models and views
+  - `MedicationController.js`: Handles all user interactions and system logic
+
+### Technology Stack
+- **Frontend**: HTML5, Bootstrap 5, Bootstrap Icons
+- **JavaScript**: ES6+ with modular MVC architecture
+- **Storage**: Browser LocalStorage for data persistence
+- **Design**: Responsive, mobile-first with professional medical theme
 
 ## Features
 
@@ -16,13 +37,15 @@ A comprehensive web-based medication dispensing and logging system designed for 
 - **Product Logs**: Complete dispensing history with all transaction details
 - **Data Persistence**: All data saved locally in browser storage
 - **Search & Filter**: Real-time search through inventory
+- **Statistics**: Comprehensive dispensing analytics and reporting
 
 ### UI Features
-- **Medical-themed Design**: Clean, professional interface with light blues and white
-- **Responsive Layout**: Works on desktop, tablet, and mobile devices
-- **Status Indicators**: Color-coded stock status (green/yellow/red)
-- **Recent Logs Display**: Shows last 10 dispensing transactions
-- **Modal Forms**: User-friendly forms for adding new medications
+- **Bootstrap 5 Design**: Modern, responsive interface with professional medical theme
+- **Responsive Layout**: Works seamlessly on desktop, tablet, and mobile devices
+- **Status Indicators**: Color-coded stock status with Bootstrap badges
+- **Recent Logs Display**: Shows last 10 dispensing transactions in responsive table
+- **Modal Forms**: Bootstrap modals for adding new medications
+- **Icons**: Bootstrap Icons for enhanced visual communication
 
 ## System Requirements
 
@@ -112,20 +135,48 @@ The system displays the 10 most recent dispensing transactions including:
 }
 ```
 
+## Project Structure
+
+```
+product_log/
+├── index.html                 # Main application view (Bootstrap UI)
+├── README.md                  # Documentation
+├── models/                    # Data models
+│   ├── InventoryModel.js      # Medication inventory management
+│   └── LogsModel.js           # Dispensing logs and statistics
+├── controllers/               # Business logic controllers
+│   └── MedicationController.js # Main application controller
+├── views/                     # View templates (empty - using index.html)
+├── assets/                    # Static assets
+│   ├── css/                   # Custom CSS files (if needed)
+│   └── js/                    # Additional JavaScript files
+├── script.js                  # Legacy script (deprecated)
+└── styles.css                 # Legacy styles (deprecated)
+```
+
 ## Customization
 
 ### Low Stock Threshold
-To change the low stock warning threshold, modify the `lowStockThreshold` value in `script.js`:
+To change the low stock warning threshold, modify the `lowStockThreshold` value in `controllers/MedicationController.js`:
 
 ```javascript
 this.lowStockThreshold = 10; // Change this value
 ```
 
 ### Adding Sample Data
-The system includes sample medications on first load. To customize the initial inventory, modify the `loadInventory()` method in `script.js`.
+The system includes sample medications on first load. To customize the initial inventory, modify the `getDefaultInventory()` method in `models/InventoryModel.js`.
 
-### Styling Customization
-All colors and styles are defined in `styles.css` using CSS variables. Update the `:root` section to customize the theme.
+### Bootstrap Customization
+The system uses Bootstrap 5 with custom CSS overrides in the `<style>` section of `index.html`. For extensive customizations:
+1. Create a new CSS file in `assets/css/`
+2. Link it in the HTML head
+3. Override Bootstrap variables as needed
+
+### MVC Extensions
+To add new features:
+1. **Models**: Add new data management classes in `/models/`
+2. **Controllers**: Extend `MedicationController.js` or create new controllers
+3. **Views**: Add new HTML sections or create separate view files
 
 ## Data Storage
 
@@ -138,7 +189,7 @@ All colors and styles are defined in `styles.css` using CSS variables. Update th
 
 To backup your data:
 1. Open browser developer console (F12)
-2. Run: `medSystem.exportData()`
+2. Run: `medicationController.exportData()`
 
 To restore data:
 1. Use the import functionality (can be added to UI if needed)

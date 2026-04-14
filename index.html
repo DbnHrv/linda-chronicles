@@ -4,131 +4,270 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Medication Dispensing & Log System</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        .header-gradient {
+            background: linear-gradient(135deg, #0d6efd, #4dabf7);
+        }
+        .stock-status-available { color: #198754; }
+        .stock-status-low { color: #fd7e14; }
+        .stock-status-out { color: #dc3545; }
+        .table-hover tbody tr:hover { background-color: rgba(13, 110, 253, 0.05); }
+        .modal-content { border-radius: 15px; }
+        .card { border-radius: 15px; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); }
+        .btn { border-radius: 8px; }
+        .form-control, .form-select { border-radius: 8px; }
+        .alert { border-radius: 10px; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1>Medication Dispensing & Log System</h1>
-            <div class="header-info">
-                <span id="currentDateTime"></span>
-                <span id="currentUser">Dispensed By: <select id="userSelect"><option value="Staff">Staff</option><option value="Intern">Intern</option></select></span>
+    <div class="container-fluid">
+        <!-- Header -->
+        <header class="header-gradient text-white p-4 mb-4 rounded-3 shadow">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1 class="mb-2">
+                        <i class="bi bi-capsule"></i> Medication Dispensing & Log System
+                    </h1>
+                    <p class="mb-0 opacity-75">Professional Medical Inventory Management</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="mb-2">
+                        <i class="bi bi-clock"></i> <span id="currentDateTime"></span>
+                    </div>
+                    <div>
+                        <i class="bi bi-person-circle"></i> 
+                        Dispensed By: 
+                        <select id="userSelect" class="form-select d-inline-block w-auto">
+                            <option value="Staff">Staff</option>
+                            <option value="Intern">Intern</option>
+                            <option value="Pharmacist">Pharmacist</option>
+                            <option value="Nurse">Nurse</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </header>
 
-        <main class="main-content">
-            <section class="dispensing-section">
-                <h2>Medication Dispensing</h2>
-                <form id="dispensingForm" class="dispensing-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="medicationSelect">Medication Name:</label>
-                            <select id="medicationSelect" required>
-                                <option value="">Select Medication...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="dosageInput">Dosage/Quantity:</label>
-                            <input type="text" id="dosageInput" placeholder="e.g., 500mg, 1 tablet" required>
-                        </div>
+        <!-- Alert Container -->
+        <div id="alertContainer" class="mb-3"></div>
+
+        <!-- Main Content -->
+        <main class="row">
+            <!-- Dispensing Section -->
+            <section class="col-lg-5 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-prescription2"></i> Medication Dispensing
+                        </h5>
                     </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="remarkInput">Remark:</label>
-                            <input type="text" id="remarkInput" placeholder="e.g., Patient A, Emergency stock">
-                        </div>
-                        <div class="form-group">
-                            <label>Stock Status:</label>
-                            <div class="stock-info">
-                                <span id="stockStatus">--</span>
-                                <span id="unitsRemaining" class="units-remaining">-- units remaining</span>
+                    <div class="card-body">
+                        <form id="dispensingForm">
+                            <div class="mb-3">
+                                <label for="medicationSelect" class="form-label fw-semibold">
+                                    <i class="bi bi-capsule"></i> Medication Name
+                                </label>
+                                <select id="medicationSelect" class="form-select" required>
+                                    <option value="">Select Medication...</option>
+                                </select>
                             </div>
+                            
+                            <div class="mb-3">
+                                <label for="dosageInput" class="form-label fw-semibold">
+                                    <i class="bi bi-droplet"></i> Dosage/Quantity
+                                </label>
+                                <input type="text" id="dosageInput" class="form-control" 
+                                       placeholder="e.g., 500mg, 1 tablet" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="remarkInput" class="form-label fw-semibold">
+                                    <i class="bi bi-chat-left-text"></i> Remark
+                                </label>
+                                <input type="text" id="remarkInput" class="form-control" 
+                                       placeholder="e.g., Patient A, Emergency stock">
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-info-circle"></i> Stock Status
+                                </label>
+                                <div class="card bg-light">
+                                    <div class="card-body py-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span id="stockStatus" class="fw-bold">--</span>
+                                            <span id="unitsRemaining" class="text-muted">-- units remaining</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 d-md-flex">
+                                <button type="submit" id="dispenseBtn" class="btn btn-primary flex-fill" disabled>
+                                    <i class="bi bi-check-circle"></i> Dispense Medication
+                                </button>
+                                <button type="button" id="refreshBtn" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Logs Section -->
+            <section class="col-lg-7 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history"></i> Recent Dispensing Logs (Last 10)
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table id="logsTable" class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Medication</th>
+                                        <th>Dosage</th>
+                                        <th>Date & Time</th>
+                                        <th>Dispensed By</th>
+                                        <th>Remark</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logsTableBody">
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    
-                    <div class="form-actions">
-                        <button type="submit" id="dispenseBtn" class="btn btn-primary" disabled>Dispense Medication</button>
-                        <button type="button" id="refreshBtn" class="btn btn-secondary">Refresh Inventory</button>
-                    </div>
-                </form>
-
-                <div id="alertContainer" class="alert-container"></div>
-            </section>
-
-            <section class="inventory-section">
-                <h2>Current Inventory</h2>
-                <div class="inventory-controls">
-                    <input type="text" id="inventorySearch" placeholder="Search medications..." class="search-input">
-                    <button id="addInventoryBtn" class="btn btn-secondary">Add New Medication</button>
-                </div>
-                <div class="table-container">
-                    <table id="inventoryTable" class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Medication ID</th>
-                                <th>Medication Name</th>
-                                <th>Dosage</th>
-                                <th>Units Remaining</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="inventoryTableBody">
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section class="logs-section">
-                <h2>Recent Dispensing Logs (Last 10)</h2>
-                <div class="table-container">
-                    <table id="logsTable" class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Medication ID</th>
-                                <th>Medication Name</th>
-                                <th>Dosage Dispensed</th>
-                                <th>Date & Time</th>
-                                <th>Dispensed By</th>
-                                <th>Remark</th>
-                            </tr>
-                        </thead>
-                        <tbody id="logsTableBody">
-                        </tbody>
-                    </table>
                 </div>
             </section>
         </main>
+
+        <!-- Inventory Section -->
+        <section class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-archive"></i> Current Inventory
+                                </h5>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <div class="input-group" style="max-width: 400px;">
+                                    <input type="text" id="inventorySearch" class="form-control" 
+                                           placeholder="Search medications...">
+                                    <button class="btn btn-outline-light" type="button">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                                <button id="addInventoryBtn" class="btn btn-light mt-2">
+                                    <i class="bi bi-plus-circle"></i> Add New Medication
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table id="inventoryTable" class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Medication ID</th>
+                                        <th>Medication Name</th>
+                                        <th>Dosage</th>
+                                        <th>Units Remaining</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventoryTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 
-    <!-- Modal for adding new medication -->
-    <div id="addMedicationModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Add New Medication</h3>
-            <form id="addMedicationForm">
-                <div class="form-group">
-                    <label for="newMedicationName">Medication Name:</label>
-                    <input type="text" id="newMedicationName" required>
+    <!-- Add Medication Modal -->
+    <div class="modal fade" id="addMedicationModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> Add New Medication
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="form-group">
-                    <label for="newMedicationDosage">Dosage:</label>
-                    <input type="text" id="newMedicationDosage" placeholder="e.g., 500mg" required>
+                <div class="modal-body">
+                    <form id="addMedicationForm">
+                        <div class="mb-3">
+                            <label for="newMedicationName" class="form-label fw-semibold">Medication Name</label>
+                            <input type="text" id="newMedicationName" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newMedicationDosage" class="form-label fw-semibold">Dosage</label>
+                            <input type="text" id="newMedicationDosage" class="form-control" 
+                                   placeholder="e.g., 500mg" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newMedicationQuantity" class="form-label fw-semibold">Initial Quantity</label>
+                            <input type="number" id="newMedicationQuantity" class="form-control" 
+                                   min="0" required>
+                        </div>
+                    </form>
                 </div>
-                <div class="form-group">
-                    <label for="newMedicationQuantity">Initial Quantity:</label>
-                    <input type="number" id="newMedicationQuantity" min="0" required>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                    <button type="submit" form="addMedicationForm" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Add Medication
+                    </button>
                 </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Add Medication</button>
-                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Models -->
+    <script src="models/InventoryModel.js"></script>
+    <script src="models/LogsModel.js"></script>
+    
+    <!-- Controller -->
+    <script src="controllers/MedicationController.js"></script>
+    
+    <!-- Initialize Application -->
+    <script>
+        // Initialize the medication controller when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.medicationController = new MedicationController();
+            
+            // Initialize Bootstrap modals
+            const addMedicationModal = new bootstrap.Modal(document.getElementById('addMedicationModal'));
+            
+            // Override modal show/hide methods
+            medicationController.showAddMedicationModal = () => {
+                addMedicationModal.show();
+            };
+            
+            medicationController.hideModal = () => {
+                addMedicationModal.hide();
+                document.getElementById('addMedicationForm').reset();
+            };
+        });
+    </script>
 </body>
 </html>
