@@ -571,19 +571,115 @@
     </div>
   </div>
 </div>
+<div id="inv-report-modal" class="inv-modal-overlay" aria-hidden="true">
+  <div class="inv-modal-box" role="dialog" aria-labelledby="inv-report-title">
+    <h3 id="inv-report-title">Generate Inventory Report</h3>
+    <div class="form-group">
+      <label class="form-label">Report Type</label>
+      <select id="inv-report-type" class="form-select">
+        <option value="daily">Daily Inventory Report</option>
+        <option value="stock-count">Stock Count Report</option>
+        <option value="stock-product">Stock Product Report</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date</label>
+      <input id="inv-report-date" type="date" class="form-input">
+    </div>
+    <div class="inv-modal-actions">
+      <button type="button" class="btn btn-outline btn-sm" onclick="invCloseReportModal()">Cancel</button>
+      <button type="button" class="btn btn-primary btn-sm" onclick="invGenerateReport()">Generate</button>
+    </div>
+  </div>
+</div>
 <script>
 
 let currentPage = 'intern-dashboard';
 let liveTimer = null;
 let seconds = 0;
 let formStartTime = null;
+const TASK_STORAGE_KEY = 'pharmacyAssignedTasks';
+const ORIENTATION_STORAGE_KEY = 'pharmacyOrientationModules';
+const CURRENT_INTERN_NAME = 'Juan Reyes';
+const CURRENT_INTERN_ALIASES = ['juan reyes', 'j. reyes'];
 
 const internPages = [
   { id: 'product-inventory', label: 'Product Inventory', ico: '📦', section: 'Inventory' },
   { id: 'intern-dashboard', label: 'My Dashboard', ico: '⬡', section: 'Overview' },
+  { id: 'orientation-view', label: 'Orientation', ico: '🎓', section: 'Overview' },
+  { id: 'house-rules', label: 'House Rules', ico: '📋', section: 'Guidelines' },
   { id: 'task-view', label: 'My Tasks', ico: '✓', section: 'Today', badge: '5' },
   { id: 'live-form', label: 'Log Routine', ico: '📝', section: 'Today' },
 ];
+
+function isTaskForCurrentIntern(assignee = '') {
+  const normalized = assignee.trim().toLowerCase();
+  if (!normalized) return false;
+  if (normalized.includes('all interns') || normalized.includes('rotation')) return true;
+  const assignees = normalized.split(',').map(n => n.trim());
+  return assignees.some(name => CURRENT_INTERN_ALIASES.includes(name));
+}
+
+function getAssignedTaskBandsForIntern() {
+  const fallback = [
+    { id:'bl', cls:'band-before-lunch', label:'Before Lunch', ico:'🌅', time:'By 12:00', tasks:[
+      {id:'t_bl1',name:'Pill Counting & Verification',note:'Count trays 1–4. Record any discrepancies.',done:true},
+      {id:'t_bl2',name:'Label Accuracy Check',note:'Cross-check label details on dispensed items.',done:true},
+      {id:'t_bl3',name:'Morning Drug Tray Setup',note:'Arrange daily dispensing trays per protocol.',done:false},
+    ]},
+    { id:'d', cls:'band-daily', label:'Daily Tasks', ico:'📅', time:'All Day', tasks:[
+      {id:'t_d1',name:'Patient Queue Assistance',note:'Assist licensed pharmacist with queue management.',done:false},
+      {id:'t_d2',name:'Drug Counseling Observation',note:'Observe and take notes on counseling sessions.',done:false},
+    ]},
+    { id:'cl', cls:'band-before-close', label:'Before Closing', ico:'🌙', time:'By 17:30', tasks:[
+      {id:'t_cl1',name:'End-of-Day Inventory Count',note:'Count and record remaining high-value items.',done:false},
+    ]},
+  ];
+  try {
+    const raw = localStorage.getItem(TASK_STORAGE_KEY);
+    if (!raw) return fallback;
+    const sourceBands = JSON.parse(raw);
+    if (!Array.isArray(sourceBands) || sourceBands.length === 0) return fallback;
+    const metaBySlot = {
+      bl: { cls:'band-before-lunch', label:'Before Lunch', ico:'🌅', time:'By 12:00' },
+      d: { cls:'band-daily', label:'Daily Tasks', ico:'📅', time:'All Day' },
+      cl: { cls:'band-before-close', label:'Before Closing', ico:'🌙', time:'By 17:30' },
+      wk: { cls:'band-weekly', label:'Weekly Tasks', ico:'📆', time:'Every Monday' },
+    };
+    const mapped = sourceBands.map(b => {
+      const meta = metaBySlot[b.id] || { cls:'band-daily', label:'Tasks', ico:'📌', time:'Today' };
+      const tasks = (b.tasks || []).filter(t => isTaskForCurrentIntern(t.assignee)).map(t => ({
+        id: `hr_${t.id}`,
+        name: t.name,
+        note: t.note && t.note.trim() ? t.note : `Assigned by HR · ${t.assignee || 'Intern'}`,
+        done: false,
+      }));
+      return { id: b.id, cls: meta.cls, label: meta.label, ico: meta.ico, time: meta.time, tasks };
+    }).filter(b => b.tasks.length > 0);
+    return mapped.length ? mapped : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function getHROrientationModules() {
+  const fallback = [
+    {id:'ori1', n:1, title:'Welcome & Company Overview', done:true, time:'30 min'},
+    {id:'ori2', n:2, title:'Pharmacy Layout & Zones', done:true, time:'45 min'},
+    {id:'ori3', n:3, title:'Drug Classification Basics', done:false, active:true, time:'60 min'},
+    {id:'ori4', n:4, title:'Documentation & Record-Keeping', done:false, time:'45 min'},
+    {id:'ori5', n:5, title:'Safety & Emergency Protocols', done:false, time:'30 min'},
+  ];
+  try {
+    const raw = localStorage.getItem(ORIENTATION_STORAGE_KEY);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) return fallback;
+    return parsed;
+  } catch (e) {
+    return fallback;
+  }
+}
 
 function renderSidebar() {
   const el = document.getElementById('sidebar-content');
@@ -616,10 +712,81 @@ function renderPage(id) {
   const pages = {
     'product-inventory': renderProductInventory,
     'intern-dashboard': renderInternDashboard,
+    'orientation-view': renderInternOrientation,
+    'house-rules': renderHouseRulesIntern,
     'task-view': renderTaskView,
     'live-form': renderLiveForm,
   };
   return (pages[id] || (() => '<div class="page active"><p>Page not found</p></div>'))();
+}
+
+function renderHouseRulesIntern() {
+  const submissions = [
+    'Completed, signed, and stamped application for registration of premises',
+    'Premises layout and sketch',
+    'Taxpayer identification number copy',
+    'Certificate of registration of the pharmacist with PMRA',
+    'Valid practicing certificate copy of the pharmacist',
+    'Signed contractual commitment letter for full-time personnel',
+    'Business registration copy from registrar of businesses',
+    'Payment receipt copy from PMRA'
+  ];
+  const premises = [
+    'Premises must protect medicines from weather, seepage, and pests/vermin.',
+    'Building condition should be maintained and reviewed regularly; repairs must be done when necessary.',
+    'Layout should support efficient workflow, communication, and supervision.',
+    'Space should be adequate for operations (minimum 40 sqm, one side at least 5m, height around 2.5m).',
+    'Floors and walls should be crack-free and made of impervious materials for easy cleaning.',
+    'Building should be effectively lit and properly ventilated.',
+    'Premises must be secure from unauthorized access (steel burglar bars installed).',
+    'Toilets must be well ventilated and should not open directly to the medicine storage area.'
+  ];
+
+  return `<div class="page active">
+    <div class="page-header">
+      <div class="page-title">House Rules</div>
+      <div class="page-sub">Issued by HR Personnel · Pharmacy and Medicines Regulatory Authority guidance</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="section-title">Policy Notice</span>
+        <span class="tag tag-violet">HR Personnel</span>
+      </div>
+      <div style="font-size:12px;color:var(--slate-600);line-height:1.55">
+        All interns must comply with the following minimum operational and submission requirements while on duty.
+        These rules are posted by HR Personnel and must be acknowledged during orientation.
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header">
+          <span class="section-title">A. Submissions</span>
+          <span class="tag tag-sky">${submissions.length} items</span>
+        </div>
+        ${submissions.map((item, idx) => `
+          <div class="rule-item">
+            <div class="rule-num">${idx + 1}</div>
+            <div class="rule-text">${item}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="section-title">B. Premises</span>
+          <span class="tag tag-amber">${premises.length} rules</span>
+        </div>
+        ${premises.map((item, idx) => `
+          <div class="rule-item">
+            <div class="rule-num">${idx + 1}</div>
+            <div class="rule-text">${item}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  </div>`;
 }
 
 function renderProductInventory() {
@@ -659,7 +826,10 @@ function renderProductInventory() {
         <label>Sort <select id="inv-sort" onchange="invRenderTable()"><option value="generic" selected>Generic name</option><option value="trade">Trade name</option></select></label>
         <label>Status <select id="inv-fstat" onchange="invRenderTable()"><option value="">All</option><option value="ok">In stock</option><option value="low">Low</option><option value="out">Out</option></select></label>
       </div>
-      <button type="button" class="btn btn-primary btn-sm" style="margin-top:10px" onclick="invStartAdd()">＋ Add product</button>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" class="btn btn-primary btn-sm" onclick="invStartAdd()">＋ Add product</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="invOpenReportModal()">Generate report</button>
+      </div>
     </div>
     <div class="inv-layout">
       <div class="inv-table-panel card" style="padding:0;overflow:hidden">
@@ -946,9 +1116,182 @@ function initInvPage() {
   invRenderTable();
 }
 
+function invOpenReportModal() {
+  const modal = document.getElementById('inv-report-modal');
+  const dateInput = document.getElementById('inv-report-date');
+  if (dateInput && !dateInput.value) {
+    dateInput.value = new Date().toISOString().slice(0, 10);
+  }
+  if (modal) {
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+}
+
+function invCloseReportModal() {
+  const modal = document.getElementById('inv-report-modal');
+  if (modal) {
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+}
+
+function invReportTitle(type) {
+  if (type === 'daily') return 'Daily Inventory Report';
+  if (type === 'stock-count') return 'Stock Count Report';
+  return 'Stock Product Report';
+}
+
+function invGenerateReport() {
+  const type = (document.getElementById('inv-report-type') || { value: 'daily' }).value;
+  const rawDate = (document.getElementById('inv-report-date') || { value: '' }).value;
+  const dateStr = rawDate || new Date().toISOString().slice(0, 10);
+  const title = invReportTitle(type);
+  const onHandValue = invProds.reduce((sum, p) => sum + invOHVal(p), 0);
+
+  let rowsHtml = '';
+  if (type === 'daily') {
+    rowsHtml = invProds.map((p, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${invEsc(p.din)}</td>
+        <td>${invEsc(p.trade)}</td>
+        <td>${invEsc(p.generic)}</td>
+        <td style="text-align:right">${p.qtyDisp}</td>
+        <td style="text-align:right">${p.oh}</td>
+        <td style="text-align:right">${invFmtPeso(invOHVal(p), 2, 2)}</td>
+      </tr>`).join('');
+  } else if (type === 'stock-count') {
+    rowsHtml = invProds.map((p, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${invEsc(p.din)}</td>
+        <td>${invEsc(p.trade)}</td>
+        <td>${invEsc(p.generic)}</td>
+        <td style="text-align:right">${p.packSize}</td>
+        <td style="text-align:right">${p.numPacks}</td>
+        <td style="text-align:right">${p.oh}</td>
+        <td style="text-align:right">${p.rp}</td>
+      </tr>`).join('');
+  } else {
+    rowsHtml = invProds.map((p, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${invEsc(p.din)}</td>
+        <td>${invEsc(p.trade)}</td>
+        <td>${invEsc(p.generic)}</td>
+        <td>${invEsc(p.str)}</td>
+        <td>${invEsc(p.form)}</td>
+        <td>${invBadge(p)}</td>
+        <td style="text-align:right">${invFmtPeso(p.ac, 4, 4)}</td>
+        <td style="text-align:right">${invFmtPeso(invOHVal(p), 2, 2)}</td>
+      </tr>`).join('');
+  }
+
+  const headers = type === 'daily'
+    ? '<th>#</th><th>DIN</th><th>Trade Name</th><th>Generic Name</th><th>Qty Dispensed</th><th>On Hand</th><th>On Hand Value</th>'
+    : (type === 'stock-count'
+      ? '<th>#</th><th>DIN</th><th>Trade Name</th><th>Generic Name</th><th>Pack Size</th><th>#Pks</th><th>On Hand</th><th>Re-Order Pt</th>'
+      : '<th>#</th><th>DIN</th><th>Trade Name</th><th>Generic Name</th><th>Strength</th><th>Form</th><th>Status</th><th>Acq Cost</th><th>On Hand Value</th>');
+
+  const printWin = window.open('', '_blank');
+  if (!printWin) {
+    alert('Allow popups to generate the report window.');
+    return;
+  }
+
+  printWin.document.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>${title}</title>
+  <style>
+    :root{--bg:#f2f6fa;--card:#fff;--txt:#1f2937;--muted:#556070;--line:#d9e2ec;--brand:#0f6d52;--brandBg:#e8f6f1}
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#f4f8fc 0%,#edf3f9 100%);font-family:"Segoe UI",Tahoma,Arial,sans-serif;color:var(--txt);padding:24px}
+    .wrap{max-width:1120px;margin:0 auto;background:var(--card);border:1px solid #dfe8f1;border-radius:14px;box-shadow:0 10px 24px rgba(16,42,67,.08);padding:20px}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+    .btn{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer}
+    .btn:hover{background:#f8fafc}
+    .btn-primary{background:#0f6d52;color:#fff;border-color:#0f6d52}
+    .btn-primary:hover{filter:brightness(.96)}
+    .btn-send{background:#2563eb;color:#fff;border-color:#2563eb}
+    .btn-send:hover{filter:brightness(.96)}
+    .head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fcfefe}
+    .title{font-size:24px;font-weight:700;margin-bottom:6px;letter-spacing:-.2px}
+    .meta{font-size:13px;color:var(--muted);line-height:1.5}
+    .pill{display:inline-block;padding:6px 12px;border:1px solid #c9e8dc;background:var(--brandBg);color:var(--brand);border-radius:999px;font-size:12px;font-weight:700}
+    table{width:100%;border-collapse:collapse;font-size:12px;overflow:hidden;border-radius:10px}
+    th,td{border:1px solid var(--line);padding:8px 9px;text-align:left;vertical-align:top}
+    th{background:linear-gradient(180deg,#f4f7fb 0%,#edf2f7 100%);font-size:11px;text-transform:uppercase;letter-spacing:.35px}
+    td:nth-last-child(-n+3), th:nth-last-child(-n+3){text-align:right}
+    .foot{margin-top:14px;font-size:13px;font-weight:600;color:#334155}
+    .send-status{display:none;margin-top:12px;padding:12px 14px;border-radius:10px;border:1px solid #cde7d8;background:#edf9f2;color:#0f5132}
+    .send-status .t{font-size:14px;font-weight:700;margin-bottom:3px}
+    .send-status .s{font-size:12px;color:#1e5f46}
+    @media print{
+      body{background:#fff;padding:0}
+      .wrap{max-width:none;box-shadow:none;border:none;border-radius:0;padding:0}
+      .toolbar{display:none}
+      .send-status{display:none!important}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="toolbar">
+      <button class="btn" onclick="window.close()">← Back</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        <button class="btn btn-send" id="btn-send-tech" onclick="submitAndSendToTechs()">Submit & Send to Pharmacy Technicians</button>
+        <button class="btn btn-primary" onclick="window.print()">Print Report</button>
+      </div>
+    </div>
+    <div class="head">
+      <div>
+        <div class="title">${title}</div>
+        <div class="meta">Date: ${dateStr}</div>
+        <div class="meta">Stock Product Report: ${invProds.length} item(s)</div>
+      </div>
+      <div class="pill">On hand value: ${invFmtPeso(onHandValue, 2, 2)}</div>
+    </div>
+    <table>
+      <thead><tr>${headers}</tr></thead>
+      <tbody>${rowsHtml || '<tr><td colspan="9">No products found.</td></tr>'}</tbody>
+    </table>
+    <div class="foot">Daily inventory Report · Stock Count Report · Stock Product Report</div>
+    <div class="send-status" id="send-status">
+      <div class="t">Submitted and sent to pharmacy technicians</div>
+      <div class="s">Dispatch time: <span id="send-time">--:--:--</span> · Recipient group: Pharmacy Technicians</div>
+    </div>
+  </div>
+  <script>
+    function submitAndSendToTechs(){
+      var btn=document.getElementById('btn-send-tech');
+      var box=document.getElementById('send-status');
+      var tm=document.getElementById('send-time');
+      if(tm){tm.textContent=new Date().toTimeString().slice(0,8);}
+      if(box){box.style.display='block';}
+      if(btn){
+        btn.textContent='Sent to Pharmacy Technicians';
+        btn.disabled=true;
+        btn.style.opacity='.7';
+        btn.style.cursor='default';
+      }
+    }
+  <\/script>
+</body>
+</html>`);
+  printWin.document.close();
+  printWin.focus();
+  invCloseReportModal();
+}
+
 
 
 function renderInternDashboard() {
+  const orientationModules = getHROrientationModules();
+  const completedModules = orientationModules.filter(m => m.done).length;
+  const activeOrientation = orientationModules.find(m => m.active) || orientationModules.find(m => !m.done) || orientationModules[0];
   return `<div class="page active">
     <div class="page-header">
       <div class="page-title intern-dash-greeting">Good morning, Juan! 👋</div>
@@ -967,8 +1310,8 @@ function renderInternDashboard() {
       </div>
       <div class="stat-card">
         <div class="stat-label">Orientation</div>
-        <div class="stat-value">5/5</div>
-        <div class="stat-sub">all complete</div>
+        <div class="stat-value">${completedModules}/${orientationModules.length}</div>
+        <div class="stat-sub">${completedModules===orientationModules.length?'all complete':'from HR Personnel'}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">This Week</div>
@@ -1009,6 +1352,18 @@ function renderInternDashboard() {
             ✓ View My Tasks
           </button>
         </div>
+        <div class="card">
+          <div class="card-header"><span class="section-title">Orientation from HR</span></div>
+          <div style="font-size:12px;color:var(--slate-600);margin-bottom:8px">
+            <strong>Current Module:</strong> ${activeOrientation?.title || '—'}
+          </div>
+          <div class="progress-bar" style="margin-bottom:8px"><div class="progress-fill" style="width:${Math.round((completedModules/orientationModules.length)*100)}%"></div></div>
+          <div style="font-size:11px;color:var(--slate-400);margin-bottom:8px">${completedModules} of ${orientationModules.length} modules completed</div>
+          ${(orientationModules.slice(0,3)).map(m=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-top:1px solid var(--slate-100)">
+            <span style="font-size:11px;color:var(--slate-600)">${m.n}. ${m.title}</span>
+            <span class="tag ${m.done?'tag-teal':m.active?'tag-sky':'tag-slate'}">${m.done?'Done':m.active?'Active':'Pending'}</span>
+          </div>`).join('')}
+        </div>
         <div class="card intern-timeline-compact">
           <div class="card-header"><span class="section-title">Today's Timeline</span></div>
           ${[
@@ -1030,30 +1385,52 @@ function renderInternDashboard() {
   </div>`;
 }
 
+function renderInternOrientation() {
+  const modules = getHROrientationModules();
+  const completedModules = modules.filter(m => m.done).length;
+  const completionPct = modules.length ? Math.round((completedModules / modules.length) * 100) : 0;
+  return `<div class="page active">
+    <div class="page-header">
+      <div class="page-title">Orientation</div>
+      <div class="page-sub">Modules issued by HR Personnel</div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="section-title">Progress Overview</span>
+        <span class="tag tag-sky">${completedModules}/${modules.length} complete</span>
+      </div>
+      <div class="progress-bar" style="margin-bottom:8px"><div class="progress-fill" style="width:${completionPct}%"></div></div>
+      <div style="font-size:11px;color:var(--slate-400)">Completion: ${completionPct}%</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="section-title">Orientation Modules</span></div>
+      ${modules.map(m => `<div class="orientation-step ${m.active?'active':m.done?'done':''}">
+        <div class="step-num">${m.done ? '✓' : m.n}</div>
+        <div class="step-content" style="flex:1">
+          <div class="step-title">${m.title}</div>
+          <div class="step-desc">${m.desc || 'No description provided.'}</div>
+        </div>
+        <div style="text-align:right">
+          <span class="tag ${m.done?'tag-teal':m.active?'tag-sky':'tag-slate'}">${m.done?'Done':m.active?'Active':'Pending'}</span>
+          <div style="font-size:10px;color:var(--slate-400);margin-top:4px">${m.time || '—'}</div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
 function renderTaskView() {
+  const assignedBands = getAssignedTaskBandsForIntern();
   return `<div class="page active">
     <div class="page-header">
       <div class="page-title">My Tasks</div>
-      <div class="page-sub">Assigned pharmacy routine tasks for today</div>
+      <div class="page-sub">Assigned pharmacy routine tasks for ${CURRENT_INTERN_NAME}</div>
     </div>
     <div class="inline-tip">
       <span>💡</span>
       <span>Complete tasks in order within each slot. Click the checkbox to mark done, then submit your log using the "Log Routine" page.</span>
     </div>
-    ${[
-      {id:'bl',cls:'band-before-lunch',label:'Before Lunch',ico:'🌅',time:'By 12:00',tasks:[
-        {id:'t_bl1',name:'Pill Counting & Verification',note:'Count trays 1–4. Record any discrepancies.',done:true},
-        {id:'t_bl2',name:'Label Accuracy Check',note:'Cross-check label details on dispensed items.',done:true},
-        {id:'t_bl3',name:'Morning Drug Tray Setup',note:'Arrange daily dispensing trays per protocol.',done:false},
-      ]},
-      {id:'d',cls:'band-daily',label:'Daily Tasks',ico:'📅',time:'All Day',tasks:[
-        {id:'t_d1',name:'Patient Queue Assistance',note:'Assist licensed pharmacist with queue management.',done:false},
-        {id:'t_d2',name:'Drug Counseling Observation',note:'Observe and take notes on counseling sessions.',done:false},
-      ]},
-      {id:'cl',cls:'band-before-close',label:'Before Closing',ico:'🌙',time:'By 17:30',tasks:[
-        {id:'t_cl1',name:'End-of-Day Inventory Count',note:'Count and record remaining high-value items.',done:false},
-      ]},
-    ].map(b => `
+    ${assignedBands.map(b => `
     <div class="task-band ${b.cls}" id="iband-${b.id}">
       <div class="task-band-header open" onclick="toggleBand('i${b.id}')">
         <span>${b.ico}</span>

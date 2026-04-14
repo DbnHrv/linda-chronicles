@@ -423,6 +423,93 @@ const hrPages = [
   { id: 'log-monitor', label: 'Log Monitor', ico: '📊', section: 'Reports' },
 ];
 
+const TASK_STORAGE_KEY = 'pharmacyAssignedTasks';
+const ORIENTATION_STORAGE_KEY = 'pharmacyOrientationModules';
+const INTERN_OPTIONS = ['All Interns', 'J. Reyes', 'A. Santos', 'M. Cruz', 'L. Tan'];
+const defaultTaskBands = [
+  {
+    id:'bl', cls:'band-before-lunch', label:'Before Lunch Tasks', ico:'🌅', time:'8:00 – 12:00',
+    tasks: [
+      {id:'bl1', name:'Pill Counting & Verification', assignee:'J. Reyes, A. Santos', duration:'30 min', note:'Count trays 1–4 and verify totals.'},
+      {id:'bl2', name:'Label Accuracy Check', assignee:'M. Cruz', duration:'20 min', note:'Cross-check labels vs prescription slips.'},
+      {id:'bl3', name:'Morning Drug Tray Setup', assignee:'All Interns', duration:'15 min', note:'Prepare dispensing tray before first queue.'},
+      {id:'bl4', name:'Expired Stock Spot Check', assignee:'L. Tan', duration:'20 min', note:'Report near-expiry and expired items.'},
+    ]
+  },
+  {
+    id:'d', cls:'band-daily', label:'Daily Tasks (All Day)', ico:'📅', time:'8:00 – 17:00',
+    tasks: [
+      {id:'d1', name:'Patient Queue Assistance', assignee:'Rotation', duration:'Ongoing', note:'Assist pharmacist in queue flow.'},
+      {id:'d2', name:'Prescription Filing & Organization', assignee:'A. Santos', duration:'15 min', note:'Sort by date and patient code.'},
+      {id:'d3', name:'Drug Counseling Observation', assignee:'All Interns', duration:'As needed', note:'Observe sessions and take notes.'},
+    ]
+  },
+  {
+    id:'cl', cls:'band-before-close', label:'Before Closing Tasks', ico:'🌙', time:'16:00 – 18:00',
+    tasks: [
+      {id:'cl1', name:'End-of-Day Inventory Count', assignee:'J. Reyes', duration:'30 min', note:'Focus on high-value medicines.'},
+      {id:'cl2', name:'Refrigerator Temperature Log', assignee:'M. Cruz', duration:'10 min', note:'Record and sign cold-chain logs.'},
+      {id:'cl3', name:'Dispensing Area Cleanup', assignee:'All Interns', duration:'20 min', note:'Clean counters and restock supplies.'},
+    ]
+  },
+  {
+    id:'wk', cls:'band-weekly', label:'Weekly Tasks', ico:'📆', time:'Every Monday',
+    tasks: [
+      {id:'wk1', name:'Full Shelf Audit & FEFO Check', assignee:'All Interns', duration:'60 min', note:'Audit shelves by FEFO protocol.'},
+      {id:'wk2', name:'Waste Disposal Documentation', assignee:'J. Reyes', duration:'30 min', note:'Complete regulated disposal log.'},
+      {id:'wk3', name:'Weekly Progress Report Submission', assignee:'All Interns', duration:'30 min', note:'Submit weekly routine summary.'},
+    ]
+  },
+];
+
+const defaultOrientationModules = [
+  {id:'ori1', n:1, title:'Welcome & Company Overview', desc:'Pharmacy background, mission & values', done:true, time:'30 min', presenter:'Maria Aquino, RPh', schedule:'2026-04-14', script:'Introduce internship objectives, pharmacy values, and expected conduct.'},
+  {id:'ori2', n:2, title:'Pharmacy Layout & Zones', desc:'Dispensing, storage, consultation areas', done:true, time:'45 min', presenter:'Maria Aquino, RPh', schedule:'2026-04-14', script:'Walk through key pharmacy zones and role boundaries per area.'},
+  {id:'ori3', n:3, title:'Drug Classification Basics', desc:'OTC, Rx, controlled substances overview', done:false, active:true, time:'60 min', presenter:'Maria Aquino, RPh', schedule:'2026-04-15', script:'Cover OTC, Rx, and controlled classes. Explain labeling and handling restrictions.'},
+  {id:'ori4', n:4, title:'Documentation & Record-Keeping', desc:'Log forms, prescription handling protocols', done:false, time:'45 min', presenter:'Maria Aquino, RPh', schedule:'2026-04-16', script:'Train interns on documentation standards and filing requirements.'},
+  {id:'ori5', n:5, title:'Safety & Emergency Protocols', desc:'Fire exits, drug spill procedures, first aid', done:false, time:'30 min', presenter:'Maria Aquino, RPh', schedule:'2026-04-17', script:'Review safety checklist, escalation chain, and incident reporting.'},
+];
+
+function cloneDefaultTaskBands() {
+  return JSON.parse(JSON.stringify(defaultTaskBands));
+}
+
+function loadTaskBands() {
+  try {
+    const stored = localStorage.getItem(TASK_STORAGE_KEY);
+    if (!stored) return cloneDefaultTaskBands();
+    const parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed) || parsed.length === 0) return cloneDefaultTaskBands();
+    return parsed;
+  } catch (e) {
+    return cloneDefaultTaskBands();
+  }
+}
+
+function saveTaskBands(bands) {
+  localStorage.setItem(TASK_STORAGE_KEY, JSON.stringify(bands));
+}
+
+function cloneDefaultOrientationModules() {
+  return JSON.parse(JSON.stringify(defaultOrientationModules));
+}
+
+function loadOrientationModules() {
+  try {
+    const stored = localStorage.getItem(ORIENTATION_STORAGE_KEY);
+    if (!stored) return cloneDefaultOrientationModules();
+    const parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed) || parsed.length === 0) return cloneDefaultOrientationModules();
+    return parsed;
+  } catch (e) {
+    return cloneDefaultOrientationModules();
+  }
+}
+
+function saveOrientationModules(modules) {
+  localStorage.setItem(ORIENTATION_STORAGE_KEY, JSON.stringify(modules));
+}
+
 function renderSidebar() {
   const pages = hrPages;
   const el = document.getElementById('sidebar-content');
@@ -643,6 +730,9 @@ function renderHouseRules() {
 }
 
 function renderOrientation() {
+  const modules = loadOrientationModules();
+  const activeModule = modules.find(m => m.active) || modules.find(m => !m.done) || modules[0];
+  const completed = modules.filter(m => m.done).length;
   return `<div class="page active">
     <div class="page-header" style="display:flex;align-items:center;justify-content:space-between">
       <div>
@@ -654,13 +744,7 @@ function renderOrientation() {
     <div class="two-col">
       <div>
         <div class="section-title" style="margin-bottom:10px">Orientation Modules</div>
-        ${[
-          {n:1, title:'Welcome & Company Overview', desc:'Pharmacy background, mission & values', done:true, time:'30 min'},
-          {n:2, title:'Pharmacy Layout & Zones', desc:'Dispensing, storage, consultation areas', done:true, time:'45 min'},
-          {n:3, title:'Drug Classification Basics', desc:'OTC, Rx, controlled substances overview', done:false, time:'60 min', active:true},
-          {n:4, title:'Documentation & Record-Keeping', desc:'Log forms, prescription handling protocols', done:false, time:'45 min'},
-          {n:5, title:'Safety & Emergency Protocols', desc:'Fire exits, drug spill procedures, first aid', done:false, time:'30 min'},
-        ].map(m => `<div class="orientation-step ${m.active?'active':m.done?'done':''}" onclick="selectOriStep(this)">
+        ${modules.map(m => `<div class="orientation-step ${m.active?'active':m.done?'done':''}" onclick="selectOriStep(this)">
           <div class="step-num">${m.done ? '✓' : m.n}</div>
           <div class="step-content" style="flex:1">
             <div class="step-title">${m.title}</div>
@@ -673,44 +757,54 @@ function renderOrientation() {
         </div>`).join('')}
       </div>
       <div>
-        <div class="section-title" style="margin-bottom:10px">Module Details — Drug Classification</div>
+        <div class="section-title" style="margin-bottom:10px">Module Details — Editable</div>
         <div class="card">
           <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-            <span class="tag tag-sky">Active</span>
-            <span class="tag tag-slate">60 min</span>
-            <span class="tag tag-amber">In Progress</span>
+            <span class="tag ${activeModule.done?'tag-teal':activeModule.active?'tag-sky':'tag-amber'}">${activeModule.done?'Completed':activeModule.active?'Active':'Pending'}</span>
+            <span class="tag tag-slate">${activeModule.time}</span>
+            <span class="tag tag-violet">HR Synced to Intern UI</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Module</label>
+            <select class="form-select" id="ori-module-id">
+              ${modules.map(m => `<option value="${m.id}" ${m.id===activeModule.id?'selected':''}>${m.n}. ${m.title}</option>`).join('')}
+            </select>
           </div>
           <div class="form-group">
             <label class="form-label">Module Title</label>
-            <input class="form-input" value="Drug Classification Basics">
+            <input class="form-input" id="ori-title" value="${activeModule.title}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Short Description</label>
+            <input class="form-input" id="ori-desc" value="${activeModule.desc}">
           </div>
           <div class="form-group">
             <label class="form-label">Content / Script</label>
-            <textarea class="form-textarea" style="min-height:100px">Cover the three main drug categories: Over-the-Counter (OTC), Prescription-only (Rx), and Controlled Substances. Explain labeling requirements and intern handling restrictions.</textarea>
+            <textarea class="form-textarea" id="ori-script" style="min-height:100px">${activeModule.script || ''}</textarea>
           </div>
           <div class="form-group">
             <label class="form-label">Presenter</label>
-            <input class="form-input" value="Maria Aquino, RPh">
+            <input class="form-input" id="ori-presenter" value="${activeModule.presenter || ''}">
           </div>
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Scheduled Date</label>
-              <input class="form-input" type="date" value="2026-04-15">
+              <input class="form-input" type="date" id="ori-schedule" value="${activeModule.schedule || ''}">
             </div>
             <div class="form-group">
               <label class="form-label">Duration</label>
-              <input class="form-input" value="60 minutes">
+              <input class="form-input" id="ori-duration" value="${activeModule.time}">
             </div>
           </div>
           <div style="display:flex;gap:8px">
-            <button class="btn btn-primary" style="flex:1">Save Changes</button>
+            <button class="btn btn-primary" style="flex:1" onclick="saveOrientationChanges()">Save Changes</button>
             <button class="btn btn-outline">Preview</button>
           </div>
         </div>
         <div class="card" style="margin-top:10px">
           <div class="section-title" style="margin-bottom:10px">Intern Completion</div>
-          <div class="progress-bar" style="margin-bottom:8px"><div class="progress-fill" style="width:50%"></div></div>
-          <div style="font-size:11px;color:var(--slate-400);margin-bottom:10px">4 of 8 interns completed all orientation modules</div>
+          <div class="progress-bar" style="margin-bottom:8px"><div class="progress-fill" style="width:${Math.round((completed/modules.length)*100)}%"></div></div>
+          <div style="font-size:11px;color:var(--slate-400);margin-bottom:10px">${completed} of ${modules.length} modules completed</div>
           <table class="data-table">
             <thead><tr><th>Intern</th><th>Progress</th><th>Last</th></tr></thead>
             <tbody>
@@ -726,41 +820,7 @@ function renderOrientation() {
 }
 
 function renderTaskManagement() {
-  const bands = [
-    {
-      id:'bl', cls:'band-before-lunch', label:'Before Lunch Tasks', ico:'🌅', time:'8:00 – 12:00',
-      tasks: [
-        {id:'bl1', name:'Pill Counting & Verification', assignee:'J. Reyes, A. Santos', duration:'30 min'},
-        {id:'bl2', name:'Label Accuracy Check', assignee:'M. Cruz', duration:'20 min'},
-        {id:'bl3', name:'Morning Drug Tray Setup', assignee:'All Interns', duration:'15 min'},
-        {id:'bl4', name:'Expired Stock Spot Check', assignee:'L. Tan', duration:'20 min'},
-      ]
-    },
-    {
-      id:'d', cls:'band-daily', label:'Daily Tasks (All Day)', ico:'📅', time:'8:00 – 17:00',
-      tasks: [
-        {id:'d1', name:'Patient Queue Assistance', assignee:'Rotation', duration:'Ongoing'},
-        {id:'d2', name:'Prescription Filing & Organization', assignee:'A. Santos', duration:'15 min'},
-        {id:'d3', name:'Drug Counseling Observation', assignee:'All Interns', duration:'As needed'},
-      ]
-    },
-    {
-      id:'cl', cls:'band-before-close', label:'Before Closing Tasks', ico:'🌙', time:'16:00 – 18:00',
-      tasks: [
-        {id:'cl1', name:'End-of-Day Inventory Count', assignee:'J. Reyes', duration:'30 min'},
-        {id:'cl2', name:'Refrigerator Temperature Log', assignee:'M. Cruz', duration:'10 min'},
-        {id:'cl3', name:'Dispensing Area Cleanup', assignee:'All Interns', duration:'20 min'},
-      ]
-    },
-    {
-      id:'wk', cls:'band-weekly', label:'Weekly Tasks', ico:'📆', time:'Every Monday',
-      tasks: [
-        {id:'wk1', name:'Full Shelf Audit & FEFO Check', assignee:'All Interns', duration:'60 min'},
-        {id:'wk2', name:'Waste Disposal Documentation', assignee:'J. Reyes', duration:'30 min'},
-        {id:'wk3', name:'Weekly Progress Report Submission', assignee:'All Interns', duration:'30 min'},
-      ]
-    },
-  ];
+  const bands = loadTaskBands();
 
   return `<div class="page active">
     <div class="page-header" style="display:flex;align-items:center;justify-content:space-between">
@@ -773,6 +833,41 @@ function renderTaskManagement() {
     <div class="inline-tip">
       <span>ℹ</span>
       <span>Tasks are structured by pharmacy workflow slots. Click any task band to expand or collapse. Assign tasks to individual interns or all interns.</span>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="section-title" style="margin-bottom:10px">Create and Assign Task</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Task Name <span class="req">*</span></label>
+          <input class="form-input" id="new-task-name" placeholder="e.g. Antibiotic shelf relabeling">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Assign To <span class="req">*</span></label>
+          <select class="form-select" id="new-task-assignee">
+            ${INTERN_OPTIONS.map(name => `<option value="${name}">${name}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label class="form-label">Task Slot</label>
+          <select class="form-select" id="new-task-slot">
+            <option value="bl">Before Lunch</option>
+            <option value="d">Daily</option>
+            <option value="cl">Before Closing</option>
+            <option value="wk">Weekly</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Duration</label>
+          <input class="form-input" id="new-task-duration" value="20 min">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Note</label>
+          <input class="form-input" id="new-task-note" placeholder="Optional instructions">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="addTaskFromHR()">Assign Task to Intern</button>
     </div>
     ${bands.map(b => `
     <div class="task-band ${b.cls}" id="band-${b.id}">
@@ -794,7 +889,7 @@ function renderTaskManagement() {
               <td><span class="tag ${b.id==='d'?'tag-teal':'tag-amber'}">${b.id==='d'?'Active':'Pending'}</span></td>
               <td style="display:flex;gap:4px">
                 <button class="btn btn-outline btn-sm">Edit</button>
-                <button class="btn btn-danger btn-sm">✕</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteTaskFromHR('${b.id}','${t.id}')">✕</button>
               </td>
             </tr>`).join('')}
           </tbody>
@@ -916,6 +1011,59 @@ function selectOriStep(el) {
 function addRule() {}
 
 function initTaskToggles() {}
+
+function saveOrientationChanges() {
+  const moduleId = document.getElementById('ori-module-id')?.value;
+  const modules = loadOrientationModules();
+  const idx = modules.findIndex(m => m.id === moduleId);
+  if (idx < 0) return;
+  modules.forEach(m => { m.active = false; });
+  modules[idx] = {
+    ...modules[idx],
+    title: (document.getElementById('ori-title')?.value || modules[idx].title).trim(),
+    desc: (document.getElementById('ori-desc')?.value || modules[idx].desc).trim(),
+    script: (document.getElementById('ori-script')?.value || '').trim(),
+    presenter: (document.getElementById('ori-presenter')?.value || '').trim(),
+    schedule: document.getElementById('ori-schedule')?.value || modules[idx].schedule,
+    time: (document.getElementById('ori-duration')?.value || modules[idx].time).trim(),
+    active: true,
+  };
+  saveOrientationModules(modules);
+  navigate('orientation');
+}
+
+function addTaskFromHR() {
+  const nameEl = document.getElementById('new-task-name');
+  const assigneeEl = document.getElementById('new-task-assignee');
+  const slotEl = document.getElementById('new-task-slot');
+  const durationEl = document.getElementById('new-task-duration');
+  const noteEl = document.getElementById('new-task-note');
+  const taskName = nameEl?.value.trim();
+  const assignee = assigneeEl?.value || 'All Interns';
+  const slot = slotEl?.value || 'd';
+  const duration = (durationEl?.value || '20 min').trim();
+  const note = (noteEl?.value || '').trim();
+  if (!taskName) {
+    alert('Please enter a task name.');
+    return;
+  }
+  const bands = loadTaskBands();
+  const band = bands.find(b => b.id === slot);
+  if (!band) return;
+  const id = slot + Date.now().toString(36).slice(-5);
+  band.tasks.push({ id, name: taskName, assignee, duration, note });
+  saveTaskBands(bands);
+  navigate('task-management');
+}
+
+function deleteTaskFromHR(slotId, taskId) {
+  const bands = loadTaskBands();
+  const band = bands.find(b => b.id === slotId);
+  if (!band) return;
+  band.tasks = band.tasks.filter(t => t.id !== taskId);
+  saveTaskBands(bands);
+  navigate('task-management');
+}
 
 // Init
 renderSidebar();
