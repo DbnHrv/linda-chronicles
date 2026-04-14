@@ -1,0 +1,21 @@
+<?php
+return [
+    1  => ['name'=>'Submit Internship Requirements',  'view'=>'/views/processes/intern_submit_requirements.php', 'roles'=>[2]],
+    2  => ['name'=>'Organize Pharmacy Policies',      'view'=>'/views/processes/hr_organize_policies.php',       'roles'=>[6]],
+    3  => ['name'=>'Check Internship Requirements',   'view'=>'/views/processes/hr_check_requirements.php',      'roles'=>[6]],
+    4  => ['name'=>'Conduct Job Interview',           'view'=>'/views/processes/job_interview.php',              'roles'=>[2,6]],
+    5  => ['name'=>'Present Schedule & Requirements', 'view'=>'/views/processes/present_schedule.php',           'roles'=>[6]],
+    6  => ['name'=>'Organize Schedule',               'view'=>'/views/processes/organize_schedule.php',          'roles'=>[2,6]],
+    7  => ['name'=>'Conduct Company Orientation',     'view'=>'/views/processes/conduct_orientation.php',        'roles'=>[6]],
+    8  => ['name'=>'Present Internship Tasks',        'view'=>'/views/processes/assign_intern_tasks.php',        'roles'=>[2,6]],
+    9  => ['name'=>'Conduct Product Inventory',       'view'=>'/views/processes/conduct_inventory.php',          'roles'=>[2]],
+    10 => ['name'=>'Create Inventory Report',         'view'=>'/views/processes/create_inventory_report.php',    'roles'=>[4]],
+    11 => ['name'=>'Check Inventory Report',          'view'=>'/views/processes/check_inventory_report.php',     'roles'=>[4]],
+    12 => ['name'=>'Request Additional Stocks',       'view'=>'/views/processes/request_stocks.php',             'roles'=>[4]],
+    13 => ['name'=>'Check Stock Requisition Report',  'view'=>'/views/processes/check_stock_requisition.php',    'roles'=>[5]],
+    14 => ['name'=>'Generate Purchase Order',         'view'=>'/views/processes/generate_purchase_order.php',    'roles'=>[5]],
+    15 => ['name'=>'Upload Doctor Prescription',      'view'=>'/views/processes/upload_prescription.php',        'roles'=>[1]],
+    16 => ['name'=>'Check Product Availability',      'view'=>'/views/processes/check_product_availability.php', 'roles'=>[3]],
+    17 => ['name'=>'Dispense Product',                'view'=>'/views/processes/dispense_products.php',          'roles'=>[3]],
+    18 => ['name'=>'Process Payment',                 'view'=>'/views/processes/process_payment.php',            'roles'=>[1]],
+];

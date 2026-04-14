@@ -77,15 +77,16 @@ class User {
                 $fullName = trim($user['first_name'] . ' ' . $user['middle_name'] . ' ' . $user['last_name']);
 
                 // Create session
-                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_id']         = $user['id'];
                 $_SESSION['user_first_name'] = $user['first_name'];
-                $_SESSION['user_middle_name'] = $user['middle_name'];
-                $_SESSION['user_last_name'] = $user['last_name'];
-                $_SESSION['user_full_name'] = $fullName;
-                $_SESSION['user_email'] = $user['email'];
-                $_SESSION['user_role'] = $user['role_id'];
-                $_SESSION['user_role_name'] = $user['role_name'];
-                $_SESSION['login_time'] = time();
+                $_SESSION['user_middle_name']= $user['middle_name'];
+                $_SESSION['user_last_name']  = $user['last_name'];
+                $_SESSION['user_full_name']  = $fullName;
+                $_SESSION['user_email']      = $user['email'];
+                $_SESSION['role_id']         = $user['role_id'];   // primary key used by config
+                $_SESSION['user_role']       = $user['role_id'];   // alias
+                $_SESSION['user_role_name']  = $user['role_name'];
+                $_SESSION['login_time']      = time();
 
                 return ['success' => true, 'message' => 'Login successful', 'role_id' => $user['role_id']];
             } else {

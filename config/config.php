@@ -53,7 +53,7 @@ function isAuthenticated() {
 
 // Helper function to get current user role
 function getCurrentUserRole() {
-    return $_SESSION['user_role'] ?? null;
+    return $_SESSION['role_id'] ?? $_SESSION['user_role'] ?? null;
 }
 
 // Helper function to redirect
@@ -78,5 +78,69 @@ function verifyCSRFToken($token) {
 // Helper function to sanitize input
 function sanitize($input) {
     return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+}
+
+// ── RBAC ──────────────────────────────────────────────────────
+
+$PROCESS_ACCESS = [
+    ROLE_INTERN               => [1, 4, 6, 8, 9],
+    ROLE_HR_PERSONNEL         => [2, 3, 4, 5, 6, 7, 8],
+    ROLE_PHARMACY_TECHNICIAN  => [10, 11, 12],
+    ROLE_PHARMACIST           => [13, 14],
+    ROLE_PHARMACIST_ASSISTANT => [16, 17],
+    ROLE_CUSTOMER             => [15, 18],
+];
+
+$PROCESS_METADATA = [
+    1  => ['name'=>'Submit Internship Requirements',  'role'=>'Intern',               'category'=>'Internship'],
+    2  => ['name'=>'Organize Pharmacy Policies',      'role'=>'HR Personnel',          'category'=>'HR'],
+    3  => ['name'=>'Check Internship Requirements',   'role'=>'HR Personnel',          'category'=>'HR'],
+    4  => ['name'=>'Conduct Job Interview',           'role'=>'HR Personnel / Intern', 'category'=>'HR'],
+    5  => ['name'=>'Present Schedule & Requirements', 'role'=>'HR Personnel',          'category'=>'HR'],
+    6  => ['name'=>'Organize Schedule',               'role'=>'HR Personnel / Intern', 'category'=>'HR'],
+    7  => ['name'=>'Conduct Company Orientation',     'role'=>'HR Personnel',          'category'=>'HR'],
+    8  => ['name'=>'Present Internship Tasks',        'role'=>'HR Personnel / Intern', 'category'=>'HR'],
+    9  => ['name'=>'Conduct Product Inventory',       'role'=>'Intern',               'category'=>'Inventory'],
+    10 => ['name'=>'Create Inventory Report',         'role'=>'Pharmacy Technician',  'category'=>'Inventory'],
+    11 => ['name'=>'Check Inventory Report',          'role'=>'Pharmacy Technician',  'category'=>'Inventory'],
+    12 => ['name'=>'Request Additional Stocks',       'role'=>'Pharmacy Technician',  'category'=>'Inventory'],
+    13 => ['name'=>'Check Stock Requisition Report',  'role'=>'Pharmacist',           'category'=>'Pharmacy'],
+    14 => ['name'=>'Generate Purchase Order',         'role'=>'Pharmacist',           'category'=>'Pharmacy'],
+    15 => ['name'=>'Upload Doctor Prescription',      'role'=>'Customer',             'category'=>'Customer'],
+    16 => ['name'=>'Check Product Availability',      'role'=>'Pharmacist Assistant', 'category'=>'Pharmacy'],
+    17 => ['name'=>'Dispense Product',                'role'=>'Pharmacist Assistant', 'category'=>'Pharmacy'],
+    18 => ['name'=>'Process Payment',                 'role'=>'Customer',             'category'=>'Customer'],
+];
+
+function canAccessProcess($processId, $roleId = null) {
+    global $PROCESS_ACCESS;
+    if ($roleId === null) $roleId = getCurrentUserRole();
+    return isset($PROCESS_ACCESS[$roleId]) && in_array($processId, $PROCESS_ACCESS[$roleId]);
+}
+
+function getAccessibleProcesses($roleId = null) {
+    global $PROCESS_ACCESS;
+    if ($roleId === null) $roleId = getCurrentUserRole();
+    return $PROCESS_ACCESS[$roleId] ?? [];
+}
+
+function getProcessMetadata($processId) {
+    global $PROCESS_METADATA;
+    return $PROCESS_METADATA[$processId] ?? null;
+}
+
+function getRoleNameById($roleId) {
+    global $ROLE_NAMES;
+    return $ROLE_NAMES[$roleId] ?? 'Unknown';
+}
+
+function requireProcessAccess($processId) {
+    if (!isAuthenticated()) redirect(APP_URL . '/?action=login');
+    if (!canAccessProcess($processId)) {
+        http_response_code(403);
+        die('<div style="font-family:sans-serif;padding:40px;background:#0a0c10;color:#f87171;min-height:100vh">
+             <h2>Access Denied</h2><p>You do not have permission to access this process.</p>
+             <a href="' . APP_URL . '/dashboard.php" style="color:#38bdf8">← Back to Dashboard</a></div>');
+    }
 }
 ?>

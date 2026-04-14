@@ -131,31 +131,7 @@ class AuthController {
         if (!isAuthenticated()) {
             redirect(APP_URL . '/?action=login');
         }
-
-        $roleId = getCurrentUserRole();
-
-        switch ($roleId) {
-            case ROLE_CUSTOMER:
-                redirect(APP_URL . '/?action=dashboard&role=customer');
-                break;
-            case ROLE_INTERN:
-                redirect(APP_URL . '/?action=dashboard&role=intern');
-                break;
-            case ROLE_PHARMACIST_ASSISTANT:
-                redirect(APP_URL . '/?action=dashboard&role=pharmacist_assistant');
-                break;
-            case ROLE_PHARMACY_TECHNICIAN:
-                redirect(APP_URL . '/?action=dashboard&role=pharmacy_technician');
-                break;
-            case ROLE_PHARMACIST:
-                redirect(APP_URL . '/?action=dashboard&role=pharmacist');
-                break;
-            case ROLE_HR_PERSONNEL:
-                redirect(APP_URL . '/?action=dashboard&role=hr_personnel');
-                break;
-            default:
-                redirect(APP_URL . '/?action=login');
-        }
+        redirect(APP_URL . '/dashboard.php');
     }
 
     /**
