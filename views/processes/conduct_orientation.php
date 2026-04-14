@@ -5,7 +5,7 @@ if (!isAuthenticated()) redirect(APP_URL . '/?action=login');
 requireProcessAccess(7);
 $processModel = new ProcessModel($pdo);
 $message = $message_type = '';
-$orientations = $processModel->getAllOrientations();
+try { $orientations = $processModel->getAllOrientations(); } catch(Exception $e){ $orientations = []; }
 try { $stmt=$pdo->prepare("SELECT u.id,u.first_name,u.last_name FROM users u JOIN internship_submissions s ON s.user_id=u.id WHERE u.role_id=? AND s.status='Approved' ORDER BY u.first_name"); $stmt->execute([ROLE_INTERN]); $interns=$stmt->fetchAll(); } catch(Exception $e){$interns=[];}
 if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='create_orientation') {
     if (!verifyCSRFToken($_POST['csrf_token']??'')) { $message='Invalid token.'; $message_type='error'; }
@@ -13,7 +13,8 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='create_orie
         $intern_id=intval($_POST['intern_id']??0); $date=sanitize($_POST['orientation_date']??''); $venue=sanitize($_POST['venue']??''); $content=sanitize($_POST['content']??'');
         if (!$intern_id||!$date) throw new Exception('Intern and date are required.');
         $processModel->createOrientationSession($intern_id,$date,$venue,$content);
-        $message='Orientation scheduled.'; $message_type='success'; $orientations=$processModel->getAllOrientations();
+        $message='Orientation scheduled.'; $message_type='success';
+        try { $orientations=$processModel->getAllOrientations(); } catch(Exception $e){ $orientations=[]; }
     } catch(Exception $e){$message=$e->getMessage();$message_type='error';} }
 }
 ?>

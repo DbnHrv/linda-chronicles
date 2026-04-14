@@ -6,14 +6,15 @@ requireProcessAccess(12);
 $processModel = new ProcessModel($pdo);
 $message = $message_type = '';
 try { $stmt=$pdo->prepare("SELECT id,product_name,product_code,current_stock FROM products WHERE is_active=1 ORDER BY product_name"); $stmt->execute(); $products=$stmt->fetchAll(); } catch(Exception $e){$products=[];}
-$requisitions = $processModel->getRequisitionsByUser($_SESSION['user_id']);
+try { $requisitions = $processModel->getRequisitionsByUser($_SESSION['user_id']); } catch(Exception $e){ $requisitions=[]; }
 if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='request_stock') {
     if (!verifyCSRFToken($_POST['csrf_token']??'')) { $message='Invalid token.'; $message_type='error'; }
     else { try {
         $pid=intval($_POST['product_id']??0); $qty=intval($_POST['quantity']??0); $reason=sanitize($_POST['reason']??'');
         if ($pid<=0||$qty<=0) throw new Exception('Valid product and quantity required.');
         $processModel->createStockRequisition($pid,$qty,$reason);
-        $message='Stock requisition submitted.'; $message_type='success'; $requisitions=$processModel->getRequisitionsByUser($_SESSION['user_id']);
+        $message='Stock requisition submitted.'; $message_type='success';
+        try { $requisitions=$processModel->getRequisitionsByUser($_SESSION['user_id']); } catch(Exception $e){ $requisitions=[]; }
     } catch(Exception $e){$message=$e->getMessage();$message_type='error';} }
 }
 ?>

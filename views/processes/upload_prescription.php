@@ -7,7 +7,7 @@ $processModel = new ProcessModel($pdo);
 $message = $message_type = '';
 $uploads_dir = realpath(__DIR__ . '/../../uploads') ?: (__DIR__ . '/../../uploads');
 if (!is_dir($uploads_dir)) mkdir($uploads_dir, 0755, true);
-$prescriptions = $processModel->getPrescriptionsByCustomer($_SESSION['user_id']);
+try { $prescriptions = $processModel->getPrescriptionsByCustomer($_SESSION['user_id']); } catch(Exception $e){ $prescriptions=[]; }
 if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='upload_prescription') {
     if (!verifyCSRFToken($_POST['csrf_token']??'')) { $message='Invalid token.'; $message_type='error'; }
     else { try {

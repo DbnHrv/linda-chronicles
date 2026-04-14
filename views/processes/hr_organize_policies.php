@@ -5,7 +5,7 @@ if (!isAuthenticated()) redirect(APP_URL . '/?action=login');
 requireProcessAccess(2);
 $processModel = new ProcessModel($pdo);
 $message = $message_type = '';
-$policies = $processModel->getHRPolicies();
+try { $policies = $processModel->getHRPolicies(); } catch(Exception $e){ $policies=[]; }
 if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='add_policy') {
     if (!verifyCSRFToken($_POST['csrf_token']??'')) { $message='Invalid token.'; $message_type='error'; }
     else { try {

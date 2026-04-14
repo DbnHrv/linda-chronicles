@@ -6,7 +6,7 @@ requireProcessAccess(9);
 $processModel = new ProcessModel($pdo);
 $message = $message_type = '';
 try { $stmt=$pdo->prepare("SELECT id,product_code,product_name,current_stock FROM products WHERE is_active=1 ORDER BY product_name"); $stmt->execute(); $products=$stmt->fetchAll(); } catch(Exception $e){$products=[];}
-$my_counts = $processModel->getInventoryCountsByUser($_SESSION['user_id']);
+try { $my_counts = $processModel->getInventoryCountsByUser($_SESSION['user_id']); } catch(Exception $e){ $my_counts=[]; }
 if ($_SERVER['REQUEST_METHOD']==='POST') {
     if (!verifyCSRFToken($_POST['csrf_token']??'')) { $message='Invalid token.'; $message_type='error'; }
     else {

@@ -8,7 +8,7 @@ $message = $message_type = '';
 $is_hr     = ((int)$_SESSION['role_id'] === ROLE_HR_PERSONNEL);
 $is_intern = ((int)$_SESSION['role_id'] === ROLE_INTERN);
 if ($is_hr) {
-    $all_tasks = $processModel->getAllTasks();
+    try { $all_tasks = $processModel->getAllTasks(); } catch(Exception $e){ $all_tasks = []; }
     try { $stmt=$pdo->prepare("SELECT u.id,u.first_name,u.last_name FROM users u JOIN internship_submissions s ON s.user_id=u.id WHERE u.role_id=? AND s.status='Approved' ORDER BY u.first_name"); $stmt->execute([ROLE_INTERN]); $interns=$stmt->fetchAll(); } catch(Exception $e){$interns=[];}
     if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='assign_task') {
         if (!verifyCSRFToken($_POST['csrf_token']??'')) { $message='Invalid token.'; $message_type='error'; }
@@ -16,11 +16,12 @@ if ($is_hr) {
             $intern_id=intval($_POST['intern_id']??0); $title=sanitize($_POST['task_title']??''); $desc=sanitize($_POST['task_description']??''); $deadline=sanitize($_POST['task_deadline']??'')?:null;
             if (!$intern_id||!$title) throw new Exception('Intern and task title are required.');
             $processModel->assignTask($intern_id,$title,$desc,$deadline);
-            $message='Task assigned.'; $message_type='success'; $all_tasks=$processModel->getAllTasks();
+            $message='Task assigned.'; $message_type='success';
+            try { $all_tasks=$processModel->getAllTasks(); } catch(Exception $e){ $all_tasks=[]; }
         } catch(Exception $e){$message=$e->getMessage();$message_type='error';} }
     }
 } else {
-    $my_tasks = $processModel->getTasksByIntern($_SESSION['user_id']);
+    try { $my_tasks = $processModel->getTasksByIntern($_SESSION['user_id']); } catch(Exception $e){ $my_tasks = []; }
 }
 ?>
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">

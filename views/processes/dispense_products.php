@@ -6,7 +6,7 @@ requireProcessAccess(17);
 $processModel = new ProcessModel($pdo);
 $message = $message_type = '';
 try { $stmt=$pdo->prepare("SELECT id,product_code,product_name,current_stock FROM products WHERE is_active=1 ORDER BY product_name"); $stmt->execute(); $products=$stmt->fetchAll(); } catch(Exception $e){$products=[];}
-$available_prescriptions = $processModel->getVerifiedPrescriptions();
+try { $available_prescriptions = $processModel->getVerifiedPrescriptions(); } catch(Exception $e){ $available_prescriptions=[]; }
 if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='dispense') {
     if (!verifyCSRFToken($_POST['csrf_token']??'')) { $message='Invalid token.'; $message_type='error'; }
     else { try {

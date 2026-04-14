@@ -15,7 +15,7 @@ $message = '';
 $message_type = '';
 
 // Load all schedules
-$schedules = $processModel->getAllSchedules();
+try { $schedules = $processModel->getAllSchedules(); } catch(Exception $e){ $schedules=[]; }
 
 // Handle schedule creation
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'create_schedule') {
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
             $processModel->createSchedule($intern_id, $start_date, $end_date, $data);
             $message = 'Schedule created and presented to intern successfully';
             $message_type = 'success';
-            $schedules = $processModel->getAllSchedules();
+            try { $schedules = $processModel->getAllSchedules(); } catch(Exception $e){ $schedules=[]; }
         } catch (Exception $e) {
             $message = 'Error: ' . $e->getMessage();
             $message_type = 'error';

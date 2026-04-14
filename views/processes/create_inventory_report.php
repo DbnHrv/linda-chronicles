@@ -6,7 +6,7 @@ requireProcessAccess(10);
 $processModel = new ProcessModel($pdo);
 $message = $message_type = '';
 try { $stmt=$pdo->prepare("SELECT ic.*,u.first_name,u.last_name,(SELECT COUNT(*) FROM inventory_items ii WHERE ii.inventory_id=ic.id) AS item_count FROM inventory_counts ic JOIN users u ON ic.conducted_by=u.id WHERE ic.status='Completed' AND ic.id NOT IN (SELECT inventory_id FROM inventory_reports) ORDER BY ic.completed_at DESC"); $stmt->execute(); $pending_counts=$stmt->fetchAll(); } catch(Exception $e){$pending_counts=[];}
-$existing_reports = $processModel->getInventoryReports();
+try { $existing_reports = $processModel->getInventoryReports(); } catch(Exception $e){ $existing_reports=[]; }
 if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='create_report') {
     if (!verifyCSRFToken($_POST['csrf_token']??'')) { $message='Invalid token.'; $message_type='error'; }
     else { try {

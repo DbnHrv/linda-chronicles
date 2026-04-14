@@ -5,8 +5,8 @@ if (!isAuthenticated()) redirect(APP_URL . '/?action=login');
 requireProcessAccess(18);
 $processModel = new ProcessModel($pdo);
 $message = $message_type = '';
-$payments = $processModel->getPaymentsByCustomer($_SESSION['user_id']);
-$ready_to_pay = $processModel->getDispensedPrescriptions($_SESSION['user_id']);
+try { $payments = $processModel->getPaymentsByCustomer($_SESSION['user_id']); } catch(Exception $e){ $payments=[]; }
+try { $ready_to_pay = $processModel->getDispensedPrescriptions($_SESSION['user_id']); } catch(Exception $e){ $ready_to_pay=[]; }
 if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='process_payment') {
     if (!verifyCSRFToken($_POST['csrf_token']??'')) { $message='Invalid token.'; $message_type='error'; }
     else { try {

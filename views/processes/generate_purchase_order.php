@@ -5,8 +5,10 @@ if (!isAuthenticated()) redirect(APP_URL . '/?action=login');
 requireProcessAccess(14);
 $processModel = new ProcessModel($pdo);
 $message = $message_type = '';
-$approved_requisitions = $processModel->getApprovedRequisitions();
-$purchase_orders = $processModel->getPurchaseOrders();
+$approved_requisitions = [];
+$purchase_orders = [];
+try { $approved_requisitions = $processModel->getApprovedRequisitions(); } catch(Exception $e){}
+try { $purchase_orders = $processModel->getPurchaseOrders(); } catch(Exception $e){}
 try { $stmt=$pdo->prepare("SELECT id,manufacturer_name FROM manufacturers ORDER BY manufacturer_name"); $stmt->execute(); $suppliers=$stmt->fetchAll(); } catch(Exception $e){$suppliers=[];}
 if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='generate_po') {
     if (!verifyCSRFToken($_POST['csrf_token']??'')) { $message='Invalid token.'; $message_type='error'; }

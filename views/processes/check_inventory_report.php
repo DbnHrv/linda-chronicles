@@ -5,7 +5,7 @@ if (!isAuthenticated()) redirect(APP_URL . '/?action=login');
 requireProcessAccess(11);
 $processModel = new ProcessModel($pdo);
 $message = $message_type = '';
-$reports = $processModel->getInventoryReports();
+try { $reports = $processModel->getInventoryReports(); } catch(Exception $e){ $reports=[]; }
 if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='verify_report') {
     if (!verifyCSRFToken($_POST['csrf_token']??'')) { $message='Invalid token.'; $message_type='error'; }
     else { try {
