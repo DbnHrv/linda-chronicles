@@ -478,9 +478,7 @@
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════
-     SIDEBAR
-══════════════════════════════════════════════ -->
+<!--SIDEBAR-->
 <nav class="sidebar">
   <div class="sidebar-logo">
     <div class="logo-icon"><i class="fa-solid fa-pills"></i></div>
@@ -547,18 +545,16 @@
   </div>
 
   <div class="sidebar-footer">
-    <div class="user-avatar">AP</div>
+    <div class="user-avatar">HR</div>
     <div>
-      <div class="user-name">Name</div>
+      <div class="user-name">HR Personnel</div>
       <div class="user-role">Human Resource</div>
     </div>
     <i class="fa-solid fa-ellipsis ml-auto text-muted" style="font-size:13px;cursor:pointer;"></i>
   </div>
 </nav>
 
-<!-- ══════════════════════════════════════════════
-     MAIN
-══════════════════════════════════════════════ -->
+<!-- MAIN -->
 <main class="main">
   <header class="topbar">
     <span class="topbar-title" id="pageTitle">Dashboard</span>
@@ -575,7 +571,7 @@
 
   <div class="content">
 
-    <!-- ════════════ DASHBOARD ════════════ -->
+    <!-- DASHBOARD -->
     <section class="page-section active" id="page-dashboard">
       <div class="grid-4 mb-6">
         <div class="stat-card green">
@@ -616,7 +612,6 @@
           </div>
           <div class="card-body">
             <div style="margin-bottom:18px;" id="hourList">
-              <!-- populated by JS -->
             </div>
           </div>
         </div>
@@ -966,7 +961,7 @@
       </div>
     </section>
 
-    <!-- ════════════ APPLICATIONS ════════════ -->
+    <!-- APPLICATIONS -->
     <section class="page-section" id="page-applications">
       <div class="card mb-6">
         <div class="card-header">
@@ -1113,7 +1108,7 @@
       </div>
     </section>
 
-    <!-- ════════════ INTERVIEWS ════════════ -->
+    <!-- INTERVIEWS -->
     <section class="page-section" id="page-interviews">
       <div class="grid-2">
         <div class="card">
@@ -1224,7 +1219,7 @@
       </div>
     </section>
 
-    <!-- ════════════ PROFILE WIZARD ════════════ -->
+    <!-- PROFILE WIZARD -->
     <section class="page-section" id="page-profile-wizard">
       <div class="card" style="max-width:820px;margin:auto;">
         <div class="card-header">
@@ -1475,7 +1470,7 @@
       </div>
     </section>
 
-    <!-- ════════════ DOCUMENTS ════════════ -->
+    <!-- DOCUMENTS -->
     <section class="page-section" id="page-documents">
       <div class="card">
         <div class="card-header">
@@ -1504,7 +1499,7 @@
       </div>
     </section>
 
-    <!-- ════════════ E-SIGNATURE ════════════ -->
+    <!-- E-SIGNATURE -->
     <section class="page-section" id="page-signature">
       <div class="card" style="max-width:720px;margin:auto;">
         <div class="card-header">
@@ -1553,7 +1548,7 @@
       </div>
     </section>
 
-    <!-- ════════════ WELCOME GUIDE ════════════ -->
+    <!-- WELCOME GUIDE -->
     <section class="page-section" id="page-welcome">
       <div style="max-width:820px;margin:auto;">
         <div style="background:linear-gradient(135deg,rgba(79,255,176,.12),rgba(0,200,255,.08));border:1px solid rgba(79,255,176,.2);border-radius:var(--radius);padding:32px;margin-bottom:24px;text-align:center;">
@@ -1593,7 +1588,7 @@
       </div>
     </section>
 
-    <!-- ════════════ ROTATIONS ════════════ -->
+    <!-- ROTATIONS -->
     <section class="page-section" id="page-rotations">
       <div class="card">
         <div class="card-header">
@@ -1609,7 +1604,7 @@
       </div>
     </section>
 
-    <!-- ════════════ SHIFTS & HOURS ════════════ -->
+    <!-- SHIFTS & HOURS -->
     <section class="page-section" id="page-shifts">
       <div class="grid-2 mb-6">
         <div class="card">
@@ -1731,7 +1726,7 @@
       </div>
     </section>
 
-    <!-- ════════════ DISCIPLINARY ════════════ -->
+    <!-- DISCIPLINARY -->
     <section class="page-section" id="page-disciplinary">
       <div class="grid-2">
         <div class="card">
@@ -1848,7 +1843,7 @@
       </div>
     </section>
 
-    <!-- ════════════ EVALUATIONS ════════════ -->
+    <!-- EVALUATIONS -->
     <section class="page-section" id="page-evaluation">
       <div class="grid-2">
         <div class="card">
@@ -1938,7 +1933,7 @@
       </div>
     </section>
 
-    <!-- ════════════ PRECEPTORS ════════════ -->
+    <!-- PRECEPTORS -->
     <section class="page-section" id="page-preceptors">
       <div class="grid-2">
         <div class="card">
@@ -1998,7 +1993,7 @@
       </div>
     </section>
 
-    <!-- ════════════ MOA COMPLIANCE ════════════ -->
+    <!-- MOA COMPLIANCE -->
     <section class="page-section" id="page-moa">
       <div class="card" style="max-width:760px;margin:auto;">
         <div class="card-header">
@@ -2080,7 +2075,7 @@
       </div>
     </section>
 
-    <!-- ════════════ NOTIFICATIONS PAGE ════════════ -->
+    <!-- NOTIFICATIONS PAGE -->
     <section class="page-section" id="page-notifications">
       <div class="card" style="max-width:680px;margin:auto;">
         <div class="card-header">
@@ -2140,9 +2135,7 @@
   </div><!-- /content -->
 </main>
 
-<!-- ══════════════════════════════════════════════
-     EVALUATION MODAL
-══════════════════════════════════════════════ -->
+<!-- EVALUATION MODAL -->
 <div class="modal-overlay" id="evalModal" onclick="closeModalOnBg(event,'evalModal')">
   <div class="modal">
     <div class="modal-header">
@@ -2193,7 +2186,7 @@
 </div>
 
 <script>
-// ── NAVIGATION ──
+//NAVIGATION
 const pageTitles = {
   'dashboard': 'Dashboard',
   'schedule-form': 'UCC Student Schedule Form',
@@ -2226,12 +2219,12 @@ function showPage(id) {
   });
 }
 
-// ── MODAL ──
+//  MODAL 
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 function closeModalOnBg(e, id) { if (e.target.id === id) closeModal(id); }
 
-// ── WIZARD ──
+//  WIZARD 
 function wizardStep(n) {
   [1,2,3,4].forEach(i => {
     const panel = document.getElementById('step-' + i);
@@ -2249,7 +2242,7 @@ function wizardStep(n) {
   });
 }
 
-// ── HOUR GOAL LOGIC (MOA-based) ──
+//  HOUR GOAL LOGIC (MOA-based) 
 function getHourGoal(course) {
   const map = {
     'computer_science': 500,
@@ -2425,16 +2418,14 @@ function dropIntern(e, to) {
 
 // ── DOCUMENT CHECKLIST ──
 const docs = [
-  { name: 'Class 10th Certificate', status: 'verified' },
-  { name: 'Class 12th Certificate', status: 'rejected' },
-  { name: 'Bachelor\'s Degree / Diploma', status: 'uploaded' },
-  { name: 'Government-Issued ID', status: 'verified' },
-  { name: 'Passport-size Photo (2x2)', status: 'verified' },
-  { name: 'Medical Certificate', status: 'pending' },
-  { name: 'PRC Board Rating (if applicable)', status: 'not-uploaded' },
-  { name: 'NBI Clearance', status: 'verified' },
-  { name: 'Certificate of Enrollment', status: 'uploaded' },
-  { name: 'MOA (Signed Copy)', status: 'pending' },
+  { name: 'Certificate of Employment (COE)', status: 'verified' },
+  { name: 'Transcript of Records (TOR)', status: 'verified' },
+  { name: 'Resume', status: 'verified' },
+  { name: 'Cover Letter', status: 'uploaded' },
+  { name: 'Parent Consent', status: 'pending' },
+  { name: 'Medical Certificate', status: 'verified' },
+  { name: 'School Endorsement Letter', status: 'verified' },
+  { name: 'Memorandum of Agreement (MOA)', status: 'verified' },
 ];
 
 const statusLabel = { verified:'Verified', rejected:'Rejected', uploaded:'Uploaded', pending:'Pending Review', 'not-uploaded':'Not Uploaded' };
