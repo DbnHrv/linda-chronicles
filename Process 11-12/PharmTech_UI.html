@@ -1,0 +1,626 @@
+
+<style>
+:root{
+  --font-sans:"Segoe UI",Tahoma,Arial,sans-serif;
+  --font-mono:Consolas,"Courier New",monospace;
+  --color-background-primary:#ffffff;
+  --color-background-secondary:#f7f9fc;
+  --color-background-tertiary:#eef3f8;
+  --color-border-secondary:#d6deea;
+  --color-border-tertiary:#e4ebf4;
+  --color-text-primary:#172231;
+  --color-text-secondary:#435467;
+  --color-text-tertiary:#7a8ea5;
+  --border-radius-md:8px;
+  --border-radius-lg:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-sans);background:linear-gradient(180deg,#f5f8fc 0%,#ebf1f7 100%);color:var(--color-text-primary);padding:14px;}
+.app{display:flex;min-height:800px;background:var(--color-background-tertiary);border:1px solid #dbe4ef;border-radius:14px;overflow:hidden;box-shadow:0 10px 24px rgba(16,42,67,.08);}
+.sidebar{width:200px;background:var(--color-background-secondary);border-right:0.5px solid var(--color-border-tertiary);padding:1rem 0;flex-shrink:0;display:flex;flex-direction:column;}
+.logo-area{padding:.75rem 1rem 1.25rem;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:.5rem;}
+.logo-name{font-size:14px;font-weight:500;color:var(--color-text-primary);}
+.logo-role{font-size:11px;color:var(--color-text-tertiary);margin-top:1px;}
+.sb-sec{font-size:10px;color:var(--color-text-tertiary);padding:.6rem 1rem .25rem;letter-spacing:.06em;text-transform:uppercase;}
+.sb-it{display:flex;align-items:center;gap:8px;padding:.42rem 1rem;font-size:13px;color:var(--color-text-secondary);cursor:pointer;border-left:2px solid transparent;}
+.sb-it:hover{background:var(--color-background-primary);color:var(--color-text-primary);}
+.sb-it.active{background:var(--color-background-primary);color:#1D9E75;font-weight:500;border-left-color:#1D9E75;}
+.sb-it .n{margin-left:auto;background:#E24B4A;color:#fff;border-radius:999px;font-size:10px;padding:0 5px;font-weight:500;}
+.main{flex:1;padding:1.5rem;overflow:auto;}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;}
+.page-title{font-size:18px;font-weight:500;color:var(--color-text-primary);}
+.page-sub{font-size:12px;color:var(--color-text-tertiary);margin-top:1px;}
+.user-pill{display:flex;align-items:center;gap:8px;}
+.avatar{width:32px;height:32px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#0F6E56;}
+.stat-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:1.25rem;}
+.sc{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:.75rem 1rem;box-shadow:0 1px 3px rgba(16,42,67,.05);}
+.sc .lbl{font-size:11px;color:var(--color-text-secondary);margin-bottom:3px;}
+.sc .val{font-size:22px;font-weight:500;color:var(--color-text-primary);}
+.sc .sub{font-size:11px;color:var(--color-text-tertiary);margin-top:1px;}
+.sc .val.amber{color:#854F0B;}
+.sc .val.green{color:#1D9E75;}
+.sc .val.blue{color:#185FA5;}
+.sc .val.red{color:#A32D2D;}
+.panel{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1.25rem;box-shadow:0 2px 8px rgba(16,42,67,.05);}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;}
+.pt{font-size:14px;font-weight:500;color:var(--color-text-primary);}
+.step-bar{display:flex;align-items:center;gap:0;margin-bottom:1.25rem;}
+.step{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-tertiary);}
+.step.active{color:#1D9E75;font-weight:500;}
+.step.done{color:#1D9E75;}
+.step-num{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--color-border-secondary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;}
+.step.active .step-num{background:#1D9E75;border-color:#1D9E75;color:#fff;}
+.step.done .step-num{background:#E1F5EE;border-color:#1D9E75;color:#1D9E75;}
+.step-line{flex:1;height:1px;background:var(--color-border-tertiary);margin:0 6px;}
+.step-line.done{background:#1D9E75;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg.full{grid-column:1/-1;}
+.fg label{font-size:11px;color:var(--color-text-secondary);font-weight:500;}
+.fg input,.fg select,.fg textarea{padding:7px 10px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);}
+.fg input:focus,.fg select:focus,.fg textarea:focus,td input:focus,td select:focus{outline:none;border-color:#93cdbb;box-shadow:0 0 0 3px rgba(29,158,117,.12);}
+.fg textarea{resize:vertical;min-height:60px;}
+.items-tbl-wrap{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;margin:10px 0;}
+table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
+thead{background:var(--color-background-secondary);}
+th{padding:7px 8px;text-align:left;font-weight:500;font-size:11px;color:var(--color-text-secondary);border-bottom:0.5px solid var(--color-border-tertiary);}
+td{padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);}
+tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:var(--color-background-secondary);}
+td input,td select{padding:4px 6px;font-size:11px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);width:100%;}
+.btn{padding:7px 14px;border-radius:var(--border-radius-md);font-size:13px;cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);}
+.btn-green{background:#1D9E75;color:#fff;border-color:#1D9E75;font-weight:500;}
+.btn-green:hover{background:#0F6E56;}
+.btn-blue{background:#E6F1FB;color:#0C447C;border-color:#B5D4F4;font-weight:500;}
+.btn:hover{filter:brightness(.98);}
+.btn-sm{padding:3px 9px;font-size:11px;}
+.btn-del{color:#A32D2D;border-color:#F7C1C1;background:#FCEBEB;}
+.btn-outline{background:transparent;border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary);}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:500;}
+.b-draft{background:#F1EFE8;color:#5F5E5A;}
+.b-pending{background:#FAEEDA;color:#854F0B;}
+.b-sent{background:#E6F1FB;color:#185FA5;}
+.b-approved{background:#EAF3DE;color:#3B6D11;}
+.b-rejected{background:#FCEBEB;color:#A32D2D;}
+.req-row{display:flex;align-items:center;gap:10px;padding:.6rem 0;border-bottom:0.5px solid var(--color-border-tertiary);cursor:pointer;}
+.req-row:last-child{border-bottom:none;}
+.req-row:hover{background:var(--color-background-secondary);margin:0 -1.25rem;padding-left:1.25rem;padding-right:1.25rem;}
+.req-id{font-family:var(--font-mono);font-size:11px;color:var(--color-text-tertiary);width:70px;flex-shrink:0;}
+.req-name{flex:1;font-size:13px;font-weight:500;color:var(--color-text-primary);}
+.req-meta{font-size:11px;color:var(--color-text-tertiary);}
+.req-items{font-size:11px;color:var(--color-text-secondary);}
+.divider{height:0.5px;background:var(--color-border-tertiary);margin:.75rem 0;}
+.report-header{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.85rem 1rem;margin-bottom:1rem;}
+.report-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:12px;}
+.report-meta .k{color:var(--color-text-tertiary);margin-bottom:2px;font-size:11px;}
+.report-meta .v{color:var(--color-text-primary);font-weight:500;}
+.total-row td{font-weight:500;background:var(--color-background-secondary);}
+.send-box{background:#E1F5EE;border:0.5px solid #9FE1CB;border-radius:var(--border-radius-md);padding:.85rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:1rem;}
+.send-box .msg{font-size:13px;color:#085041;}
+.two-col{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px;}
+.notif{display:flex;gap:8px;padding:.5rem 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px;}
+.notif:last-child{border-bottom:none;}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:#1D9E75;margin-top:4px;flex-shrink:0;}
+.notif-dot.amber{background:#EF9F27;}
+.notif-dot.blue{background:#378ADD;}
+.notif-text{color:var(--color-text-secondary);}
+.notif-time{color:var(--color-text-tertiary);font-size:11px;margin-top:2px;}
+.rpt-item{display:flex;align-items:center;gap:10px;padding:.65rem 0;border-bottom:0.5px solid var(--color-border-tertiary);}
+.rpt-item:last-child{border-bottom:none;}
+.rpt-id{font-family:var(--font-mono);font-size:11px;color:var(--color-text-tertiary);width:86px;flex-shrink:0;}
+.rpt-main{flex:1;}
+.rpt-title{font-size:13px;font-weight:500;color:var(--color-text-primary);}
+.rpt-sub{font-size:11px;color:var(--color-text-tertiary);margin-top:2px;}
+.rpt-actions{display:flex;gap:6px;flex-shrink:0;}
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.38);display:none;align-items:center;justify-content:center;z-index:120;}
+.modal-ov.show{display:flex;}
+.modal-card{width:min(880px,95vw);max-height:88vh;overflow:auto;background:var(--color-background-primary);border:1px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);box-shadow:0 18px 40px rgba(0,0,0,.2);padding:1rem 1.2rem;}
+.modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:.8rem;}
+.modal-title{font-size:16px;font-weight:600;color:var(--color-text-primary);}
+.modal-sub{font-size:12px;color:var(--color-text-tertiary);margin-top:2px;}
+.mini-meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:.7rem 0 1rem;}
+.mini-meta .k{font-size:10px;color:var(--color-text-tertiary);}
+.mini-meta .v{font-size:12px;color:var(--color-text-primary);font-weight:500;margin-top:1px;}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+@media (max-width:1024px){
+  body{padding:8px;}
+  .app{flex-direction:column;min-height:auto;}
+  .sidebar{width:100%;border-right:none;border-bottom:0.5px solid var(--color-border-tertiary);padding:.7rem;flex-direction:row;flex-wrap:wrap;gap:4px;}
+  .logo-area{width:100%;margin-bottom:.35rem;padding:.55rem .6rem .75rem;}
+  .sb-sec{width:100%;padding:.4rem .55rem .2rem;}
+  .sb-it{padding:.45rem .55rem;border-radius:8px;}
+  .stat-row{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .two-col{grid-template-columns:1fr;}
+}
+@media (max-width:640px){
+  .main{padding:1rem;}
+  .topbar{flex-direction:column;align-items:flex-start;gap:8px;}
+  .stat-row,.form-grid{grid-template-columns:1fr;}
+  .step{font-size:11px;}
+  .mini-meta{grid-template-columns:1fr 1fr;}
+}
+</style>
+
+<h2 class="sr-only">Pharmacy technician dashboard — request additional stocks, review requisition report, and send to pharmacist</h2>
+
+<div class="app" id="app">
+  <div class="sidebar">
+    <div class="logo-area">
+      <div style="width:32px;height:32px;border-radius:var(--border-radius-md);background:#1D9E75;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="8" width="14" height="2" rx="1" fill="#fff"/><rect x="8" y="2" width="2" height="14" rx="1" fill="#fff"/></svg>
+      </div>
+      <div class="logo-name">PharmaDesk</div>
+      <div class="logo-role">Technician Portal</div>
+    </div>
+    <div class="sb-sec">Main</div>
+    <div class="sb-it" onclick="setView('dashboard')">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".6"/><rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".6"/><rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".6"/><rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".6"/></svg>
+      Dashboard
+    </div>
+    <div class="sb-it active" onclick="setView('request')" id="sb-request">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2h10v10H2z" stroke="currentColor" stroke-width="1.2" fill="none" rx="1"/><path d="M5 7h4M7 5v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Request Stocks
+    </div>
+    <div class="sb-it" onclick="setView('report')" id="sb-report">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 1h6l3 3v9H3V1z" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M9 1v3h3M5 6h4M5 8.5h4M5 11h2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+      Requisition Report
+      <span class="n" id="pending-badge">2</span>
+    </div>
+    <div class="sb-sec">Records</div>
+    <div class="sb-it" onclick="setView('history')">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M7 4v3.5l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Request History
+    </div>
+    <div class="sb-it">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 11V5l5-3 5 3v6H9V8H5v3H2z" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+      Inventory
+    </div>
+    <div class="sb-it" onclick="setView('intern-reports')" id="sb-intern-reports">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 1h6l2 2v10H3V1z" stroke="currentColor" stroke-width="1.2"/><path d="M9 1v2h2M5 6h4M5 8.5h4M5 11h3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+      Intern Reports
+      <span class="n">3</span>
+    </div>
+    <div style="flex:1;"></div>
+    <div style="padding:.75rem 1rem;border-top:0.5px solid var(--color-border-tertiary);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="avatar">JR</div>
+        <div><div style="font-size:12px;font-weight:500;color:var(--color-text-primary);">Juan Reyes</div><div style="font-size:10px;color:var(--color-text-tertiary);">Pharm. Technician</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <div id="view-dashboard">
+      <div class="topbar">
+        <div><div class="page-title">Dashboard</div><div class="page-sub">Tuesday, April 14, 2026 · Morning Shift</div></div>
+        <div class="user-pill"><div class="avatar">JR</div><span style="font-size:13px;color:var(--color-text-primary);">Juan Reyes</span></div>
+      </div>
+      <div class="stat-row">
+        <div class="sc"><div class="lbl">Total Requests</div><div class="val blue">8</div><div class="sub">this month</div></div>
+        <div class="sc"><div class="lbl">Pending Review</div><div class="val amber">2</div><div class="sub">awaiting pharmacist</div></div>
+        <div class="sc"><div class="lbl">Approved</div><div class="val green">5</div><div class="sub">fulfilled</div></div>
+        <div class="sc"><div class="lbl">Low Stock Alerts</div><div class="val red">3</div><div class="sub">need reorder</div></div>
+      </div>
+      <div class="two-col">
+        <div class="panel">
+          <div class="ph"><span class="pt">Recent stock requests</span><button class="btn btn-sm" onclick="setView('request')">+ New Request</button></div>
+          <div class="req-row" onclick="setView('report');showReport('SR-0042')">
+            <span class="req-id">SR-0042</span>
+            <div style="flex:1"><div class="req-name">Morning restock batch</div><div class="req-meta">Apr 14, 2026 · 6 items</div></div>
+            <span class="badge b-pending">Pending</span>
+          </div>
+          <div class="req-row" onclick="setView('report');showReport('SR-0041')">
+            <span class="req-id">SR-0041</span>
+            <div style="flex:1"><div class="req-name">Controlled substances top-up</div><div class="req-meta">Apr 13, 2026 · 3 items</div></div>
+            <span class="badge b-sent">Sent</span>
+          </div>
+          <div class="req-row">
+            <span class="req-id">SR-0040</span>
+            <div style="flex:1"><div class="req-name">Weekly OTC reorder</div><div class="req-meta">Apr 10, 2026 · 9 items</div></div>
+            <span class="badge b-approved">Approved</span>
+          </div>
+          <div class="req-row">
+            <span class="req-id">SR-0039</span>
+            <div style="flex:1"><div class="req-name">Antihypertensives restock</div><div class="req-meta">Apr 7, 2026 · 4 items</div></div>
+            <span class="badge b-approved">Approved</span>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="ph"><span class="pt">Notifications</span></div>
+          <div class="notif"><span class="notif-dot amber"></span><div><div class="notif-text">GEN-CLONAZEPAM stock below reorder point</div><div class="notif-time">10 min ago</div></div></div>
+          <div class="notif"><span class="notif-dot blue"></span><div><div class="notif-text">SR-0041 reviewed by Pharmacist Cruz</div><div class="notif-time">1 hr ago</div></div></div>
+          <div class="notif"><span class="notif-dot green"></span><div><div class="notif-text">SR-0040 approved and fulfilled</div><div class="notif-time">Apr 10</div></div></div>
+          <div class="notif"><span class="notif-dot amber"></span><div><div class="notif-text">GEN-ACEBUTOLOL 400MG out of stock</div><div class="notif-time">Apr 9</div></div></div>
+          <div class="divider"></div>
+          <button class="btn btn-green" style="width:100%;margin-top:.25rem;" onclick="setView('request')">+ Create stock request</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-request" style="display:none;">
+      <div class="topbar">
+        <div><div class="page-title">Request additional stocks</div><div class="page-sub">Fill in the details below and add items to your request</div></div>
+        <button class="btn btn-outline" onclick="setView('dashboard')">&#8592; Back</button>
+      </div>
+      <div class="step-bar">
+        <div class="step done" id="st1"><div class="step-num">&#10003;</div><span>Request details</span></div>
+        <div class="step-line" id="sl1"></div>
+        <div class="step active" id="st2"><div class="step-num">2</div><span>Add items</span></div>
+        <div class="step-line" id="sl2"></div>
+        <div class="step" id="st3"><div class="step-num">3</div><span>Review &amp; submit</span></div>
+      </div>
+
+      <div class="panel" id="step-details">
+        <div class="ph"><span class="pt">Request information</span></div>
+        <div class="form-grid">
+          <div class="fg"><label>Request ID</label><input value="SR-0043" readonly style="background:var(--color-background-secondary);color:var(--color-text-tertiary);"/></div>
+          <div class="fg"><label>Date</label><input value="April 14, 2026" readonly style="background:var(--color-background-secondary);color:var(--color-text-tertiary);"/></div>
+          <div class="fg"><label>Requested by</label><input value="Juan Reyes" readonly style="background:var(--color-background-secondary);color:var(--color-text-tertiary);"/></div>
+          <div class="fg"><label>Priority</label>
+            <select id="req-priority"><option>Normal</option><option>Urgent</option><option>Critical</option></select>
+          </div>
+          <div class="fg full"><label>Request title</label><input id="req-title" placeholder="e.g. Morning restock batch — Apr 14"/></div>
+          <div class="fg full"><label>Notes / reason for request</label><textarea id="req-notes" placeholder="Describe the reason for this stock request..."></textarea></div>
+        </div>
+      </div>
+
+      <div class="panel" id="step-items">
+        <div class="ph">
+          <span class="pt">Items requested</span>
+          <button class="btn btn-sm btn-blue" onclick="addItem()">+ Add item</button>
+        </div>
+        <div class="items-tbl-wrap">
+          <table>
+            <thead><tr>
+              <th style="width:80px;">DIN</th>
+              <th style="width:145px;">Drug name</th>
+              <th style="width:75px;">Strength</th>
+              <th style="width:65px;">Form</th>
+              <th style="width:70px;">Current stock</th>
+              <th style="width:75px;">Qty requested</th>
+              <th style="width:90px;">Reason</th>
+              <th style="width:40px;"></th>
+            </tr></thead>
+            <tbody id="items-body"></tbody>
+          </table>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:.75rem;">
+          <button class="btn btn-outline" onclick="setView('dashboard')">Cancel</button>
+          <button class="btn btn-green" onclick="submitRequest()">Submit request &#8594;</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-report" style="display:none;">
+      <div class="topbar">
+        <div><div class="page-title">Stock requisition report</div><div class="page-sub">Review before sending to pharmacist</div></div>
+        <button class="btn btn-outline" onclick="setView('request')">&#8592; Back</button>
+      </div>
+      <div class="panel">
+        <div class="ph">
+          <span class="pt" id="rpt-id-title">SR-0043</span>
+          <span class="badge b-pending" id="rpt-status-badge">Pending review</span>
+        </div>
+        <div class="report-header">
+          <div class="report-meta">
+            <div><div class="k">Request ID</div><div class="v" id="rpt-id">SR-0043</div></div>
+            <div><div class="k">Date</div><div class="v">April 14, 2026</div></div>
+            <div><div class="k">Prepared by</div><div class="v">Juan Reyes</div></div>
+            <div><div class="k">Title</div><div class="v" id="rpt-title">—</div></div>
+            <div><div class="k">Priority</div><div class="v" id="rpt-priority">Normal</div></div>
+            <div><div class="k">Status</div><div class="v" id="rpt-status-text">Pending review</div></div>
+          </div>
+          <div style="margin-top:.6rem;font-size:12px;color:var(--color-text-secondary);" id="rpt-notes-row"></div>
+        </div>
+        <div class="items-tbl-wrap" style="margin:0 0 .75rem;">
+          <table>
+            <thead><tr>
+              <th style="width:80px;">DIN</th>
+              <th style="width:150px;">Drug name</th>
+              <th style="width:75px;">Strength</th>
+              <th style="width:60px;">Form</th>
+              <th style="width:80px;">Current stock</th>
+              <th style="width:90px;">Qty requested</th>
+              <th>Reason</th>
+            </tr></thead>
+            <tbody id="rpt-body"></tbody>
+            <tfoot><tr class="total-row">
+              <td colspan="5" style="text-align:right;font-size:12px;padding:7px 8px;">Total items requested:</td>
+              <td style="padding:7px 8px;" id="rpt-total">—</td>
+              <td></td>
+            </tr></tfoot>
+          </table>
+        </div>
+        <div style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:.75rem;">
+          Please review all items carefully. Once sent, this request will be forwarded to the on-duty pharmacist for approval.
+        </div>
+        <div class="send-box" id="send-box">
+          <div>
+            <div class="msg" style="font-weight:500;">Ready to send to pharmacist?</div>
+            <div class="msg" style="font-weight:400;font-size:12px;margin-top:2px;">Pharmacist on duty: Dr. Maria Cruz</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline btn-sm" onclick="setView('request')">Edit request</button>
+            <button class="btn btn-green" onclick="sendToPharmacist()">Send to pharmacist &#8594;</button>
+          </div>
+        </div>
+        <div id="sent-confirm" style="display:none;background:#E6F1FB;border:0.5px solid #B5D4F4;border-radius:var(--border-radius-md);padding:.85rem 1rem;display:none;align-items:center;justify-content:space-between;gap:12px;">
+          <div>
+            <div style="font-size:13px;font-weight:500;color:#0C447C;">Sent to Dr. Maria Cruz</div>
+            <div style="font-size:12px;color:#185FA5;margin-top:2px;">The pharmacist has been notified. You will be informed once it is reviewed.</div>
+          </div>
+          <button class="btn btn-sm btn-blue" onclick="setView('history')">View history</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-history" style="display:none;">
+      <div class="topbar">
+        <div><div class="page-title">Request history</div><div class="page-sub">All stock requests submitted</div></div>
+        <button class="btn btn-green" onclick="setView('request')">+ New request</button>
+      </div>
+      <div class="panel">
+        <div class="req-row" onclick="setView('report');showReport('SR-0043')">
+          <span class="req-id">SR-0043</span>
+          <div style="flex:1"><div class="req-name" id="hist-0043-name">Morning restock batch</div><div class="req-meta">Apr 14, 2026 · <span id="hist-0043-count">0</span> items</div></div>
+          <span class="badge" id="hist-0043-badge" style="background:#FAEEDA;color:#854F0B;">Pending</span>
+        </div>
+        <div class="req-row" onclick="setView('report');showReport('SR-0042')">
+          <span class="req-id">SR-0042</span>
+          <div style="flex:1"><div class="req-name">Morning restock batch</div><div class="req-meta">Apr 14, 2026 · 6 items</div></div>
+          <span class="badge b-sent">Sent</span>
+        </div>
+        <div class="req-row">
+          <span class="req-id">SR-0041</span>
+          <div style="flex:1"><div class="req-name">Controlled substances top-up</div><div class="req-meta">Apr 13, 2026 · 3 items</div></div>
+          <span class="badge b-sent">Sent</span>
+        </div>
+        <div class="req-row">
+          <span class="req-id">SR-0040</span>
+          <div style="flex:1"><div class="req-name">Weekly OTC reorder</div><div class="req-meta">Apr 10, 2026 · 9 items</div></div>
+          <span class="badge b-approved">Approved</span>
+        </div>
+        <div class="req-row">
+          <span class="req-id">SR-0039</span>
+          <div style="flex:1"><div class="req-name">Antihypertensives restock</div><div class="req-meta">Apr 7, 2026 · 4 items</div></div>
+          <span class="badge b-approved">Approved</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-intern-reports" style="display:none;">
+      <div class="topbar">
+        <div><div class="page-title">Inventory reports from intern</div><div class="page-sub">Submitted summary reports from intern portal</div></div>
+        <button class="btn btn-outline" onclick="setView('dashboard')">&#8592; Back to dashboard</button>
+      </div>
+      <div class="panel">
+        <div class="ph"><span class="pt">Incoming reports</span><span class="badge b-pending">3 new</span></div>
+        <div class="rpt-item">
+          <span class="rpt-id">IR-2026-0414</span>
+          <div class="rpt-main">
+            <div class="rpt-title">Daily inventory Report</div>
+            <div class="rpt-sub">From: Juan Reyes · Date: Apr 14, 2026 · On hand value: ₱872.25</div>
+          </div>
+          <div class="rpt-actions">
+            <button class="btn btn-sm btn-blue" onclick="openInternReport('IR-2026-0414')">View</button>
+            <button class="btn btn-sm btn-green">Acknowledge</button>
+          </div>
+        </div>
+        <div class="rpt-item">
+          <span class="rpt-id">IR-2026-0413</span>
+          <div class="rpt-main">
+            <div class="rpt-title">Stock Count Report</div>
+            <div class="rpt-sub">From: Juan Reyes · Date: Apr 13, 2026 · On hand value: ₱1,120.75</div>
+          </div>
+          <div class="rpt-actions">
+            <button class="btn btn-sm btn-blue" onclick="openInternReport('IR-2026-0413')">View</button>
+            <button class="btn btn-sm btn-green">Acknowledge</button>
+          </div>
+        </div>
+        <div class="rpt-item">
+          <span class="rpt-id">IR-2026-0412</span>
+          <div class="rpt-main">
+            <div class="rpt-title">Stock Product Report</div>
+            <div class="rpt-sub">From: Juan Reyes · Date: Apr 12, 2026 · On hand value: ₱1,573.43</div>
+          </div>
+          <div class="rpt-actions">
+            <button class="btn btn-sm btn-blue" onclick="openInternReport('IR-2026-0412')">View</button>
+            <button class="btn btn-sm btn-green">Acknowledge</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-ov" id="intern-rpt-modal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="m-rpt-title">Inventory Report</div>
+        <div class="modal-sub" id="m-rpt-sub">Intern submitted report</div>
+      </div>
+      <button class="btn btn-sm btn-outline" onclick="closeInternReport()">Close</button>
+    </div>
+    <div class="mini-meta">
+      <div><div class="k">Report ID</div><div class="v" id="m-rpt-id">—</div></div>
+      <div><div class="k">Date</div><div class="v" id="m-rpt-date">—</div></div>
+      <div><div class="k">Submitted by</div><div class="v" id="m-rpt-by">—</div></div>
+      <div><div class="k">On hand value</div><div class="v" id="m-rpt-value">—</div></div>
+    </div>
+    <div class="items-tbl-wrap" style="margin:0;">
+      <table>
+        <thead>
+          <tr><th style="width:90px;">DIN</th><th>Drug</th><th style="width:80px;">On hand</th><th style="width:90px;">Acq Cost</th><th style="width:95px;">On hand Val</th></tr>
+        </thead>
+        <tbody id="m-rpt-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentView='request';
+let requestItems=[
+  {din:'2237723',name:'GEN-ACEBUTOLOL',strength:'400MG',form:'TABLET',current:0,qty:200,reason:'Out of stock'},
+  {din:'2230951',name:'GEN-CLONAZEPAM',strength:'2MG',form:'TABLET',current:100,qty:300,reason:'Below reorder point'},
+  {din:'2088398',name:'GEN-BACLOFEN',strength:'10MG',form:'TABLET',current:160,qty:100,reason:'Routine restock'},
+];
+let reqStatus='pending';
+let isSent=false;
+const internReports={
+  'IR-2026-0414':{
+    id:'IR-2026-0414',title:'Daily inventory Report',date:'Apr 14, 2026',by:'Juan Reyes',value:'₱872.25',
+    items:[
+      {din:'2237721',drug:'GEN-ACEBUTOLOL',oh:66,acq:'₱0.1720',val:'₱11.35'},
+      {din:'2237722',drug:'GEN-ACEBUTOLOL 200MG',oh:486,acq:'₱0.2575',val:'₱125.15'},
+      {din:'2237723',drug:'GEN-ACEBUTOLOL 400MG',oh:0,acq:'₱0.5115',val:'₱0.00'},
+      {din:'2230951',drug:'GEN-CLONAZEPAM',oh:100,acq:'₱0.2150',val:'₱21.50'},
+    ]
+  },
+  'IR-2026-0413':{
+    id:'IR-2026-0413',title:'Stock Count Report',date:'Apr 13, 2026',by:'Juan Reyes',value:'₱1,120.75',
+    items:[
+      {din:'2088398',drug:'GEN-BACLOFEN',oh:160,acq:'₱0.2960',val:'₱47.36'},
+      {din:'2230874',drug:'GEN-BUSPIRONE',oh:100,acq:'₱0.6640',val:'₱66.40'},
+      {din:'2227436',drug:'GEN-CIMETIDINE',oh:120,acq:'₱0.0737',val:'₱8.84'},
+      {din:'2238596',drug:'GEN-ZOPICLONE',oh:1000,acq:'₱0.4685',val:'₱468.50'},
+    ]
+  },
+  'IR-2026-0412':{
+    id:'IR-2026-0412',title:'Stock Product Report',date:'Apr 12, 2026',by:'Juan Reyes',value:'₱1,573.43',
+    items:[
+      {din:'2207788',drug:'GEN-RANITIDINE',oh:450,acq:'₱0.7787',val:'₱350.41'},
+      {din:'2057816',drug:'GEN-PINDOLOL',oh:440,acq:'₱0.3965',val:'₱174.46'},
+      {din:'2230951',drug:'GEN-CLONAZEPAM',oh:820,acq:'₱0.2150',val:'₱176.30'},
+      {din:'2238596',drug:'GEN-ZOPICLONE',oh:1000,acq:'₱0.4685',val:'₱468.50'},
+    ]
+  }
+};
+
+function setView(v){
+  ['dashboard','request','report','history','intern-reports'].forEach(id=>{
+    document.getElementById('view-'+id).style.display=id===v?'':'none';
+  });
+  document.querySelectorAll('.sb-it').forEach(el=>el.classList.remove('active'));
+  const map={dashboard:0,request:1,report:1,history:2,'intern-reports':4};
+  document.querySelectorAll('.sb-it')[map[v]||0].classList.add('active');
+  if(v==='report') renderReport('SR-0043');
+  if(v==='request') renderItems();
+  currentView=v;
+}
+
+function addItem(){
+  requestItems.push({din:'',name:'',strength:'',form:'TABLET',current:0,qty:0,reason:''});
+  renderItems();
+}
+
+function renderItems(){
+  const tb=document.getElementById('items-body');
+  tb.innerHTML=requestItems.map((it,i)=>`<tr>
+    <td><input value="${it.din}" oninput="requestItems[${i}].din=this.value" placeholder="DIN"/></td>
+    <td><input value="${it.name}" oninput="requestItems[${i}].name=this.value" placeholder="Drug name"/></td>
+    <td><input value="${it.strength}" oninput="requestItems[${i}].strength=this.value" placeholder="e.g. 10MG"/></td>
+    <td><select onchange="requestItems[${i}].form=this.value"><option${it.form==='TABLET'?' selected':''}>TABLET</option><option${it.form==='CAPSULE'?' selected':''}>CAPSULE</option><option${it.form==='LIQUID'?' selected':''}>LIQUID</option></select></td>
+    <td><input type="number" value="${it.current}" oninput="requestItems[${i}].current=+this.value" min="0"/></td>
+    <td><input type="number" value="${it.qty}" oninput="requestItems[${i}].qty=+this.value" min="1"/></td>
+    <td><input value="${it.reason}" oninput="requestItems[${i}].reason=this.value" placeholder="Reason"/></td>
+    <td><button class="btn btn-sm btn-del" onclick="removeItem(${i})">&#10005;</button></td>
+  </tr>`).join('');
+}
+
+function removeItem(i){requestItems.splice(i,1);renderItems();}
+
+function submitRequest(){
+  const title=document.getElementById('req-title').value.trim()||'Stock request — Apr 14';
+  const priority=document.getElementById('req-priority').value;
+  const notes=document.getElementById('req-notes').value.trim();
+  document.getElementById('rpt-title').textContent=title;
+  document.getElementById('rpt-priority').textContent=priority;
+  if(notes) document.getElementById('rpt-notes-row').textContent='Notes: '+notes;
+  document.getElementById('hist-0043-name').textContent=title;
+  document.getElementById('hist-0043-count').textContent=requestItems.length;
+  isSent=false;
+  setView('report');
+}
+
+function renderReport(id){
+  document.getElementById('rpt-id').textContent=id;
+  document.getElementById('rpt-id-title').textContent=id;
+  const items=id==='SR-0043'?requestItems:[
+    {din:'2237721',name:'GEN-ACEBUTOLOL',strength:'100MG',form:'TABLET',current:66,qty:200,reason:'Low stock'},
+    {din:'2230951',name:'GEN-CLONAZEPAM',strength:'2MG',form:'TABLET',current:100,qty:300,reason:'Reorder'},
+    {din:'2088398',name:'GEN-BACLOFEN',strength:'10MG',form:'TABLET',current:160,qty:150,reason:'Routine'},
+    {din:'2207788',name:'GEN-RANITIDINE',strength:'300MG',form:'TABLET',current:450,qty:100,reason:'Routine'},
+    {din:'2230874',name:'GEN-BUSPIRONE',strength:'10MG',form:'TABLET',current:100,qty:100,reason:'Low stock'},
+    {din:'2227436',name:'GEN-CIMETIDINE',strength:'200MG',form:'TABLET',current:120,qty:80,reason:'Routine'},
+  ];
+  const tb=document.getElementById('rpt-body');
+  tb.innerHTML=items.map(it=>`<tr>
+    <td style="font-family:var(--font-mono);font-size:11px;">${it.din}</td>
+    <td style="font-weight:500;">${it.name}</td>
+    <td>${it.strength}</td><td>${it.form}</td>
+    <td style="text-align:right;">${it.current}</td>
+    <td style="text-align:right;font-weight:500;">${it.qty}</td>
+    <td style="color:var(--color-text-secondary);">${it.reason}</td>
+  </tr>`).join('');
+  const total=items.reduce((a,it)=>a+it.qty,0);
+  document.getElementById('rpt-total').textContent=total+' units';
+  const sent=id!=='SR-0043'||isSent;
+  document.getElementById('send-box').style.display=sent?'none':'flex';
+  document.getElementById('sent-confirm').style.display=sent?'flex':'none';
+  if(sent){
+    document.getElementById('rpt-status-badge').className='badge b-sent';
+    document.getElementById('rpt-status-badge').textContent='Sent to pharmacist';
+    document.getElementById('rpt-status-text').textContent='Sent to pharmacist';
+  } else {
+    document.getElementById('rpt-status-badge').className='badge b-pending';
+    document.getElementById('rpt-status-badge').textContent='Pending review';
+    document.getElementById('rpt-status-text').textContent='Pending review';
+  }
+}
+
+function showReport(id){
+  setTimeout(()=>renderReport(id),50);
+}
+
+function sendToPharmacist(){
+  isSent=true;
+  document.getElementById('send-box').style.display='none';
+  const sc=document.getElementById('sent-confirm');
+  sc.style.display='flex';
+  document.getElementById('rpt-status-badge').className='badge b-sent';
+  document.getElementById('rpt-status-badge').textContent='Sent to pharmacist';
+  document.getElementById('rpt-status-text').textContent='Sent to pharmacist';
+  document.getElementById('hist-0043-badge').className='badge b-sent';
+  document.getElementById('hist-0043-badge').textContent='Sent';
+  document.getElementById('pending-badge').textContent='1';
+}
+
+function openInternReport(id){
+  const r=internReports[id];
+  if(!r) return;
+  document.getElementById('m-rpt-title').textContent=r.title;
+  document.getElementById('m-rpt-sub').textContent='Inventory report from intern portal';
+  document.getElementById('m-rpt-id').textContent=r.id;
+  document.getElementById('m-rpt-date').textContent=r.date;
+  document.getElementById('m-rpt-by').textContent=r.by;
+  document.getElementById('m-rpt-value').textContent=r.value;
+  document.getElementById('m-rpt-body').innerHTML=r.items.map(it=>`<tr>
+    <td style="font-family:var(--font-mono);font-size:11px;">${it.din}</td>
+    <td>${it.drug}</td>
+    <td style="text-align:right;">${it.oh}</td>
+    <td style="text-align:right;">${it.acq}</td>
+    <td style="text-align:right;font-weight:500;">${it.val}</td>
+  </tr>`).join('');
+  document.getElementById('intern-rpt-modal').classList.add('show');
+}
+function closeInternReport(){
+  document.getElementById('intern-rpt-modal').classList.remove('show');
+}
+
+setView('request');
+renderItems();
+</script>
