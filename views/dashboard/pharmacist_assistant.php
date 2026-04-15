@@ -7,8 +7,16 @@ try { $stmt=$pdo->prepare("SELECT COUNT(*) FROM prescriptions WHERE status IN ('
 try { $stmt=$pdo->prepare("SELECT COUNT(*) FROM dispensed_medicines WHERE DATE(dispensed_at)=CURDATE()"); $stmt->execute(); $dispensed_today=$stmt->fetchColumn(); } catch(Exception $e){ $dispensed_today=0; }
 try { $stmt=$pdo->prepare("SELECT COUNT(*) FROM products WHERE current_stock < reorder_level AND is_active=1"); $stmt->execute(); $low_stock=$stmt->fetchColumn(); } catch(Exception $e){ $low_stock=0; }
 try { $stmt=$pdo->prepare("SELECT COUNT(*) FROM dispensed_medicines WHERE dispensed_by=?"); $stmt->execute([$_SESSION['user_id']]); $my_total=$stmt->fetchColumn(); } catch(Exception $e){ $my_total=0; }
+
+// Fetch ALL prescriptions from all customers
 try {
-    $stmt=$pdo->prepare("SELECT p.id,p.patient_name,p.doctor_name,p.upload_date,p.status,u.first_name,u.last_name FROM prescriptions p JOIN users u ON p.customer_id=u.id WHERE p.status IN ('Verified','Approved') ORDER BY p.upload_date DESC LIMIT 5");
+    $stmt=$pdo->prepare("SELECT p.id,p.customer_id,p.patient_name,p.doctor_name,p.upload_date,p.status,p.prescription_image,u.first_name,u.last_name,u.email FROM prescriptions p JOIN users u ON p.customer_id=u.id ORDER BY p.upload_date DESC");
+    $stmt->execute(); $all_prescriptions=$stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch(Exception $e){ $all_prescriptions=[]; }
+
+// Fetch prescriptions ready to dispense (Verified/Approved)
+try {
+    $stmt=$pdo->prepare("SELECT p.id,p.customer_id,p.patient_name,p.doctor_name,p.upload_date,p.status,p.prescription_image,u.first_name,u.last_name,u.email FROM prescriptions p JOIN users u ON p.customer_id=u.id WHERE p.status IN ('Verified','Approved') ORDER BY p.upload_date DESC LIMIT 10");
     $stmt->execute(); $ready_prescriptions=$stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch(Exception $e){ $ready_prescriptions=[]; }
 $processes = array(
@@ -90,17 +98,130 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 <div class="rx-row">
 <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
 <div style="width:36px;height:36px;border-radius:8px;background:rgba(79,255,176,.1);display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0"><i class="fas fa-file-medical"></i></div>
-<div style="min-width:0">
+<div style="min-width:0;flex:1">
 <div style="font-size:13px;font-weight:600;color:var(--text)">Patient: <?php echo htmlspecialchars($rx['patient_name']); ?></div>
 <div style="font-size:11px;color:var(--text3);margin-top:2px">Dr. <?php echo htmlspecialchars($rx['doctor_name']); ?> · <?php echo date('M d, Y',strtotime($rx['upload_date'])); ?></div>
+<div style="font-size:10px;color:var(--text3);margin-top:2px">Customer: <?php echo htmlspecialchars($rx['first_name'].' '.$rx['last_name']); ?> (<?php echo htmlspecialchars($rx['email']); ?>)</div>
 </div></div>
 <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
 <span class="status-badge status-<?php echo $slug; ?>"><?php echo $rx['status']; ?></span>
-<a href="<?php echo APP_URL; ?>/views/processes/dispense_products.php" class="btn btn-sm" style="background:rgba(79,255,176,.1);color:var(--accent);border:1px solid rgba(79,255,176,.3)"><i class="fas fa-pills"></i> Dispense</a>
+<a href="<?php echo APP_URL; ?>/views/processes/dispense_products.php?rx_id=<?php echo $rx['id']; ?>" class="btn btn-sm" style="background:rgba(79,255,176,.1);color:var(--accent);border:1px solid rgba(79,255,176,.3)"><i class="fas fa-pills"></i> Dispense</a>
+<button type="button" class="btn btn-sm" style="background:var(--surface2);border:1px solid var(--border);color:var(--text)" onclick="viewPrescriptionFile('<?php echo htmlspecialchars($rx['prescription_image']); ?>')"><i class="fas fa-file"></i> View</button>
 </div></div>
 <?php endforeach; ?>
 <div style="margin-top:10px"><a href="<?php echo APP_URL; ?>/views/processes/dispense_products.php" class="btn btn-secondary btn-sm"><i class="fas fa-list"></i> Go to Dispense</a></div>
 <?php endif; ?>
 </div>
+
+<div class="sec">All Customer Prescriptions</div>
+<div style="margin-bottom:20px;display:flex;gap:8px;flex-wrap:wrap">
+  <button class="filter-btn active" onclick="filterPrescriptions('all')"><i class="fas fa-list"></i> All</button>
+  <button class="filter-btn" onclick="filterPrescriptions('pending')"><i class="fas fa-clock"></i> Pending</button>
+  <button class="filter-btn" onclick="filterPrescriptions('verified')"><i class="fas fa-check"></i> Verified</button>
+  <button class="filter-btn" onclick="filterPrescriptions('approved')"><i class="fas fa-thumbs-up"></i> Approved</button>
+  <button class="filter-btn" onclick="filterPrescriptions('dispensed')"><i class="fas fa-pills"></i> Dispensed</button>
+</div>
+
+<?php if(empty($all_prescriptions)): ?>
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:32px;text-align:center;color:var(--text3)">
+<i class="fas fa-inbox" style="font-size:32px;margin-bottom:10px;display:block;color:var(--accent2)"></i>
+<p>No prescriptions available.</p>
+</div>
+<?php else: ?>
+<div style="display:grid;gap:10px">
+<?php foreach($all_prescriptions as $rx): $slug=strtolower($rx['status']); ?>
+<div class="rx-row prescription-item" data-status="<?php echo $slug; ?>">
+<div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
+<div style="width:36px;height:36px;border-radius:8px;background:rgba(56,189,248,.1);display:flex;align-items:center;justify-content:center;color:var(--accent2);flex-shrink:0"><i class="fas fa-file-medical"></i></div>
+<div style="min-width:0;flex:1">
+<div style="font-size:13px;font-weight:600;color:var(--text)">Patient: <?php echo htmlspecialchars($rx['patient_name']); ?></div>
+<div style="font-size:11px;color:var(--text3);margin-top:2px">Dr. <?php echo htmlspecialchars($rx['doctor_name']); ?> · <?php echo date('M d, Y H:i',strtotime($rx['upload_date'])); ?></div>
+<div style="font-size:10px;color:var(--text3);margin-top:2px">Customer: <?php echo htmlspecialchars($rx['first_name'].' '.$rx['last_name']); ?> (<?php echo htmlspecialchars($rx['email']); ?>)</div>
+</div></div>
+<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+<span class="status-badge status-<?php echo $slug; ?>"><?php echo ucfirst($rx['status']); ?></span>
+<button type="button" class="btn btn-sm" style="background:var(--surface2);border:1px solid var(--border);color:var(--text)" onclick="viewPrescriptionFile('<?php echo htmlspecialchars($rx['prescription_image']); ?>', <?php echo $rx['id']; ?>)"><i class="fas fa-file"></i> View</button>
+<?php if($rx['status'] === 'Verified' || $rx['status'] === 'Approved'): ?>
+<a href="<?php echo APP_URL; ?>/views/processes/dispense_products.php?rx_id=<?php echo $rx['id']; ?>" class="btn btn-sm" style="background:rgba(79,255,176,.1);color:var(--accent);border:1px solid rgba(79,255,176,.3)"><i class="fas fa-pills"></i> Dispense</a>
+<?php endif; ?>
+</div></div>
+<?php endforeach; ?>
+</div>
+<?php endif; ?>
 <footer class="footer"><p>&copy; <?php echo date('Y'); ?> <?php echo APP_NAME; ?>. All rights reserved.</p></footer>
+
+<!-- File Viewer Modal -->
+<div id="fileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px);overflow-y:auto;padding:20px">
+<div style="background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:28px;width:90%;max-width:800px;box-shadow:0 8px 40px rgba(0,0,0,.5)">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <h2 style="font-size:18px;font-weight:700;color:var(--text);margin:0">Prescription File</h2>
+    <button type="button" style="background:none;border:none;font-size:24px;color:var(--text3);cursor:pointer;padding:0" onclick="closeFileModal()"><i class="fas fa-times"></i></button>
+  </div>
+  <div id="fileContent" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:20px;min-height:400px;display:flex;align-items:center;justify-content:center">
+    <p style="color:var(--text3)">Loading file...</p>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+    <a id="checkAvailabilityBtn" href="#" class="btn" style="background:rgba(56,189,248,.1);color:var(--accent2);border:1px solid rgba(56,189,248,.3)"><i class="fas fa-boxes"></i> Check Availability</a>
+    <button type="button" class="btn btn-secondary" onclick="closeFileModal()"><i class="fas fa-times"></i> Close</button>
+  </div>
+</div>
+</div>
+
+<script>
+function viewPrescriptionFile(filename, prescriptionId) {
+  const fileContent = document.getElementById('fileContent');
+  const fileExt = filename.split('.').pop().toLowerCase();
+  const filePath = '<?php echo APP_URL; ?>/uploads/' + filename;
+  
+  if (fileExt === 'pdf') {
+    fileContent.innerHTML = '<iframe src="' + filePath + '" style="width:100%;height:500px;border:none;border-radius:6px"></iframe>';
+  } else if (['jpg', 'jpeg', 'png'].includes(fileExt)) {
+    fileContent.innerHTML = '<img src="' + filePath + '" style="max-width:100%;max-height:500px;border-radius:6px">';
+  } else {
+    fileContent.innerHTML = '<p style="color:var(--text3)">File type not supported for preview</p>';
+  }
+  
+  // Set the Check Availability button link with prescription ID
+  if (prescriptionId) {
+    document.getElementById('checkAvailabilityBtn').href = '<?php echo APP_URL; ?>/views/processes/check_product_availability.php?rx_id=' + prescriptionId;
+  }
+  
+  document.getElementById('fileModal').style.display = 'flex';
+}
+
+function closeFileModal() {
+  document.getElementById('fileModal').style.display = 'none';
+}
+
+function filterPrescriptions(status) {
+  // Update active button
+  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  // Filter prescription items
+  const items = document.querySelectorAll('.prescription-item');
+  items.forEach(item => {
+    if (status === 'all') {
+      item.style.display = '';
+    } else {
+      item.style.display = item.dataset.status === status ? '' : 'none';
+    }
+  });
+}
+
+window.addEventListener('click', e => {
+  if (e.target === document.getElementById('fileModal')) {
+    closeFileModal();
+  }
+});
+</script>
+  document.getElementById('fileModal').style.display = 'none';
+}
+
+window.addEventListener('click', e => {
+  if (e.target === document.getElementById('fileModal')) {
+    closeFileModal();
+  }
+});
+</script>
 </body></html>

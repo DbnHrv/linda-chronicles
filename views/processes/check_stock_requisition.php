@@ -5,14 +5,65 @@ if (!isAuthenticated()) redirect(APP_URL . '/?action=login');
 requireProcessAccess(13);
 $processModel = new ProcessModel($pdo);
 $message = $message_type = '';
-try { $requisitions = $processModel->getPendingRequisitions(); } catch(Exception $e){ $requisitions=[]; }
+
+// Get all pending requisitions including manual items
+try {
+    $stmt = $pdo->prepare("
+        SELECT sr.*, 
+               COALESCE(p.product_name, 'Manual Item') as product_name,
+               COALESCE(p.product_code, '') as product_code,
+               COALESCE(p.current_stock, 0) as current_stock,
+               u.first_name, u.last_name
+        FROM stock_requisitions sr
+        LEFT JOIN products p ON sr.product_id = p.id
+        LEFT JOIN users u ON sr.requested_by = u.id
+        WHERE sr.status = 'Pending'
+        ORDER BY sr.created_at DESC
+    ");
+    $stmt->execute();
+    $requisitions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch(Exception $e) {
+    $requisitions = [];
+}
+
 if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='verify') {
     if (!verifyCSRFToken($_POST['csrf_token']??'')) { $message='Invalid token.'; $message_type='error'; }
     else { try {
         $rid=intval($_POST['requisition_id']??0); $status=sanitize($_POST['status']??''); $remarks=sanitize($_POST['remarks']??'');
         if (!$rid||!$status) throw new Exception('Required fields missing.');
-        $processModel->verifyStockRequisition($rid,$status,$remarks);
-        $message='Requisition '.$status.'.'; $message_type='success'; $requisitions=$processModel->getPendingRequisitions();
+        
+        // Update requisition status
+        $stmt = $pdo->prepare("
+            UPDATE stock_requisitions 
+            SET status = ?, verified_by = ?, verified_at = NOW(), remarks = ?
+            WHERE id = ?
+        ");
+        $stmt->execute([$status, $_SESSION['user_id'], $remarks, $rid]);
+        
+        // If approved, automatically create a purchase order
+        if ($status === 'Approved') {
+            $po_id = $processModel->createPurchaseOrder($rid);
+            $message='Requisition Approved. Purchase Order #'.$po_id.' generated automatically.'; 
+        } else {
+            $message='Requisition '.$status.'.'; 
+        }
+        $message_type='success';
+        
+        // Refresh requisitions list
+        $stmt = $pdo->prepare("
+            SELECT sr.*, 
+                   COALESCE(p.product_name, 'Manual Item') as product_name,
+                   COALESCE(p.product_code, '') as product_code,
+                   COALESCE(p.current_stock, 0) as current_stock,
+                   u.first_name, u.last_name
+            FROM stock_requisitions sr
+            LEFT JOIN products p ON sr.product_id = p.id
+            LEFT JOIN users u ON sr.requested_by = u.id
+            WHERE sr.status = 'Pending'
+            ORDER BY sr.created_at DESC
+        ");
+        $stmt->execute();
+        $requisitions = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch(Exception $e){$message=$e->getMessage();$message_type='error';} }
 }
 ?>
@@ -37,15 +88,26 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='verify') {
 <?php if(empty($requisitions)): ?><div class="empty-state"><p>No pending requisitions.</p></div>
 <?php else: ?>
 <table class="submission-table">
-<thead><tr><th>Product</th><th>Requested By</th><th>Qty Needed</th><th>Current Stock</th><th>Date</th><th>Action</th></tr></thead>
-<tbody><?php foreach($requisitions as $r): ?>
+<thead><tr><th>Product / Item Details</th><th>Requested By</th><th>Qty Needed</th><th>Current Stock</th><th>Date</th><th>Action</th></tr></thead>
+<tbody><?php foreach($requisitions as $r): 
+    $isManualItem = is_null($r['product_id']);
+    $displayName = $isManualItem ? 'Manual Request' : htmlspecialchars($r['product_name']);
+    $displayCode = $isManualItem ? '' : htmlspecialchars($r['product_code']);
+?>
 <tr>
-<td><div style="font-weight:600;color:var(--text)"><?php echo htmlspecialchars($r['product_name']); ?></div><div style="font-size:11px;color:var(--text3)"><?php echo htmlspecialchars($r['product_code']); ?></div></td>
+<td>
+    <div style="font-weight:600;color:var(--text)"><?php echo $displayName; ?></div>
+    <?php if(!$isManualItem): ?>
+    <div style="font-size:11px;color:var(--text3)"><?php echo $displayCode; ?></div>
+    <?php else: ?>
+    <div style="font-size:11px;color:var(--text2);margin-top:4px;line-height:1.4"><?php echo htmlspecialchars($r['reason']); ?></div>
+    <?php endif; ?>
+</td>
 <td><?php echo htmlspecialchars($r['first_name'].' '.$r['last_name']); ?></td>
 <td style="font-weight:600;color:var(--warn)"><?php echo $r['quantity_needed']; ?></td>
 <td style="color:<?php echo $r['current_stock']<50?'var(--danger)':'var(--accent)'; ?>"><?php echo $r['current_stock']; ?></td>
 <td><?php echo date('M d, Y',strtotime($r['created_at'])); ?></td>
-<td><button onclick="openModal(<?php echo $r['id']; ?>,'<?php echo htmlspecialchars($r['product_name']); ?>')" class="btn btn-sm"><i class="fas fa-eye"></i> Review</button></td>
+<td><button onclick="openModal(<?php echo $r['id']; ?>,<?php echo is_null($r['product_id']) ? 'null' : $r['product_id']; ?>,'<?php echo htmlspecialchars(addslashes($r['product_name'])); ?>','<?php echo htmlspecialchars(addslashes($r['product_code'])); ?>','<?php echo htmlspecialchars(addslashes($r['reason'])); ?>','<?php echo $r['current_stock']; ?>')" class="btn btn-sm"><i class="fas fa-eye"></i> Review</button></td>
 </tr><?php endforeach; ?>
 </tbody></table>
 <?php endif; ?>
@@ -53,10 +115,31 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='verify') {
 <a href="<?php echo APP_URL; ?>/dashboard.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
 </div>
 <div id="verifyModal" class="modal">
-<div class="modal-content">
+<div class="modal-content" style="max-width:700px;max-height:90vh;overflow-y:auto">
 <span style="float:right;font-size:22px;cursor:pointer;color:var(--text3)" onclick="closeModal()">&times;</span>
 <h2 style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px">Review Requisition</h2>
-<p id="modal-product" style="font-size:13px;color:var(--text2);margin-bottom:18px"></p>
+<p id="modal-product" style="font-size:13px;color:var(--text2);margin-bottom:6px"></p>
+
+<!-- Requisition Details Section -->
+<div id="modal-details" style="font-size:12px;color:var(--text3);margin-bottom:18px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px;max-height:300px;overflow-y:auto">
+  <div style="display:grid;gap:12px">
+    <!-- For inventory-based items -->
+    <div id="inventoryDetails" style="display:none">
+      <div style="font-weight:700;color:var(--text);margin-bottom:8px">Product Information:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px">
+        <div><span style="color:var(--text3);font-weight:700">Code:</span> <span id="detailCode" style="color:var(--accent);font-family:monospace">-</span></div>
+        <div><span style="color:var(--text3);font-weight:700">Current Stock:</span> <span id="detailStock">-</span></div>
+      </div>
+    </div>
+    
+    <!-- For manual items -->
+    <div id="manualDetails" style="display:none">
+      <div style="font-weight:700;color:var(--text);margin-bottom:8px">Manual Request Details:</div>
+      <div id="manualDetailsContent" style="font-size:11px;line-height:1.6;color:var(--text2)"></div>
+    </div>
+  </div>
+</div>
+
 <form method="POST"><input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>"><input type="hidden" name="action" value="verify"><input type="hidden" id="req_id" name="requisition_id">
 <div class="form-group"><label>Decision <span class="required">*</span></label><select name="status" required><option value="">— Select —</option><option value="Approved">Approve</option><option value="Rejected">Reject</option></select></div>
 <div class="form-group"><label>Remarks</label><textarea name="remarks" rows="3" placeholder="Add feedback…"></textarea></div>
@@ -64,7 +147,29 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='verify') {
 </form></div></div>
 <footer class="footer"><p>&copy; <?php echo date('Y'); ?> <?php echo APP_NAME; ?>. All rights reserved.</p></footer>
 <script>
-function openModal(id,name){document.getElementById('req_id').value=id;document.getElementById('modal-product').textContent='Product: '+name;document.getElementById('verifyModal').classList.add('show');}
+function openModal(id, productId, productName, productCode, details, currentStock){
+  document.getElementById('req_id').value = id;
+  
+  // Check if this is a manual item (product_id = null)
+  const isManualItem = productId === null;
+  
+  if (isManualItem) {
+    // Display manual item details
+    document.getElementById('modal-product').textContent = 'Manual Request';
+    document.getElementById('inventoryDetails').style.display = 'none';
+    document.getElementById('manualDetails').style.display = 'block';
+    document.getElementById('manualDetailsContent').innerHTML = details || 'No additional details';
+  } else {
+    // Display inventory item details
+    document.getElementById('modal-product').textContent = 'Product: ' + productName;
+    document.getElementById('inventoryDetails').style.display = 'block';
+    document.getElementById('manualDetails').style.display = 'none';
+    document.getElementById('detailCode').textContent = productCode;
+    document.getElementById('detailStock').textContent = currentStock;
+  }
+  
+  document.getElementById('verifyModal').classList.add('show');
+}
 function closeModal(){document.getElementById('verifyModal').classList.remove('show');}
 window.addEventListener('click',e=>{if(e.target===document.getElementById('verifyModal'))closeModal();});
 </script>

@@ -18,4 +18,5 @@ return [
     16 => ['name'=>'Check Product Availability',      'view'=>'/views/processes/check_product_availability.php', 'roles'=>[3]],
     17 => ['name'=>'Dispense Product',                'view'=>'/views/processes/dispense_products.php',          'roles'=>[3]],
     18 => ['name'=>'Process Payment',                 'view'=>'/views/processes/process_payment.php',            'roles'=>[1]],
+    19 => ['name'=>'Review Prescriptions',            'view'=>'/views/processes/review_prescriptions.php',       'roles'=>[4]],
 ];

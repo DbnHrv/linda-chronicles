@@ -20,6 +20,8 @@ $recent_pending = array_slice($pending_list, 0, 5);
 $processes = array(
     13 => array('icon'=>'fa-clipboard-list','name'=>'Check Stock Requisition','desc'=>'Review and approve or reject stock requests from technicians', 'url'=>'/views/processes/check_stock_requisition.php', 'color'=>'#f59e0b'),
     14 => array('icon'=>'fa-file-invoice',  'name'=>'Generate Purchase Order', 'desc'=>'Create purchase orders from approved stock requisitions',     'url'=>'/views/processes/generate_purchase_order.php', 'color'=>'#4fffb0'),
+    15 => array('icon'=>'fa-file-invoice-dollar','name'=>'View Purchase Orders', 'desc'=>'View and manage all generated purchase orders',     'url'=>'/views/processes/view_purchase_order.php', 'color'=>'#38bdf8'),
+    16 => array('icon'=>'fa-boxes','name'=>'Check Product Availability', 'desc'=>'Monitor current stock levels and product availability',     'url'=>'/views/processes/check_product_availability.php', 'color'=>'#8b5cf6'),
 );
 ?>
 <!DOCTYPE html>

@@ -142,6 +142,18 @@ class ProcessModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getOrientationsByIntern($intern_id) {
+        $stmt = $this->pdo->prepare("
+            SELECT o.*, u.first_name AS facilitator_first, u.last_name AS facilitator_last
+            FROM orientation_sessions o
+            LEFT JOIN users u ON o.facilitator_id = u.id
+            WHERE o.intern_id = ?
+            ORDER BY o.orientation_date ASC
+        ");
+        $stmt->execute([$intern_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // ── PROCESS 8 ──────────────────────────────────────────────
     public function assignTask($intern_id, $title, $description, $deadline = null) {
         $stmt = $this->pdo->prepare("
@@ -244,9 +256,11 @@ class ProcessModel {
 
     public function getRequisitionsByUser($user_id) {
         $stmt = $this->pdo->prepare("
-            SELECT sr.*, p.product_name, p.product_code
+            SELECT sr.*, 
+                   COALESCE(p.product_name, 'Manual Item') as product_name,
+                   COALESCE(p.product_code, '') as product_code
             FROM stock_requisitions sr
-            JOIN products p ON sr.product_id = p.id
+            LEFT JOIN products p ON sr.product_id = p.id
             WHERE sr.requested_by=?
             ORDER BY sr.created_at DESC
         ");
@@ -257,10 +271,13 @@ class ProcessModel {
     // ── PROCESS 13 ─────────────────────────────────────────────
     public function getPendingRequisitions() {
         $stmt = $this->pdo->prepare("
-            SELECT sr.*, p.product_name, p.product_code, p.current_stock,
+            SELECT sr.*, 
+                   COALESCE(p.product_name, 'Manual Item') as product_name,
+                   COALESCE(p.product_code, '') as product_code,
+                   COALESCE(p.current_stock, 0) as current_stock,
                    u.first_name, u.last_name
             FROM stock_requisitions sr
-            JOIN products p ON sr.product_id = p.id
+            LEFT JOIN products p ON sr.product_id = p.id
             JOIN users u ON sr.requested_by = u.id
             WHERE sr.status='Pending'
             ORDER BY sr.created_at DESC
@@ -279,10 +296,13 @@ class ProcessModel {
     // ── PROCESS 14 ─────────────────────────────────────────────
     public function getApprovedRequisitions() {
         $stmt = $this->pdo->prepare("
-            SELECT sr.*, p.product_name, p.product_code, p.unit_price,
+            SELECT sr.*, 
+                   COALESCE(p.product_name, 'Manual Item') as product_name,
+                   COALESCE(p.product_code, '') as product_code,
+                   COALESCE(p.unit_price, 0) as unit_price,
                    u.first_name, u.last_name
             FROM stock_requisitions sr
-            JOIN products p ON sr.product_id = p.id
+            LEFT JOIN products p ON sr.product_id = p.id
             JOIN users u ON sr.requested_by = u.id
             WHERE sr.status='Approved'
             ORDER BY sr.created_at DESC
@@ -414,6 +434,108 @@ class ProcessModel {
 
     public function getLastInsertId() {
         return $this->pdo->lastInsertId();
+    }
+
+    // ── INTERN INVENTORY REPORTS ────────────────────────────────
+    public function submitInventoryReport($inventory_id, $total_items, $details = '') {
+        $stmt = $this->pdo->prepare("
+            INSERT INTO inventory_reports (inventory_id, total_items, report_details, created_by, verification_status)
+            VALUES (?, ?, ?, ?, 'Pending')
+        ");
+        $stmt->execute([$inventory_id, $total_items, $details, $_SESSION['user_id']]);
+        return $this->pdo->lastInsertId();
+    }
+
+    public function getInventoryReportsByIntern($user_id) {
+        $stmt = $this->pdo->prepare("
+            SELECT r.*, ic.notes, ic.created_at AS count_date
+            FROM inventory_reports r
+            JOIN inventory_counts ic ON r.inventory_id = ic.id
+            WHERE r.created_by = ?
+            ORDER BY r.created_at DESC
+        ");
+        $stmt->execute([$user_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getInventoryReportById($report_id) {
+        $stmt = $this->pdo->prepare("
+            SELECT r.*, u.first_name, u.last_name, u.email, ic.notes, ic.created_at AS count_date
+            FROM inventory_reports r
+            JOIN users u ON r.created_by = u.id
+            JOIN inventory_counts ic ON r.inventory_id = ic.id
+            WHERE r.id = ?
+        ");
+        $stmt->execute([$report_id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getPendingInventoryReports() {
+        $stmt = $this->pdo->prepare("
+            SELECT r.*, u.first_name, u.last_name, u.email, ic.notes, ic.created_at AS count_date
+            FROM inventory_reports r
+            JOIN users u ON r.created_by = u.id
+            JOIN inventory_counts ic ON r.inventory_id = ic.id
+            WHERE r.verification_status = 'Pending'
+            ORDER BY r.created_at DESC
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function reviewInventoryReport($report_id, $status, $remarks = '') {
+        $stmt = $this->pdo->prepare("
+            UPDATE inventory_reports
+            SET verification_status = ?, verified_by = ?, verified_at = NOW(), remarks = ?
+            WHERE id = ?
+        ");
+        return $stmt->execute([$status, $_SESSION['user_id'], $remarks, $report_id]);
+    }
+
+    public function createPurchaseOrder($requisition_id, $supplier_id = null, $delivery_date = null) {
+        $po_number = 'PO-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+
+        $stmt = $this->pdo->prepare("
+            INSERT INTO purchase_orders (po_number, requisition_id, supplier_id, created_by, required_delivery_date, status)
+            VALUES (?, ?, ?, ?, ?, 'Draft')
+        ");
+        $stmt->execute([$po_number, $requisition_id, $supplier_id, $_SESSION['user_id'], $delivery_date]);
+        return $this->pdo->lastInsertId();
+    }
+
+    public function getPurchaseOrderById($po_id) {
+        $stmt = $this->pdo->prepare("
+            SELECT po.*,
+                   sr.product_id, sr.quantity_needed, sr.reason,
+                   p.product_code, p.product_name, p.generic_name, p.form, p.pack_size, p.unit_price, p.cost_price,
+                   m.manufacturer_name,
+                   u.first_name, u.last_name
+            FROM purchase_orders po
+            LEFT JOIN stock_requisitions sr ON po.requisition_id = sr.id
+            LEFT JOIN products p ON sr.product_id = p.id
+            LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
+            JOIN users u ON po.created_by = u.id
+            WHERE po.id = ?
+        ");
+        $stmt->execute([$po_id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getApprovedRequisitionsForPO() {
+        $stmt = $this->pdo->prepare("
+            SELECT sr.*,
+                   p.product_code, p.product_name, p.generic_name, p.form, p.pack_size, p.unit_price, p.cost_price,
+                   m.manufacturer_name,
+                   u.first_name, u.last_name
+            FROM stock_requisitions sr
+            LEFT JOIN products p ON sr.product_id = p.id
+            LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
+            LEFT JOIN users u ON sr.requested_by = u.id
+            WHERE sr.status = 'Approved' AND sr.id NOT IN (SELECT requisition_id FROM purchase_orders WHERE requisition_id IS NOT NULL)
+            ORDER BY sr.created_at DESC
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 ?>

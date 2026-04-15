@@ -14,16 +14,17 @@ foreach ($my_reqs as $r) {
     if ($r['status'] === 'Pending')  $pending_reqs++;
     if ($r['status'] === 'Approved') $approved_reqs++;
 }
-try { $stmt=$pdo->prepare("SELECT COUNT(*) FROM inventory_reports WHERE verification_status='Pending'"); $stmt->execute(); $pending_reports=$stmt->fetchColumn(); } catch(Exception $e){ $pending_reports=0; }
+try { $pending_reports = $processModel->getPendingInventoryReports(); } catch(Exception $e){ $pending_reports=[]; }
+$pending_count = count($pending_reports);
 try { $stmt=$pdo->prepare("SELECT COUNT(*) FROM inventory_counts WHERE status='Completed'"); $stmt->execute(); $completed_counts=$stmt->fetchColumn(); } catch(Exception $e){ $completed_counts=0; }
 
 // Recent requisitions for the list
 $recent_reqs = array_slice($my_reqs, 0, 5);
 
 $processes = array(
-    10 => array('icon'=>'fa-chart-bar',    'name'=>'Create Inventory Report',  'desc'=>'Generate reports from completed inventory counts', 'url'=>'/views/processes/create_inventory_report.php', 'color'=>'#38bdf8'),
     11 => array('icon'=>'fa-check-double', 'name'=>'Check Inventory Report',   'desc'=>'Verify and validate inventory reports',            'url'=>'/views/processes/check_inventory_report.php',  'color'=>'#4fffb0'),
     12 => array('icon'=>'fa-shopping-cart','name'=>'Request Additional Stocks','desc'=>'Submit stock requisition requests to pharmacist',  'url'=>'/views/processes/request_stocks.php',           'color'=>'#f59e0b'),
+    19 => array('icon'=>'fa-file-medical','name'=>'Review Prescriptions',      'desc'=>'Review customer prescriptions and check availability','url'=>'/views/processes/review_prescriptions.php',     'color'=>'#38bdf8'),
 );
 ?>
 <!DOCTYPE html>
@@ -107,7 +108,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
     </div>
     <div class="stat">
       <div class="stat-ico" style="background:rgba(56,189,248,.12);color:var(--accent2)"><i class="fas fa-chart-bar"></i></div>
-      <div><div class="stat-val"><?php echo $pending_reports; ?></div><div class="stat-lbl">Reports to Verify</div></div>
+      <div><div class="stat-val"><?php echo $pending_count; ?></div><div class="stat-lbl">Reports to Review</div></div>
     </div>
     <div class="stat">
       <div class="stat-ico" style="background:rgba(167,139,250,.12);color:var(--accent3)"><i class="fas fa-boxes"></i></div>
@@ -167,6 +168,37 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
     <i class="fas fa-shopping-cart" style="font-size:32px;margin-bottom:10px;display:block"></i>
     <p>No requisitions yet. <a href="<?php echo APP_URL; ?>/views/processes/request_stocks.php" style="color:var(--accent2)">Submit your first request →</a></p>
   </div>
+  <?php endif; ?>
+
+  <!-- Pending Inventory Reports from Interns -->
+  <?php if(!empty($pending_reports)): ?>
+  <div class="sec">Pending Inventory Reports from Interns</div>
+  <?php foreach($pending_reports as $report): ?>
+  <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid #f97316;border-radius:10px;padding:16px;margin-bottom:12px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="width:36px;height:36px;border-radius:8px;background:rgba(249,115,22,.12);display:flex;align-items:center;justify-content:center;color:#f97316;flex-shrink:0">
+          <i class="fas fa-chart-bar"></i>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Report #<?php echo $report['id']; ?> from <?php echo htmlspecialchars($report['first_name'].' '.$report['last_name']); ?></div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">
+            <i class="fas fa-calendar" style="margin-right:4px"></i><?php echo date('M d, Y h:i A', strtotime($report['created_at'])); ?>
+            &nbsp;·&nbsp;
+            <i class="fas fa-boxes" style="margin-right:4px"></i>Total Items: <strong><?php echo $report['total_items']; ?></strong>
+          </div>
+        </div>
+      </div>
+      <?php if(!empty($report['report_details'])): ?>
+      <div style="font-size:12px;color:var(--text2);margin-top:8px;padding:10px 12px;background:var(--surface2);border-radius:6px;border-left:2px solid var(--accent2)">
+        <strong>Details:</strong> <?php echo nl2br(htmlspecialchars(substr($report['report_details'], 0, 200))); ?>
+        <?php if(strlen($report['report_details']) > 200): ?>...<?php endif; ?>
+      </div>
+      <?php endif; ?>
+    </div>
+    <a href="<?php echo APP_URL; ?>/views/processes/review_intern_report.php?id=<?php echo $report['id']; ?>" class="btn btn-primary btn-sm" style="flex-shrink:0;white-space:nowrap"><i class="fas fa-eye"></i> Review</a>
+  </div>
+  <?php endforeach; ?>
   <?php endif; ?>
 
 </div>

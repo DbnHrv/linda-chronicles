@@ -17,7 +17,8 @@ $pending_payments=0;
 foreach($payments as $p){ if($p['status']==='Pending') $pending_payments++; }
 $processes = array(
     15=>array('icon'=>'fa-file-medical','name'=>'Upload Prescription','desc'=>"Submit your doctor's prescription for medication processing",'url'=>'/views/processes/upload_prescription.php','color'=>'#38bdf8'),
-    18=>array('icon'=>'fa-credit-card','name'=>'Process Payment','desc'=>'Pay for your dispensed medications','url'=>'/views/processes/process_payment.php','color'=>'#4fffb0'),
+    17=>array('icon'=>'fa-pills','name'=>'View Dispensed Medicines','desc'=>'View your dispensed medicines and check product availability','url'=>'/views/processes/view_dispensed_medicines.php','color'=>'#4fffb0'),
+    18=>array('icon'=>'fa-credit-card','name'=>'Process Payment','desc'=>'Pay for your dispensed medications','url'=>'/views/processes/process_payment.php','color'=>'#8b5cf6'),
 );
 ?>
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">

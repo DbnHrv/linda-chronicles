@@ -85,7 +85,7 @@ function sanitize($input) {
 $PROCESS_ACCESS = [
     ROLE_INTERN               => [1, 4, 6, 8, 9],
     ROLE_HR_PERSONNEL         => [2, 3, 4, 5, 6, 7, 8],
-    ROLE_PHARMACY_TECHNICIAN  => [10, 11, 12],
+    ROLE_PHARMACY_TECHNICIAN  => [10, 11, 12, 19],
     ROLE_PHARMACIST           => [13, 14],
     ROLE_PHARMACIST_ASSISTANT => [16, 17],
     ROLE_CUSTOMER             => [15, 18],
@@ -110,6 +110,7 @@ $PROCESS_METADATA = [
     16 => ['name'=>'Check Product Availability',      'role'=>'Pharmacist Assistant', 'category'=>'Pharmacy'],
     17 => ['name'=>'Dispense Product',                'role'=>'Pharmacist Assistant', 'category'=>'Pharmacy'],
     18 => ['name'=>'Process Payment',                 'role'=>'Customer',             'category'=>'Customer'],
+    19 => ['name'=>'Review Prescriptions',            'role'=>'Pharmacy Technician',  'category'=>'Pharmacy'],
 ];
 
 function canAccessProcess($processId, $roleId = null) {

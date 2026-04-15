@@ -7,10 +7,21 @@ $processModel = new ProcessModel($pdo);
 $uid = $_SESSION['user_id'];
 
 // Live data — wrapped in try/catch so missing tables never crash the page
-try { $submission  = $processModel->getInternshipSubmissionByUserId($uid); } catch(Exception $e){ $submission = null; }
-try { $interviews  = $processModel->getInterviewsByIntern($uid); }          catch(Exception $e){ $interviews = []; }
-try { $my_schedule = $processModel->getScheduleByIntern($uid); }            catch(Exception $e){ $my_schedule = null; }
-try { $my_tasks    = $processModel->getTasksByIntern($uid); }               catch(Exception $e){ $my_tasks = []; }
+try { $submission    = $processModel->getInternshipSubmissionByUserId($uid); } catch(Exception $e){ $submission = null; }
+try { $interviews    = $processModel->getInterviewsByIntern($uid); }          catch(Exception $e){ $interviews = []; }
+try { $my_schedule   = $processModel->getScheduleByIntern($uid); }            catch(Exception $e){ $my_schedule = null; }
+try { $my_tasks      = $processModel->getTasksByIntern($uid); }               catch(Exception $e){ $my_tasks = []; }
+try { $my_orientations = $processModel->getOrientationsByIntern($uid); }      catch(Exception $e){ $my_orientations = []; }
+try { $my_reports    = $processModel->getInventoryReportsByIntern($uid); }    catch(Exception $e){ $my_reports = []; }
+
+// Next upcoming orientation
+$next_orientation = null;
+foreach ($my_orientations as $o) {
+    if ($o['status'] === 'Scheduled' && strtotime($o['orientation_date']) >= time()) {
+        $next_orientation = $o;
+        break;
+    }
+}
 
 $processes = array(
     1 => array('icon'=>'fa-file-alt',    'name'=>'Submit Requirements',  'desc'=>'Upload internship documents',       'url'=>'/views/processes/intern_submit_requirements.php', 'color'=>'#4fffb0'),
@@ -18,6 +29,7 @@ $processes = array(
     6 => array('icon'=>'fa-calendar-alt','name'=>'Organize Schedule',     'desc'=>'View your assigned schedule',       'url'=>'/views/processes/organize_schedule.php',          'color'=>'#38bdf8'),
     8 => array('icon'=>'fa-tasks',       'name'=>'Internship Tasks',      'desc'=>'View tasks assigned to you',        'url'=>'/views/processes/assign_intern_tasks.php',         'color'=>'#f59e0b'),
     9 => array('icon'=>'fa-boxes',       'name'=>'Conduct Inventory',     'desc'=>'Count and record product inventory','url'=>'/views/processes/conduct_inventory.php',           'color'=>'#4fffb0'),
+    10 => array('icon'=>'fa-chart-bar',  'name'=>'View My Reports',       'desc'=>'Check status of your inventory reports','url'=>'/views/processes/intern_view_inventory_reports.php', 'color'=>'#56bdf8'),
 );
 ?>
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -86,9 +98,15 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 <div class="stat-ico" style="background:rgba(56,189,248,.1);color:var(--accent2)"><i class="fas fa-calendar-alt"></i></div>
 <div><div class="stat-val"><?php echo $my_schedule ? '1' : '0'; ?></div><div class="stat-lbl">Schedule</div></div>
 </div>
+<div class="stat">
+<div class="stat-ico" style="background:rgba(167,139,250,.1);color:var(--accent3)"><i class="fas fa-chalkboard-teacher"></i></div>
+<div><div class="stat-val"><?php echo count($my_orientations); ?></div><div class="stat-lbl">Orientations</div></div>
 </div>
-
-<!-- Processes -->
+<div class="stat">
+<div class="stat-ico" style="background:rgba(56,189,248,.1);color:var(--accent2)"><i class="fas fa-chart-bar"></i></div>
+<div><div class="stat-val"><?php echo count($my_reports); ?></div><div class="stat-lbl">Reports</div></div>
+</div>
+</div>
 <div class="section-title">My Processes</div>
 <div class="proc-grid">
 <?php foreach($processes as $pid => $p): ?>
@@ -117,6 +135,72 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 <?php if($t['task_deadline']): ?><div style="font-size:11px;color:var(--warn);margin-top:3px"><i class="fas fa-clock" style="margin-right:4px"></i>Due <?php echo date('M d, Y',strtotime($t['task_deadline'])); ?></div><?php endif; ?>
 </div><span class="status-badge status-<?php echo $slug; ?>"><?php echo $t['status']; ?></span>
 </div></div>
+<?php endforeach; ?>
+<?php endif; ?>
+
+<!-- Orientation Schedule -->
+<div class="section-title" style="margin-top:28px">Company Orientation Schedule</div>
+<?php if(empty($my_orientations)): ?>
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:28px;text-align:center;color:var(--text3)">
+    <i class="fas fa-chalkboard-teacher" style="font-size:32px;margin-bottom:10px;display:block;color:var(--accent3)"></i>
+    <p style="font-size:13px">No orientation sessions scheduled yet. HR will schedule one after your interview.</p>
+</div>
+<?php else: ?>
+<?php foreach($my_orientations as $o):
+    $slug = strtolower($o['status']);
+    $is_upcoming = strtotime($o['orientation_date']) >= time();
+    $border_color = $slug === 'completed' ? 'var(--accent)' : ($slug === 'cancelled' ? 'var(--danger)' : 'var(--accent3)');
+?>
+<div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid <?php echo $border_color; ?>;border-radius:10px;padding:16px 18px;margin-bottom:12px">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:0">
+            <!-- Date & time highlight -->
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                <div style="width:44px;height:44px;border-radius:10px;background:rgba(167,139,250,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">
+                    <div style="font-size:16px;font-weight:800;color:var(--accent3);line-height:1"><?php echo date('d',strtotime($o['orientation_date'])); ?></div>
+                    <div style="font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase"><?php echo date('M',strtotime($o['orientation_date'])); ?></div>
+                </div>
+                <div>
+                    <div style="font-size:14px;font-weight:700;color:var(--text)">Company Orientation</div>
+                    <div style="font-size:12px;color:var(--text2);margin-top:2px">
+                        <i class="fas fa-clock" style="margin-right:4px;color:var(--text3)"></i><?php echo date('h:i A', strtotime($o['orientation_date'])); ?>
+                        <?php if(!empty($o['venue'])): ?>
+                        &nbsp;·&nbsp;<i class="fas fa-map-marker-alt" style="margin-right:4px;color:var(--text3)"></i><?php echo htmlspecialchars($o['venue']); ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <?php if(!empty($o['content'])): ?>
+            <div style="background:var(--surface2);border-radius:6px;padding:10px 12px;margin-bottom:8px">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:4px">Agenda</div>
+                <div style="font-size:12px;color:var(--text2);line-height:1.5"><?php echo nl2br(htmlspecialchars($o['content'])); ?></div>
+            </div>
+            <?php endif; ?>
+
+            <?php if(!empty($o['facilitator_first'])): ?>
+            <div style="font-size:12px;color:var(--text3)">
+                <i class="fas fa-user-tie" style="margin-right:4px"></i>
+                Facilitated by <?php echo htmlspecialchars($o['facilitator_first'].' '.$o['facilitator_last']); ?>
+            </div>
+            <?php endif; ?>
+
+            <?php if($is_upcoming && $slug === 'scheduled'): ?>
+            <div style="margin-top:10px;background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.2);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--accent3)">
+                <i class="fas fa-bell" style="margin-right:6px"></i>
+                <strong>Upcoming:</strong> <?php
+                    $diff = strtotime($o['orientation_date']) - time();
+                    $days = floor($diff / 86400);
+                    if ($days === 0) echo 'Today!';
+                    elseif ($days === 1) echo 'Tomorrow!';
+                    else echo 'In '.$days.' days';
+                ?>
+            </div>
+            <?php endif; ?>
+        </div>
+        <span class="status-badge status-<?php echo $slug; ?>" style="flex-shrink:0"><?php echo $o['status']; ?></span>
+    </div>
+</div>
 <?php endforeach; ?>
 <?php endif; ?>
 

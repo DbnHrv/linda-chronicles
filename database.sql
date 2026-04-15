@@ -6,6 +6,12 @@
 SET FOREIGN_KEY_CHECKS = 0;
 SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';
 
+-- ── ALTER STOCK_REQUISITIONS TABLE ───────────────────────────────────────
+-- Modify product_id to be nullable and update foreign key constraint
+ALTER TABLE stock_requisitions DROP FOREIGN KEY stock_requisitions_ibfk_1;
+ALTER TABLE stock_requisitions MODIFY product_id INT NULL;
+ALTER TABLE stock_requisitions ADD CONSTRAINT stock_requisitions_ibfk_1 FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL;
+
 -- ── ROLES ────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS roles (
     id          INT PRIMARY KEY AUTO_INCREMENT,
@@ -69,7 +75,10 @@ CREATE TABLE IF NOT EXISTS products (
     id               INT PRIMARY KEY AUTO_INCREMENT,
     product_code     VARCHAR(50)  UNIQUE NOT NULL,
     product_name     VARCHAR(150) NOT NULL,
+    generic_name     VARCHAR(150),
     description      LONGTEXT,
+    form             VARCHAR(50),
+    pack_size        INT DEFAULT 1,
     category         VARCHAR(100),
     manufacturer_id  INT,
     unit_price       DECIMAL(10,2) DEFAULT 0.00,
@@ -85,12 +94,12 @@ CREATE TABLE IF NOT EXISTS products (
     FOREIGN KEY (manufacturer_id) REFERENCES manufacturers(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT IGNORE INTO products (id, product_code, product_name, description, category, manufacturer_id, unit_price, cost_price, current_stock, reorder_level) VALUES
-(1, 'MED-001', 'Amoxicillin 500mg',  'Antibiotic capsule',          'Antibiotics',      1, 15.00, 8.00, 200, 50),
-(2, 'MED-002', 'Paracetamol 500mg',  'Pain reliever and fever reducer','Analgesics',     1,  5.00, 2.50, 500,100),
-(3, 'MED-003', 'Metformin 500mg',    'Oral diabetes medicine',       'Antidiabetics',    2, 12.00, 6.00, 150, 50),
-(4, 'MED-004', 'Losartan 50mg',      'Blood pressure medication',    'Antihypertensives',2, 18.00, 9.00, 100, 30),
-(5, 'MED-005', 'Cetirizine 10mg',    'Antihistamine for allergies',  'Antihistamines',   3,  8.00, 4.00, 300, 80);
+INSERT IGNORE INTO products (id, product_code, product_name, generic_name, description, form, pack_size, category, manufacturer_id, unit_price, cost_price, current_stock, reorder_level) VALUES
+(1, 'MED-001', 'Amoxicillin 500mg',  'Amoxicillin',   'Antibiotic capsule',           'Capsule', 100, 'Antibiotics',      1, 15.00, 8.00, 200, 50),
+(2, 'MED-002', 'Paracetamol 500mg',  'Paracetamol',   'Pain reliever and fever reducer','Tablet', 500, 'Analgesics',       1,  5.00, 2.50, 500,100),
+(3, 'MED-003', 'Metformin 500mg',    'Metformin HCl', 'Oral diabetes medicine',        'Tablet',  100, 'Antidiabetics',    2, 12.00, 6.00, 150, 50),
+(4, 'MED-004', 'Losartan 50mg',      'Losartan',      'Blood pressure medication',     'Tablet',  100, 'Antihypertensives',2, 18.00, 9.00, 100, 30),
+(5, 'MED-005', 'Cetirizine 10mg',    'Cetirizine',    'Antihistamine for allergies',   'Tablet',  100, 'Antihistamines',   3,  8.00, 4.00, 300, 80);
 
 -- ── PROCESS 1: INTERNSHIP SUBMISSIONS ────────────────────────────────────
 CREATE TABLE IF NOT EXISTS internship_submissions (
@@ -204,6 +213,7 @@ CREATE TABLE IF NOT EXISTS intern_tasks (
     assigned_by      INT NOT NULL,
     status           ENUM('Pending','In Progress','Completed','Overdue') DEFAULT 'Pending',
     completion_notes TEXT,
+    proof_file       VARCHAR(255),
     completed_at     DATETIME,
     created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (intern_id)   REFERENCES users(id) ON DELETE CASCADE,
@@ -254,7 +264,7 @@ CREATE TABLE IF NOT EXISTS inventory_reports (
 -- ── PROCESS 12 & 13: STOCK REQUISITIONS ──────────────────────────────────
 CREATE TABLE IF NOT EXISTS stock_requisitions (
     id              INT PRIMARY KEY AUTO_INCREMENT,
-    product_id      INT NOT NULL,
+    product_id      INT,
     quantity_needed INT NOT NULL,
     reason          TEXT,
     requested_by    INT NOT NULL,
@@ -263,7 +273,7 @@ CREATE TABLE IF NOT EXISTS stock_requisitions (
     verified_at     DATETIME,
     remarks         TEXT,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (product_id)   REFERENCES products(id) ON DELETE RESTRICT,
+    FOREIGN KEY (product_id)   REFERENCES products(id) ON DELETE SET NULL,
     FOREIGN KEY (requested_by) REFERENCES users(id) ON DELETE RESTRICT,
     FOREIGN KEY (verified_by)  REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -312,6 +322,7 @@ CREATE TABLE IF NOT EXISTS dispensed_medicines (
     quantity        INT NOT NULL,
     dispensed_by    INT NOT NULL,
     dispensed_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    payment_status  ENUM('Pending','Verified') DEFAULT 'Pending',
     notes           TEXT,
     FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id)      REFERENCES products(id) ON DELETE RESTRICT,
