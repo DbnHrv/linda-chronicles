@@ -12,6 +12,12 @@ ALTER TABLE stock_requisitions DROP FOREIGN KEY stock_requisitions_ibfk_1;
 ALTER TABLE stock_requisitions MODIFY product_id INT NULL;
 ALTER TABLE stock_requisitions ADD CONSTRAINT stock_requisitions_ibfk_1 FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL;
 
+-- ── ALTER PRODUCTS TABLE ───────────────────────────────────────────────────
+-- Drop old manufacturer column if it exists and add manufacturer_id
+ALTER TABLE products DROP COLUMN IF EXISTS manufacturer;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS manufacturer_id INT NOT NULL DEFAULT 1;
+ALTER TABLE products ADD CONSTRAINT IF NOT EXISTS fk_products_manufacturer FOREIGN KEY (manufacturer_id) REFERENCES manufacturers(id) ON DELETE RESTRICT;
+
 -- ── ROLES ────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS roles (
     id          INT PRIMARY KEY AUTO_INCREMENT,
@@ -52,10 +58,10 @@ INSERT IGNORE INTO users (id, first_name, last_name, email, password, role_id) V
 (5, 'Mike',  'Pharmacist',  'pharmacist@pharmacy.local',  '$2y$10$u9lR4dHqnrMfT0.X5lVx..TdJ2mWzQh6mQvQ0pj3yL2T0F3Ql5Hra', 5),
 (6, 'Sarah', 'HR',          'hr@pharmacy.local',          '$2y$10$u9lR4dHqnrMfT0.X5lVx..TdJ2mWzQh6mQvQ0pj3yL2T0F3Ql5Hra', 6);
 
--- ── MANUFACTURERS (must exist before products) ────────────────────────────
+-- ── MANUFACTURERS (Multiple suppliers) ────────────────────
 CREATE TABLE IF NOT EXISTS manufacturers (
     id                INT PRIMARY KEY AUTO_INCREMENT,
-    manufacturer_name VARCHAR(150) NOT NULL,
+    manufacturer_name VARCHAR(150) NOT NULL UNIQUE,
     contact_person    VARCHAR(100),
     phone             VARCHAR(20),
     email             VARCHAR(100),
@@ -65,12 +71,13 @@ CREATE TABLE IF NOT EXISTS manufacturers (
     created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Insert multiple manufacturers
 INSERT IGNORE INTO manufacturers (id, manufacturer_name, contact_person, phone, email) VALUES
 (1, 'PharmaCorp Inc.',   'Dr. Santos', '09171234567', 'sales@pharmacorp.com'),
 (2, 'MediSupply Co.',    'Ms. Reyes',  '09281234567', 'orders@medisupply.com'),
 (3, 'HealthPlus Pharma', 'Mr. Cruz',   '09391234567', 'supply@healthplus.com');
 
--- ── PRODUCTS (must exist before inventory_items, stock_requisitions) ──────
+-- ── PRODUCTS (with manufacturer_id foreign key) ──────
 CREATE TABLE IF NOT EXISTS products (
     id               INT PRIMARY KEY AUTO_INCREMENT,
     product_code     VARCHAR(50)  UNIQUE NOT NULL,
@@ -80,7 +87,7 @@ CREATE TABLE IF NOT EXISTS products (
     form             VARCHAR(50),
     pack_size        INT DEFAULT 1,
     category         VARCHAR(100),
-    manufacturer_id  INT,
+    manufacturer_id  INT NOT NULL DEFAULT 1,
     unit_price       DECIMAL(10,2) DEFAULT 0.00,
     cost_price       DECIMAL(10,2) DEFAULT 0.00,
     current_stock    INT DEFAULT 0,
@@ -91,15 +98,36 @@ CREATE TABLE IF NOT EXISTS products (
     is_active        BOOLEAN DEFAULT TRUE,
     created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (manufacturer_id) REFERENCES manufacturers(id) ON DELETE SET NULL
+    FOREIGN KEY (manufacturer_id) REFERENCES manufacturers(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT IGNORE INTO products (id, product_code, product_name, generic_name, description, form, pack_size, category, manufacturer_id, unit_price, cost_price, current_stock, reorder_level) VALUES
 (1, 'MED-001', 'Amoxicillin 500mg',  'Amoxicillin',   'Antibiotic capsule',           'Capsule', 100, 'Antibiotics',      1, 15.00, 8.00, 200, 50),
-(2, 'MED-002', 'Paracetamol 500mg',  'Paracetamol',   'Pain reliever and fever reducer','Tablet', 500, 'Analgesics',       1,  5.00, 2.50, 500,100),
-(3, 'MED-003', 'Metformin 500mg',    'Metformin HCl', 'Oral diabetes medicine',        'Tablet',  100, 'Antidiabetics',    2, 12.00, 6.00, 150, 50),
-(4, 'MED-004', 'Losartan 50mg',      'Losartan',      'Blood pressure medication',     'Tablet',  100, 'Antihypertensives',2, 18.00, 9.00, 100, 30),
-(5, 'MED-005', 'Cetirizine 10mg',    'Cetirizine',    'Antihistamine for allergies',   'Tablet',  100, 'Antihistamines',   3,  8.00, 4.00, 300, 80);
+(2, 'MED-002', 'Paracetamol 500mg',  'Paracetamol',   'Pain reliever and fever reducer','Tablet', 500, 'Analgesics',       2,  5.00, 2.50, 500,100),
+(3, 'MED-003', 'Metformin 500mg',    'Metformin HCl', 'Oral diabetes medicine',        'Tablet',  100, 'Antidiabetics',    3, 12.00, 6.00, 150, 50),
+(4, 'MED-004', 'Losartan 50mg',      'Losartan',      'Blood pressure medication',     'Tablet',  100, 'Antihypertensives',1, 18.00, 9.00, 100, 30),
+(5, 'MED-005', 'Cetirizine 10mg',    'Cetirizine',    'Antihistamine for allergies',   'Tablet',  100, 'Antihistamines',   2,  8.00, 4.00, 300, 80);
+
+-- ── UPDATE existing products to have correct manufacturer_id ──────────────
+UPDATE products SET manufacturer_id = 1 WHERE id = 1;
+UPDATE products SET manufacturer_id = 2 WHERE id = 2;
+UPDATE products SET manufacturer_id = 3 WHERE id = 3;
+UPDATE products SET manufacturer_id = 1 WHERE id = 4;
+UPDATE products SET manufacturer_id = 2 WHERE id = 5;
+
+-- ── DISPENSING CART (temporary cart for pharmacist assistant) ────────────
+CREATE TABLE IF NOT EXISTS dispensing_cart (
+    id              INT PRIMARY KEY AUTO_INCREMENT,
+    user_id         INT NOT NULL,
+    prescription_id INT NOT NULL,
+    product_id      INT NOT NULL,
+    quantity        INT NOT NULL DEFAULT 1,
+    added_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id)         REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id)      REFERENCES products(id) ON DELETE RESTRICT,
+    UNIQUE KEY unique_cart_item (user_id, prescription_id, product_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ── PROCESS 1: INTERNSHIP SUBMISSIONS ────────────────────────────────────
 CREATE TABLE IF NOT EXISTS internship_submissions (
@@ -215,6 +243,7 @@ CREATE TABLE IF NOT EXISTS intern_tasks (
     completion_notes TEXT,
     proof_file       VARCHAR(255),
     completed_at     DATETIME,
+    remarks          TEXT,
     created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (intern_id)   REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (assigned_by) REFERENCES users(id) ON DELETE RESTRICT
@@ -310,6 +339,7 @@ CREATE TABLE IF NOT EXISTS prescriptions (
     status              ENUM('Pending','Verified','Approved','Rejected','Expired','Dispensed') DEFAULT 'Pending',
     verified_by         INT,
     verified_date       DATETIME,
+    rejection_remarks   TEXT,
     FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (verified_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -335,7 +365,7 @@ CREATE TABLE IF NOT EXISTS payments (
     prescription_id INT NOT NULL,
     customer_id     INT NOT NULL,
     amount          DECIMAL(10,2) NOT NULL,
-    payment_method  ENUM('Credit Card','Debit Card','Cash','Bank Transfer') NOT NULL,
+    payment_method  ENUM('credit_card','gcash','bank_transfer','Cash','paymongo') NOT NULL,
     transaction_id  VARCHAR(100),
     status          ENUM('Pending','Completed','Failed','Refunded') DEFAULT 'Pending',
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

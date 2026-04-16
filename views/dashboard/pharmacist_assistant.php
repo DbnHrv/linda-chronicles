@@ -22,6 +22,7 @@ try {
 $processes = array(
     16=>array('icon'=>'fa-search','name'=>'Check Product Availability','desc'=>'Verify stock levels before dispensing','url'=>'/views/processes/check_product_availability.php','color'=>'#38bdf8'),
     17=>array('icon'=>'fa-pills','name'=>'Dispense Product','desc'=>'Dispense medications to customers with verified prescriptions','url'=>'/views/processes/dispense_products.php','color'=>'#4fffb0'),
+    20=>array('icon'=>'fa-history','name'=>'View Dispensed Logs','desc'=>'View all medicines dispensed and their payment status','url'=>'/views/processes/view_dispensed_logs.php','color'=>'#a78bfa'),
 );
 ?>
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -114,13 +115,6 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 </div>
 
 <div class="sec">All Customer Prescriptions</div>
-<div style="margin-bottom:20px;display:flex;gap:8px;flex-wrap:wrap">
-  <button class="filter-btn active" onclick="filterPrescriptions('all')"><i class="fas fa-list"></i> All</button>
-  <button class="filter-btn" onclick="filterPrescriptions('pending')"><i class="fas fa-clock"></i> Pending</button>
-  <button class="filter-btn" onclick="filterPrescriptions('verified')"><i class="fas fa-check"></i> Verified</button>
-  <button class="filter-btn" onclick="filterPrescriptions('approved')"><i class="fas fa-thumbs-up"></i> Approved</button>
-  <button class="filter-btn" onclick="filterPrescriptions('dispensed')"><i class="fas fa-pills"></i> Dispensed</button>
-</div>
 
 <?php if(empty($all_prescriptions)): ?>
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:32px;text-align:center;color:var(--text3)">
@@ -130,7 +124,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 <?php else: ?>
 <div style="display:grid;gap:10px">
 <?php foreach($all_prescriptions as $rx): $slug=strtolower($rx['status']); ?>
-<div class="rx-row prescription-item" data-status="<?php echo $slug; ?>">
+<div class="rx-row prescription-item">
 <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
 <div style="width:36px;height:36px;border-radius:8px;background:rgba(56,189,248,.1);display:flex;align-items:center;justify-content:center;color:var(--accent2);flex-shrink:0"><i class="fas fa-file-medical"></i></div>
 <div style="min-width:0;flex:1">
@@ -193,35 +187,11 @@ function closeFileModal() {
   document.getElementById('fileModal').style.display = 'none';
 }
 
-function filterPrescriptions(status) {
-  // Update active button
-  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
-  
-  // Filter prescription items
-  const items = document.querySelectorAll('.prescription-item');
-  items.forEach(item => {
-    if (status === 'all') {
-      item.style.display = '';
-    } else {
-      item.style.display = item.dataset.status === status ? '' : 'none';
-    }
-  });
-}
-
 window.addEventListener('click', e => {
   if (e.target === document.getElementById('fileModal')) {
     closeFileModal();
   }
 });
-</script>
-  document.getElementById('fileModal').style.display = 'none';
-}
-
-window.addEventListener('click', e => {
-  if (e.target === document.getElementById('fileModal')) {
-    closeFileModal();
-  }
-});
+ 
 </script>
 </body></html>

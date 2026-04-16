@@ -8,6 +8,7 @@ $message = $message_type = '';
 $available_prescriptions = [];
 $products = [];
 $dispensed_history = [];
+$customer_prescriptions = [];
 
 try {
     $stmt = $pdo->prepare("
@@ -126,6 +127,45 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='dispense') 
     }
 }
 
+// Handle prescription rejection with remarks
+if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='reject_prescription') {
+    if (!verifyCSRFToken($_POST['csrf_token']??'')) {
+        $message='Invalid token.';
+        $message_type='error';
+    } else {
+        try {
+            $rxid = intval($_POST['prescription_id']??0);
+            $remarks = sanitize($_POST['rejection_remarks']??'');
+            
+            if (!$rxid) throw new Exception('Prescription ID required.');
+            if (empty($remarks)) throw new Exception('Rejection remarks required.');
+            
+            $stmt = $pdo->prepare("
+                UPDATE prescriptions 
+                SET status = 'Rejected', rejection_remarks = ?, verified_by = ?, verified_date = NOW()
+                WHERE id = ?
+            ");
+            $stmt->execute([$remarks, $_SESSION['user_id'], $rxid]);
+            
+            $message = 'Prescription rejected with remarks.';
+            $message_type = 'success';
+            
+            // Refresh data
+            $stmt = $pdo->prepare("
+                SELECT p.*, u.first_name, u.last_name, u.email
+                FROM prescriptions p
+                JOIN users u ON p.customer_id = u.id
+                ORDER BY p.upload_date DESC
+            ");
+            $stmt->execute();
+            $all_customer_prescriptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch(Exception $e) {
+            $message = $e->getMessage();
+            $message_type = 'error';
+        }
+    }
+}
+
 // Check for pre-selected prescription or product from URL
 $preselected_rx = intval($_GET['rx_id']??0);
 $preselected_product = intval($_GET['product_id']??0);
@@ -163,6 +203,8 @@ $preselected_product = intval($_GET['product_id']??0);
 .prescription-meta{font-size:11px;color:var(--text3);margin-top:4px}
 .btn-view-file{padding:6px 12px;font-size:11px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;cursor:pointer;transition:all .2s}
 .btn-view-file:hover{border-color:var(--border2);background:var(--surface3)}
+.btn-danger{background:var(--danger);color:white;border:none}
+.btn-danger:hover{background:#dc2626;transform:translateY(-1px)}
 </style>
 </head><body>
 <nav class="navbar"><div class="navbar-content">
@@ -276,100 +318,53 @@ $preselected_product = intval($_GET['product_id']??0);
 <?php endif; ?>
 </div>
 
-<!-- Product Availability Section -->
+<!-- Customer Prescriptions Section -->
 <div class="content-section">
-<h2>Product Availability Status</h2>
+<h2>Customer Prescriptions</h2>
 
 <?php 
-$low_count = 0;
-$medium_count = 0;
-$adequate_count = 0;
-foreach ($products as $p) {
-    if ($p['stock_status'] === 'Low') $low_count++;
-    elseif ($p['stock_status'] === 'Medium') $medium_count++;
-    else $adequate_count++;
+// Fetch all customer prescriptions (both pending and confirmed)
+try {
+    $stmt = $pdo->prepare("
+        SELECT p.*, u.first_name, u.last_name, u.email
+        FROM prescriptions p
+        JOIN users u ON p.customer_id = u.id
+        ORDER BY p.upload_date DESC
+    ");
+    $stmt->execute();
+    $all_customer_prescriptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch(Exception $e) {
+    $all_customer_prescriptions = [];
 }
 ?>
 
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
-  <div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:10px;padding:14px;text-align:center">
-    <div style="font-size:20px;font-weight:700;color:var(--danger)"><?php echo $low_count; ?></div>
-    <div style="font-size:11px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.05em">Low Stock</div>
-  </div>
-  <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:14px;text-align:center">
-    <div style="font-size:20px;font-weight:700;color:var(--warn)"><?php echo $medium_count; ?></div>
-    <div style="font-size:11px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.05em">Medium Stock</div>
-  </div>
-  <div style="background:rgba(79,255,176,.08);border:1px solid rgba(79,255,176,.2);border-radius:10px;padding:14px;text-align:center">
-    <div style="font-size:20px;font-weight:700;color:var(--accent)"><?php echo $adequate_count; ?></div>
-    <div style="font-size:11px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.05em">Adequate Stock</div>
-  </div>
-</div>
-
-<div style="overflow-x:auto">
-<table class="history-table">
-<thead>
-  <tr>
-    <th>Product Code</th>
-    <th>Product Name</th>
-    <th>Current Stock</th>
-    <th>Reorder Level</th>
-    <th>Status</th>
-  </tr>
-</thead>
-<tbody>
-<?php foreach($products as $p): 
-    $statusBadge = '<span class="stock-badge stock-adequate">ADEQUATE</span>';
-    if ($p['stock_status'] === 'Low') $statusBadge = '<span class="stock-badge stock-low">LOW</span>';
-    elseif ($p['stock_status'] === 'Medium') $statusBadge = '<span class="stock-badge stock-medium">MEDIUM</span>';
-?>
-<tr>
-  <td style="font-family:monospace;color:var(--accent);font-weight:700"><?php echo htmlspecialchars($p['product_code']); ?></td>
-  <td style="font-weight:600"><?php echo htmlspecialchars($p['product_name']); ?></td>
-  <td style="text-align:center;font-weight:600;color:<?php echo $p['stock_status'] === 'Low' ? 'var(--danger)' : 'var(--text)'; ?>"><?php echo $p['current_stock']; ?></td>
-  <td style="text-align:center"><?php echo $p['reorder_level']; ?></td>
-  <td><?php echo $statusBadge; ?></td>
-</tr>
-<?php endforeach; ?>
-</tbody>
-</table>
-</div>
-</div>
-
-<!-- Dispensing History -->
-<div class="content-section">
-<h2>Recent Dispensing History</h2>
-
-<?php if(empty($dispensed_history)): ?>
-<div class="empty-state"><p>No dispensing history yet.</p></div>
+<?php if(empty($all_customer_prescriptions)): ?>
+<div class="empty-state"><p>No customer prescriptions available.</p></div>
 <?php else: ?>
 
-<div style="overflow-x:auto">
-<table class="history-table">
-<thead>
-  <tr>
-    <th>Date & Time</th>
-    <th>Patient</th>
-    <th>Product</th>
-    <th>Quantity</th>
-    <th>Dispensed By</th>
-  </tr>
-</thead>
-<tbody>
-<?php foreach($dispensed_history as $h): ?>
-<tr>
-  <td><?php echo date('M d, Y H:i', strtotime($h['dispensed_at'])); ?></td>
-  <td style="font-weight:600"><?php echo htmlspecialchars($h['patient_name']); ?></td>
-  <td>
-    <div style="font-weight:600;color:var(--text)"><?php echo htmlspecialchars($h['product_name']); ?></div>
-    <div style="font-size:10px;color:var(--text3);font-family:monospace"><?php echo htmlspecialchars($h['product_code']); ?></div>
-  </td>
-  <td style="text-align:center;font-weight:600;color:var(--accent)"><?php echo $h['quantity']; ?> PCS</td>
-  <td><?php echo htmlspecialchars($h['first_name'] . ' ' . $h['last_name']); ?></td>
-</tr>
+<div style="display:grid;gap:10px">
+<?php foreach($all_customer_prescriptions as $rx): $slug=strtolower($rx['status']); ?>
+<div class="rx-row">
+<div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
+<div style="width:36px;height:36px;border-radius:8px;background:rgba(56,189,248,.1);display:flex;align-items:center;justify-content:center;color:var(--accent2);flex-shrink:0"><i class="fas fa-file-medical"></i></div>
+<div style="min-width:0;flex:1">
+<div style="font-size:13px;font-weight:600;color:var(--text)">Patient: <?php echo htmlspecialchars($rx['patient_name']); ?></div>
+<div style="font-size:11px;color:var(--text3);margin-top:2px">Dr. <?php echo htmlspecialchars($rx['doctor_name']); ?> · <?php echo date('M d, Y H:i',strtotime($rx['upload_date'])); ?></div>
+<div style="font-size:10px;color:var(--text3);margin-top:2px">Customer: <?php echo htmlspecialchars($rx['first_name'].' '.$rx['last_name']); ?> (<?php echo htmlspecialchars($rx['email']); ?>)</div>
+<?php if($rx['status'] === 'Rejected' && !empty($rx['rejection_remarks'])): ?>
+<div style="font-size:10px;color:var(--danger);margin-top:4px;padding:6px;background:rgba(248,113,113,.1);border-radius:4px;border-left:2px solid var(--danger)">
+<strong>Rejection Reason:</strong> <?php echo htmlspecialchars($rx['rejection_remarks']); ?>
+</div>
+<?php endif; ?>
+</div></div>
+<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+<span class="status-badge status-<?php echo $slug; ?>"><?php echo ucfirst($rx['status']); ?></span>
+<button type="button" class="btn btn-sm" style="background:var(--surface2);border:1px solid var(--border);color:var(--text)" onclick="viewPrescriptionFile(event, '<?php echo htmlspecialchars($rx['prescription_image']); ?>')"><i class="fas fa-file"></i> View</button>
+<?php if($rx['status'] === 'Pending'): ?>
+<button type="button" class="btn btn-sm" style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);color:var(--danger)" onclick="openRejectModal(<?php echo $rx['id']; ?>)"><i class="fas fa-times"></i> Mark as Reject</button>
+<?php endif; ?>
+</div></div>
 <?php endforeach; ?>
-</tbody>
-</table>
 </div>
 
 <?php endif; ?>
@@ -388,6 +383,31 @@ foreach ($products as $p) {
   <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
     <button type="button" class="btn btn-secondary" onclick="closeFileModal()"><i class="fas fa-times"></i> Close</button>
   </div>
+</div>
+</div>
+
+<!-- Rejection Modal -->
+<div id="rejectModal" class="modal">
+<div class="modal-content" style="max-width:500px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <h2 style="font-size:18px;font-weight:700;color:var(--text);margin:0">Reject Prescription</h2>
+    <button type="button" style="background:none;border:none;font-size:24px;color:var(--text3);cursor:pointer;padding:0" onclick="closeRejectModal()"><i class="fas fa-times"></i></button>
+  </div>
+  <form id="rejectForm" method="POST">
+    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
+    <input type="hidden" name="action" value="reject_prescription">
+    <input type="hidden" name="prescription_id" id="rejectPrescriptionId">
+    
+    <div class="form-group">
+      <label style="display:block;font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Rejection Reason <span class="required">*</span></label>
+      <textarea name="rejection_remarks" id="rejectionRemarks" required placeholder="Explain why this prescription is being rejected..." style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-family:inherit;font-size:13px;min-height:120px;resize:vertical"></textarea>
+    </div>
+    
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+      <button type="button" class="btn btn-secondary" onclick="closeRejectModal()"><i class="fas fa-times"></i> Cancel</button>
+      <button type="submit" class="btn btn-danger"><i class="fas fa-ban"></i> Reject Prescription</button>
+    </div>
+  </form>
 </div>
 </div>
 
@@ -417,6 +437,16 @@ function selectProduct(productId, productName, currentStock) {
   document.getElementById('quantityInput').value = 1;
 }
 
+function openRejectModal(prescriptionId) {
+  document.getElementById('rejectPrescriptionId').value = prescriptionId;
+  document.getElementById('rejectionRemarks').value = '';
+  document.getElementById('rejectModal').classList.add('show');
+}
+
+function closeRejectModal() {
+  document.getElementById('rejectModal').classList.remove('show');
+}
+
 function viewPrescriptionFile(e, filename) {
   e.stopPropagation();
   const fileContent = document.getElementById('fileContent');
@@ -441,6 +471,9 @@ function closeFileModal() {
 window.addEventListener('click', e => {
   if (e.target === document.getElementById('fileModal')) {
     closeFileModal();
+  }
+  if (e.target === document.getElementById('rejectModal')) {
+    closeRejectModal();
   }
 });
 

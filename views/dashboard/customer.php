@@ -18,7 +18,7 @@ foreach($payments as $p){ if($p['status']==='Pending') $pending_payments++; }
 $processes = array(
     15=>array('icon'=>'fa-file-medical','name'=>'Upload Prescription','desc'=>"Submit your doctor's prescription for medication processing",'url'=>'/views/processes/upload_prescription.php','color'=>'#38bdf8'),
     17=>array('icon'=>'fa-pills','name'=>'View Dispensed Medicines','desc'=>'View your dispensed medicines and check product availability','url'=>'/views/processes/view_dispensed_medicines.php','color'=>'#4fffb0'),
-    18=>array('icon'=>'fa-credit-card','name'=>'Process Payment','desc'=>'Pay for your dispensed medications','url'=>'/views/processes/process_payment.php','color'=>'#8b5cf6'),
+    21=>array('icon'=>'fa-shopping-cart','name'=>'Checkout','desc'=>'Review and checkout your pending medicines','url'=>'/views/processes/checkout.php','color'=>'#f59e0b'),
 );
 ?>
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -58,12 +58,6 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 <div style="font-size:18px;font-weight:700;color:var(--text)">Welcome, <?php echo htmlspecialchars($_SESSION['user_first_name']??'Customer'); ?></div>
 <div style="font-size:13px;color:var(--text2);margin-top:3px"><?php echo htmlspecialchars($_SESSION['user_email']??''); ?> · Customer</div>
 </div>
-<?php if($dispensed_rx>0 && $pending_payments>0): ?>
-<a href="<?php echo APP_URL; ?>/views/processes/process_payment.php" style="text-decoration:none;background:rgba(79,255,176,.12);border:1px solid rgba(79,255,176,.3);border-radius:10px;padding:10px 16px;text-align:center;flex-shrink:0">
-<div style="font-size:22px;font-weight:700;color:var(--accent)"><?php echo $pending_payments; ?></div>
-<div style="font-size:11px;color:var(--accent)">Pending Payment</div>
-</a>
-<?php endif; ?>
 </div>
 <div class="stat-row">
 <div class="stat"><div class="stat-ico" style="background:rgba(56,189,248,.12);color:var(--accent2)"><i class="fas fa-file-medical"></i></div><div><div class="stat-val"><?php echo count($prescriptions); ?></div><div class="stat-lbl">Total Prescriptions</div></div></div>
@@ -100,9 +94,6 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 <?php endforeach; ?>
 <div style="margin-top:10px">
 <a href="<?php echo APP_URL; ?>/views/processes/upload_prescription.php" class="btn btn-secondary btn-sm"><i class="fas fa-plus"></i> Upload New</a>
-<?php if($dispensed_rx>0): ?>
-<a href="<?php echo APP_URL; ?>/views/processes/process_payment.php" class="btn btn-sm" style="margin-left:8px;background:rgba(79,255,176,.1);color:var(--accent);border:1px solid rgba(79,255,176,.3)"><i class="fas fa-credit-card"></i> Pay Now</a>
-<?php endif; ?>
 </div>
 <?php else: ?>
 <div class="sec">My Prescriptions</div>

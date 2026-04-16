@@ -30,6 +30,7 @@ $processes = array(
     8 => array('icon'=>'fa-tasks',       'name'=>'Internship Tasks',      'desc'=>'View tasks assigned to you',        'url'=>'/views/processes/assign_intern_tasks.php',         'color'=>'#f59e0b'),
     9 => array('icon'=>'fa-boxes',       'name'=>'Conduct Inventory',     'desc'=>'Count and record product inventory','url'=>'/views/processes/conduct_inventory.php',           'color'=>'#4fffb0'),
     10 => array('icon'=>'fa-chart-bar',  'name'=>'View My Reports',       'desc'=>'Check status of your inventory reports','url'=>'/views/processes/intern_view_inventory_reports.php', 'color'=>'#56bdf8'),
+    22 => array('icon'=>'fa-book',       'name'=>'Policies & Guidelines', 'desc'=>'Review company policies and rules',  'url'=>'/views/processes/intern_view_policies.php',       'color'=>'#a78bfa'),
 );
 ?>
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">

@@ -389,7 +389,6 @@ $total_system_value = array_sum(array_map(fn($p) => $p['current_stock'] * $p['co
 <th class="r">Pack Size</th>
 <th>Manufacturer</th>
 <th>Category</th>
-<th class="r">On Hand<br><span style="font-weight:400;text-transform:none;letter-spacing:0">(System)</span></th>
 <th class="r">Re-Order<br>Point</th>
 <th class="r">Counted<br>Qty</th>
 <?php if($active_id): ?><th class="r">Variance</th><?php endif; ?>
@@ -418,7 +417,6 @@ $total_system_value = array_sum(array_map(fn($p) => $p['current_stock'] * $p['co
 <td class="r" style="color:var(--text2)"><?php echo $p['pack_size']; ?></td>
 <td style="color:var(--text3);font-size:11px"><?php echo htmlspecialchars($p['manufacturer_name']); ?></td>
 <td><span style="background:var(--surface2);padding:2px 7px;border-radius:4px;font-size:10px;color:var(--text3)"><?php echo htmlspecialchars($p['category']??'—'); ?></span></td>
-<td class="r <?php echo $is_low?'low':''; ?>"><?php echo $p['current_stock']; ?><?php if($is_low): ?> <i class="fas fa-exclamation-triangle" style="font-size:9px;margin-left:3px"></i><?php endif; ?></td>
 <td class="r" style="color:var(--text3)"><?php echo $p['reorder_level']; ?></td>
 <td class="r">
 <?php if($active_id): ?>
@@ -454,7 +452,7 @@ $total_system_value = array_sum(array_map(fn($p) => $p['current_stock'] * $p['co
 </tbody>
 <tfoot>
 <tr>
-<td colspan="<?php echo $active_id ? 15 : 13; ?>" style="text-align:right;font-size:13px;color:var(--text2)">
+<td colspan="<?php echo $active_id ? 14 : 12; ?>" style="text-align:right;font-size:13px;color:var(--text2)">
 <strong>Total On-Hand Value:</strong>
 </td>
 <td class="r" style="font-size:15px;color:var(--accent)" id="grand-total">

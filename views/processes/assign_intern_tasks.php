@@ -33,6 +33,22 @@ if ($is_hr) {
             try { $all_tasks=$processModel->getAllTasks(); } catch(Exception $e){ $all_tasks=[]; }
         } catch(Exception $e){ $message=$e->getMessage(); $message_type='error'; } }
     }
+
+    // Handle adding remarks to completed tasks
+    if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='add_remarks') {
+        if (!verifyCSRFToken($_POST['csrf_token']??'')) { $message='Invalid token.'; $message_type='error'; }
+        else { try {
+            $task_id = intval($_POST['task_id']??0);
+            $remarks = sanitize($_POST['remarks']??'');
+            if (!$task_id) throw new Exception('Task not found.');
+            
+            $stmt = $pdo->prepare("UPDATE intern_tasks SET remarks=? WHERE id=?");
+            $stmt->execute([$remarks, $task_id]);
+            
+            $message='Remarks added successfully.'; $message_type='success';
+            try { $all_tasks=$processModel->getAllTasks(); } catch(Exception $e){ $all_tasks=[]; }
+        } catch(Exception $e){ $message=$e->getMessage(); $message_type='error'; } }
+    }
 }
 
 /* ── Intern: view + update status ── */
@@ -279,6 +295,26 @@ if ($is_intern && !empty($my_tasks)) {
                     </a>
                 </div>
                 <?php endif; ?>
+
+                <!-- HR Remarks Section (for completed tasks) -->
+                <?php if($t['status'] === 'Completed'): ?>
+                <div style="margin-top:12px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.2);border-radius:8px;padding:12px 14px">
+                    <form method="POST" style="display:flex;gap:8px;align-items:flex-end">
+                        <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
+                        <input type="hidden" name="action" value="add_remarks">
+                        <input type="hidden" name="task_id" value="<?php echo $t['id']; ?>">
+                        <div style="flex:1">
+                            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent3);margin-bottom:6px">
+                                <i class="fas fa-comment-dots" style="margin-right:4px"></i>Add Remarks
+                            </div>
+                            <textarea name="remarks" placeholder="Add feedback or remarks for the intern..." style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:inherit;padding:8px 10px;resize:vertical;outline:none;min-height:50px;max-height:100px"><?php echo htmlspecialchars($t['remarks']??''); ?></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-sm" style="background:rgba(167,139,250,.1);color:var(--accent3);border:1px solid rgba(167,139,250,.3);flex-shrink:0">
+                            <i class="fas fa-save"></i> Save
+                        </button>
+                    </form>
+                </div>
+                <?php endif; ?>
             </div>
             <span class="status-badge status-<?php echo $slug; ?>" style="flex-shrink:0"><?php echo $is_overdue?'Overdue':$t['status']; ?></span>
         </div>
@@ -368,6 +404,16 @@ if ($is_intern && !empty($my_tasks)) {
                 <?php if(!empty($t['completion_notes'])): ?>
                 <div style="margin-top:8px;background:var(--surface2);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--text2)">
                     <strong style="color:var(--text)">Your notes:</strong> <?php echo htmlspecialchars($t['completion_notes']); ?>
+                </div>
+                <?php endif; ?>
+
+                <!-- HR Remarks (shown after task is completed) -->
+                <?php if($is_done && !empty($t['remarks'])): ?>
+                <div style="margin-top:8px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.2);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--text2)">
+                    <div style="font-size:11px;font-weight:700;color:var(--accent3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em">
+                        <i class="fas fa-comment-dots" style="margin-right:4px"></i>HR Remarks
+                    </div>
+                    <?php echo nl2br(htmlspecialchars($t['remarks'])); ?>
                 </div>
                 <?php endif; ?>
 

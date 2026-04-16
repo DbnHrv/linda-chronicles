@@ -274,7 +274,6 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
         <th style="padding:10px;text-align:left;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Form</th>
         <th style="padding:10px;text-align:center;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Mfr</th>
         <th style="padding:10px;text-align:center;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Category</th>
-        <th style="padding:10px;text-align:center;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">On Hand</th>
         <th style="padding:10px;text-align:center;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Re-Order</th>
         <th style="padding:10px;text-align:center;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Qty</th>
         <th style="padding:10px;text-align:center;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Variance</th>
@@ -299,7 +298,6 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
         <td style="padding:10px;color:var(--text2)"><?php echo htmlspecialchars($item['form'] ?? '-'); ?></td>
         <td style="padding:10px;text-align:center;color:var(--text2);font-size:10px"><?php echo htmlspecialchars($item['manufacturer_name'] ?? '-'); ?></td>
         <td style="padding:10px;text-align:center;color:var(--text2)"><?php echo htmlspecialchars($item['category'] ?? '-'); ?></td>
-        <td style="padding:10px;text-align:center;color:var(--text)"><?php echo $item['current_stock'] ?? 0; ?></td>
         <td style="padding:10px;text-align:center;color:var(--text3)"><?php echo $item['reorder_level'] ?? 0; ?></td>
         <td style="padding:10px;text-align:center;color:var(--accent);font-weight:700"><?php echo $item['counted_qty'] ?? 0; ?></td>
         <td style="padding:10px;text-align:center;font-weight:700;<?php echo $varianceClass; ?>"><?php echo $variance > 0 ? '+' : ''; ?><?php echo $variance; ?></td>
@@ -310,13 +308,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
         } else {
       ?>
       <tr>
-        <td colspan="13" style="padding:20px;text-align:center;color:var(--text3)"><i class="fas fa-inbox"></i> No inventory items found</td>
+        <td colspan="12" style="padding:20px;text-align:center;color:var(--text3)"><i class="fas fa-inbox"></i> No inventory items found</td>
       </tr>
       <?php } ?>
     </tbody>
     <tfoot>
       <tr style="background:var(--surface2);border-top:2px solid var(--border)">
-        <td colspan="10" style="padding:10px;text-align:right;font-weight:700;color:var(--text)">Total On-Hand Value:</td>
+        <td colspan="9" style="padding:10px;text-align:right;font-weight:700;color:var(--text)">Total On-Hand Value:</td>
         <td style="padding:10px;text-align:right;font-size:13px;font-weight:700;color:var(--accent)">₱<?php echo number_format($total_cost, 2); ?></td>
         <td></td>
       </tr>

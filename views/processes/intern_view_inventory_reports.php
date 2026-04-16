@@ -395,7 +395,6 @@ $total_rejected = count($rejected_reports);
             <th style="padding:10px;text-align:left;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Form</th>
             <th style="padding:10px;text-align:center;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Mfr</th>
             <th style="padding:10px;text-align:center;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Category</th>
-            <th style="padding:10px;text-align:center;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">On Hand</th>
             <th style="padding:10px;text-align:center;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Re-Order</th>
             <th style="padding:10px;text-align:center;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.05em">QTY <i class="fas fa-edit" style="font-size:9px;margin-left:4px"></i></th>
             <th style="padding:10px;text-align:center;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Variance</th>
@@ -468,7 +467,6 @@ function openEditModal(reportId, inventoryId) {
               <td style="padding:10px;color:var(--text2)">${item.form || '-'}</td>
               <td style="padding:10px;text-align:center;color:var(--text2);font-size:10px">${item.manufacturer_name || '-'}</td>
               <td style="padding:10px;color:var(--text2)">${item.category || '-'}</td>
-              <td style="padding:10px;text-align:center;color:var(--text)">${item.current_stock}</td>
               <td style="padding:10px;text-align:center;color:var(--text3)">${item.reorder_level}</td>
               <td style="padding:10px;text-align:center">
                 <input type="number" class="qty-input" data-product-id="${item.product_id}" data-cost="${item.cost_price}" value="${item.counted_qty}" min="0" onchange="updateRowValue(this)" style="width:60px;padding:6px;border:1px solid var(--border);border-radius:6px;background:var(--surface3);color:var(--accent);font-weight:600;text-align:center">

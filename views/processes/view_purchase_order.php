@@ -97,6 +97,23 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='update_stat
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .modal.show{display:flex}
 .modal-content{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:28px;width:90%;max-width:500px}
+@media print{
+  body{background:white;padding:0;margin:0}
+  .navbar,.process-wrapper>a,.po-actions,.modal{display:none!important}
+  .process-wrapper{max-width:100%;padding:0}
+  .po-card{display:block;page-break-inside:avoid;border:1px solid #000;margin-bottom:20px;padding:20px;background:white}
+  .po-header{display:block}
+  .po-number{font-size:18px;margin-bottom:15px;border-bottom:2px solid #000;padding-bottom:10px}
+  .po-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:15px}
+  .po-meta-label,.po-details-label{color:#000;font-weight:700}
+  .po-meta-value,.po-details-value{color:#000}
+  .po-details{background:white;border:1px solid #000;padding:15px}
+  .po-details-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
+  .status-badge{border:1px solid #000;background:white;color:#000}
+  h1,h2,.subtitle{color:#000}
+  .alert{display:none}
+  .footer{display:none}
+}
 </style>
 </head><body>
 <nav class="navbar"><div class="navbar-content">
@@ -237,7 +254,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='update_stat
     <button type="button" class="btn btn-sm" onclick="openStatusModal(<?php echo $po['id']; ?>)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text)">
       <i class="fas fa-edit"></i> Update Status
     </button>
-    <button type="button" class="btn btn-sm" style="background:var(--surface2);border:1px solid var(--border);color:var(--text)">
+    <button type="button" class="btn btn-sm" onclick="printPO(<?php echo htmlspecialchars(json_encode($po)); ?>)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text)">
       <i class="fas fa-print"></i> Print
     </button>
   </div>
@@ -292,6 +309,97 @@ function openStatusModal(poId) {
 
 function closeStatusModal() {
   document.getElementById('statusModal').classList.remove('show');
+}
+
+function printPO(poData) {
+  const printWindow = window.open('', '', 'height=600,width=800');
+  const isManualItem = poData.product_id === null;
+  
+  let html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Purchase Order ${poData.po_number}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #000; background: white; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 15px; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .header p { margin: 5px 0; font-size: 12px; }
+        .po-info { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .info-block { border: 1px solid #000; padding: 10px; }
+        .info-block h3 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; font-weight: bold; }
+        .info-block p { margin: 5px 0; font-size: 11px; }
+        .details-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .details-table th { background: #f0f0f0; border: 1px solid #000; padding: 8px; text-align: left; font-weight: bold; font-size: 11px; }
+        .details-table td { border: 1px solid #000; padding: 8px; font-size: 11px; }
+        .total-section { text-align: right; margin-top: 20px; font-weight: bold; }
+        .footer { margin-top: 30px; text-align: center; font-size: 10px; border-top: 1px solid #000; padding-top: 10px; }
+        @media print { body { margin: 0; } }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>PURCHASE ORDER</h1>
+        <p>Linda Chronicles - Pharmacy Management System</p>
+      </div>
+      
+      <div class="po-info">
+        <div class="info-block">
+          <h3>PO Details</h3>
+          <p><strong>PO Number:</strong> ${poData.po_number}</p>
+          <p><strong>Date:</strong> ${new Date(poData.po_date).toLocaleDateString()}</p>
+          <p><strong>Status:</strong> ${poData.status}</p>
+          <p><strong>Created By:</strong> ${poData.first_name} ${poData.last_name}</p>
+        </div>
+        
+        <div class="info-block">
+          <h3>Supplier Information</h3>
+          <p><strong>Supplier:</strong> ${poData.manufacturer_name || 'N/A'}</p>
+          <p><strong>Delivery Address:</strong> ${poData.delivery_address || 'N/A'}</p>
+          <p><strong>Required Delivery:</strong> ${poData.required_delivery_date ? new Date(poData.required_delivery_date).toLocaleDateString() : 'N/A'}</p>
+        </div>
+      </div>
+      
+      <table class="details-table">
+        <thead>
+          <tr>
+            <th>Item Description</th>
+            <th>Quantity</th>
+            <th>Unit Price</th>
+            <th>Total Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              ${isManualItem ? 'Manual Request' : poData.product_name}
+              ${!isManualItem ? `<br><small>Code: ${poData.product_code}</small>` : ''}
+            </td>
+            <td style="text-align: center;">${poData.quantity_needed || 'N/A'}</td>
+            <td style="text-align: right;">₱${parseFloat(poData.unit_price || 0).toFixed(2)}</td>
+            <td style="text-align: right;">₱${(parseFloat(poData.quantity_needed || 0) * parseFloat(poData.unit_price || 0)).toFixed(2)}</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="total-section">
+        <p>Total Amount: ₱${(parseFloat(poData.quantity_needed || 0) * parseFloat(poData.unit_price || 0)).toFixed(2)}</p>
+      </div>
+      
+      ${poData.notes ? `<div style="margin-top: 20px; border: 1px solid #000; padding: 10px;"><strong>Notes:</strong><br>${poData.notes}</div>` : ''}
+      
+      <div class="footer">
+        <p>This is a computer-generated document. No signature required.</p>
+        <p>Generated on ${new Date().toLocaleString()}</p>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  printWindow.document.write(html);
+  printWindow.document.close();
+  printWindow.print();
 }
 
 window.addEventListener('click', e => {

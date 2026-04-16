@@ -2,7 +2,16 @@
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../models/ProcessModel.php';
 if (!isAuthenticated()) redirect(APP_URL . '/?action=login');
-requireProcessAccess(18);
+
+// Allow both customers (process 18) and pharmacist assistants (process 17)
+$user_role = getCurrentUserRole();
+if ($user_role != ROLE_CUSTOMER && $user_role != ROLE_PHARMACIST_ASSISTANT) {
+    http_response_code(403);
+    die('<div style="font-family:sans-serif;padding:40px;background:#0a0c10;color:#f87171;min-height:100vh">
+         <h2>Access Denied</h2><p>You do not have permission to access this process.</p>
+         <a href="' . APP_URL . '/dashboard.php" style="color:#38bdf8">← Back to Dashboard</a></div>');
+}
+
 $processModel = new ProcessModel($pdo);
 $message = $message_type = '';
 $dispensed_medicines = [];
@@ -44,18 +53,26 @@ try {
         JOIN products p ON dm.product_id = p.id
         JOIN prescriptions pr ON dm.prescription_id = pr.id
         JOIN users u ON dm.dispensed_by = u.id
-        WHERE pr.customer_id = ?
+        WHERE 1=1
     ";
+    
+    $params = [];
+    
+    // If customer, only show their own dispensed medicines
+    if ($user_role == ROLE_CUSTOMER) {
+        $query .= " AND pr.customer_id = ?";
+        $params[] = $_SESSION['user_id'];
+    }
+    // If pharmacist assistant, show all dispensed medicines
     
     if ($rx_id > 0) {
         $query .= " AND pr.id = ?";
-        $stmt = $pdo->prepare($query . " ORDER BY dm.dispensed_at DESC");
-        $stmt->execute([$customer_id, $rx_id]);
-    } else {
-        $stmt = $pdo->prepare($query . " ORDER BY dm.dispensed_at DESC");
-        $stmt->execute([$customer_id]);
+        $params[] = $rx_id;
     }
     
+    $query .= " ORDER BY dm.dispensed_at DESC";
+    $stmt = $pdo->prepare($query);
+    $stmt->execute($params);
     $dispensed_medicines = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch(Exception $e) {
     $dispensed_medicines = [];

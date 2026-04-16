@@ -300,12 +300,15 @@ class ProcessModel {
                    COALESCE(p.product_name, 'Manual Item') as product_name,
                    COALESCE(p.product_code, '') as product_code,
                    COALESCE(p.unit_price, 0) as unit_price,
+                   COALESCE(p.manufacturer_id, 1) as manufacturer_id,
+                   COALESCE(m.manufacturer_name, 'Unknown') as manufacturer_name,
                    u.first_name, u.last_name
             FROM stock_requisitions sr
             LEFT JOIN products p ON sr.product_id = p.id
+            LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
             JOIN users u ON sr.requested_by = u.id
             WHERE sr.status='Approved'
-            ORDER BY sr.created_at DESC
+            ORDER BY p.manufacturer_id, sr.created_at DESC
         ");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

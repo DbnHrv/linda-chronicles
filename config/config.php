@@ -28,7 +28,12 @@ $ROLE_NAMES = [
 // Application Settings
 define('APP_NAME', 'Linda Chronicles - Pharmacy Management');
 define('APP_URL', 'http://localhost/linda-chronicles');
-define('SESSION_TIMEOUT', 3600); // 1 hour
+define('SESSION_TIMEOUT', 1000000); // 20 minutes
+
+// PayMongo Configuration
+// NOTE: Replace these with your actual PayMongo test keys from https://dashboard.paymongo.com
+define('PAYMONGO_SECRET_KEY', 'sk_test_YOUR_SECRET_KEY_HERE');
+define('PAYMONGO_PUBLIC_KEY', 'pk_test_YOUR_PUBLIC_KEY_HERE');
 
 // Database Connection
 try {
@@ -83,12 +88,12 @@ function sanitize($input) {
 // ── RBAC ──────────────────────────────────────────────────────
 
 $PROCESS_ACCESS = [
-    ROLE_INTERN               => [1, 4, 6, 8, 9],
+    ROLE_INTERN               => [1, 4, 6, 8, 9, 22],
     ROLE_HR_PERSONNEL         => [2, 3, 4, 5, 6, 7, 8],
     ROLE_PHARMACY_TECHNICIAN  => [10, 11, 12, 19],
     ROLE_PHARMACIST           => [13, 14],
-    ROLE_PHARMACIST_ASSISTANT => [16, 17],
-    ROLE_CUSTOMER             => [15, 18],
+    ROLE_PHARMACIST_ASSISTANT => [16, 17, 20],
+    ROLE_CUSTOMER             => [15, 18, 21],
 ];
 
 $PROCESS_METADATA = [
@@ -111,6 +116,9 @@ $PROCESS_METADATA = [
     17 => ['name'=>'Dispense Product',                'role'=>'Pharmacist Assistant', 'category'=>'Pharmacy'],
     18 => ['name'=>'Process Payment',                 'role'=>'Customer',             'category'=>'Customer'],
     19 => ['name'=>'Review Prescriptions',            'role'=>'Pharmacy Technician',  'category'=>'Pharmacy'],
+    20 => ['name'=>'View Dispensed Logs',             'role'=>'Pharmacist Assistant', 'category'=>'Pharmacy'],
+    21 => ['name'=>'Checkout',                        'role'=>'Customer',             'category'=>'Customer'],
+    22 => ['name'=>'View Policies & Guidelines',      'role'=>'Intern',               'category'=>'Internship'],
 ];
 
 function canAccessProcess($processId, $roleId = null) {

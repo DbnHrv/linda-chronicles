@@ -13,58 +13,7 @@ $selected_items = [];
 // Check if prescription ID is passed in URL
 $selected_rx_id = intval($_GET['rx_id']??0);
 
-// Handle adding product to cart
-if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='add_product') {
-    if (!verifyCSRFToken($_POST['csrf_token']??'')) {
-        $message='Invalid token.';
-        $message_type='error';
-    } else {
-        try {
-            $pid = intval($_POST['product_id']??0);
-            $qty = intval($_POST['quantity']??0);
-            
-            if (!$pid || !$qty) throw new Exception('Product and quantity required.');
-            
-            // Check stock availability
-            $stmt = $pdo->prepare("SELECT current_stock FROM products WHERE id = ?");
-            $stmt->execute([$pid]);
-            $product = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if (!$product) throw new Exception('Product not found.');
-            if ($product['current_stock'] < $qty) throw new Exception('Insufficient stock. Available: ' . $product['current_stock']);
-            
-            // Store in session
-            if (!isset($_SESSION['dispensing_cart'])) {
-                $_SESSION['dispensing_cart'] = [];
-            }
-            
-            // Check if product already in cart
-            $found = false;
-            foreach ($_SESSION['dispensing_cart'] as &$item) {
-                if ($item['product_id'] == $pid) {
-                    $item['quantity'] += $qty;
-                    $found = true;
-                    break;
-                }
-            }
-            
-            if (!$found) {
-                $_SESSION['dispensing_cart'][] = [
-                    'product_id' => $pid,
-                    'quantity' => $qty
-                ];
-            }
-            
-            $message = 'Product added to dispensing cart.';
-            $message_type = 'success';
-        } catch(Exception $e) {
-            $message = $e->getMessage();
-            $message_type = 'error';
-        }
-    }
-}
-
-// Handle dispensing all products in cart
+// Handle dispensing all products in cart (ONLY database operation)
 if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='dispense_all') {
     if (!verifyCSRFToken($_POST['csrf_token']??'')) {
         $message='Invalid token.';
@@ -72,49 +21,26 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='dispense_al
     } else {
         try {
             $rxid = intval($_POST['prescription_id']??0);
+            $cart_items_json = $_POST['cart_items']??'[]';
+            $cart_items = json_decode($cart_items_json, true);
             
             if (!$rxid) throw new Exception('Prescription ID required.');
-            if (empty($_SESSION['dispensing_cart'])) throw new Exception('No products in cart.');
+            if (empty($cart_items)) throw new Exception('No products in cart.');
             
-            // Dispense all products
-            foreach ($_SESSION['dispensing_cart'] as $item) {
+            // Dispense all products from the cart data
+            foreach ($cart_items as $item) {
                 $processModel->dispenseMedicine($rxid, $item['product_id'], $item['quantity']);
             }
             
             $message = 'All medicines dispensed successfully.';
             $message_type = 'success';
             
-            // Clear cart and redirect
-            unset($_SESSION['dispensing_cart']);
             $_SESSION['success'] = 'Medicines dispensed successfully. Awaiting payment.';
             header('Location: ' . APP_URL . '/views/processes/view_dispensed_medicines.php?rx_id=' . $rxid);
             exit;
         } catch(Exception $e) {
             $message = $e->getMessage();
             $message_type = 'error';
-        }
-    }
-}
-
-// Handle removing product from cart
-if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='remove_from_cart') {
-    $pid = intval($_POST['product_id']??0);
-    if (isset($_SESSION['dispensing_cart'])) {
-        $_SESSION['dispensing_cart'] = array_filter($_SESSION['dispensing_cart'], function($item) use ($pid) {
-            return $item['product_id'] != $pid;
-        });
-        $_SESSION['dispensing_cart'] = array_values($_SESSION['dispensing_cart']);
-    }
-}
-
-// Load cart items with product details
-if (isset($_SESSION['dispensing_cart']) && !empty($_SESSION['dispensing_cart'])) {
-    foreach ($_SESSION['dispensing_cart'] as $item) {
-        $stmt = $pdo->prepare("SELECT * FROM products WHERE id = ?");
-        $stmt->execute([$item['product_id']]);
-        $product = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($product) {
-            $selected_items[] = array_merge($product, ['cart_quantity' => $item['quantity']]);
         }
     }
 }
@@ -151,7 +77,7 @@ try {
 
 try {
     $stmt = $pdo->prepare("
-        SELECT p.*, m.manufacturer_name,
+        SELECT p.id, p.product_code, p.product_name, p.generic_name, p.form, p.pack_size, p.unit_price, p.current_stock, p.reorder_level, p.cost_price, m.manufacturer_name,
                CASE 
                    WHEN p.current_stock <= p.reorder_level THEN 'Low'
                    WHEN p.current_stock <= (p.reorder_level * 1.5) THEN 'Medium'
@@ -222,11 +148,20 @@ foreach ($products as $p) {
 .cart-item-qty{text-align:center;min-width:60px}
 .qty-label{font-size:10px;color:var(--text3);text-transform:uppercase;font-weight:700}
 .qty-value{font-size:14px;font-weight:700;color:var(--text);margin-top:2px}
-.cart-item-price{text-align:right;min-width:100px}
+.cart-item-price{text-align:right;min-width:100px;overflow:hidden;white-space:nowrap}
 .price-label{font-size:10px;color:var(--text3);text-transform:uppercase;font-weight:700}
 .price-value{font-size:13px;font-weight:700;color:var(--accent);margin-top:2px}
 .btn-remove{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);color:var(--danger);padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s}
 .btn-remove:hover{background:rgba(248,113,113,.2);border-color:var(--danger)}
+/* Hide file paths and debug output */
+[style*="C:\\"], [style*="xampp"], [style*="/uploads/"] { display: none !important; }
+.cart-item-price::after { content: none !important; }
+/* Hide any text nodes that contain file paths */
+.cart-item { position: relative; }
+.cart-item::after { content: none !important; }
+/* Hide file path text by making it invisible */
+.cart-item-price { font-size: 0; }
+.cart-item-price > * { font-size: 13px; }
 .cart-total{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(79,255,176,.08);border:1px solid rgba(79,255,176,.18);border-radius:8px}
 .total-label{font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.05em}
 .total-value{font-size:18px;font-weight:700;color:var(--accent)}
@@ -296,6 +231,14 @@ foreach ($products as $p) {
 <div style="font-size:13px;font-weight:700;color:var(--text)">Selected Prescription</div>
 <div style="font-size:12px;color:var(--text2);margin-top:2px">Patient: <?php echo htmlspecialchars($selected_prescription['patient_name']); ?> · Dr. <?php echo htmlspecialchars($selected_prescription['first_name'].' '.$selected_prescription['last_name']); ?></div>
 <div style="font-size:11px;color:var(--text3);margin-top:2px"><?php echo date('M d, Y H:i',strtotime($selected_prescription['upload_date'])); ?> · Status: <span class="status-badge status-<?php echo strtolower($selected_prescription['status']); ?>" style="font-size:10px"><?php echo $selected_prescription['status']; ?></span></div>
+<?php if($selected_prescription['status'] === 'Rejected' && !empty($selected_prescription['rejection_remarks'])): ?>
+<div style="font-size:11px;color:var(--danger);margin-top:8px;padding:10px;background:rgba(248,113,113,.1);border-radius:6px;border-left:3px solid var(--danger)">
+<strong><i class="fas fa-exclamation-circle" style="margin-right:6px"></i>Rejection Reason:</strong><br>
+<?php echo htmlspecialchars($selected_prescription['rejection_remarks']); ?>
+<br><br>
+<em style="color:var(--text2)">Please re-upload your prescription with the corrections to proceed with dispensing.</em>
+</div>
+<?php endif; ?>
 </div>
 </div>
 <button type="button" class="btn btn-sm" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);flex-shrink:0" onclick="viewPrescriptionFile('<?php echo htmlspecialchars($selected_prescription['prescription_image']); ?>')"><i class="fas fa-file"></i> View File</button>
@@ -305,10 +248,8 @@ foreach ($products as $p) {
 <?php if($selected_prescription): ?>
 <div class="dispensing-form">
 <h3><i class="fas fa-pills" style="color:var(--accent)"></i>Dispense Medicine</h3>
-<form method="POST">
+<form id="addProductForm" onsubmit="addToCart(event)">
 <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
-<input type="hidden" name="action" value="add_product">
-<input type="hidden" name="prescription_id" value="<?php echo $selected_prescription['id']; ?>">
 
 <div class="form-group">
   <label>Select Product to Dispense</label>
@@ -317,7 +258,7 @@ foreach ($products as $p) {
         $stockClass = $p['stock_status'] === 'Low' ? 'stock-low' : ($p['stock_status'] === 'Medium' ? 'stock-medium' : 'stock-adequate');
         $statusIcon = $p['stock_status'] === 'Low' ? 'exclamation-triangle' : ($p['stock_status'] === 'Medium' ? 'info-circle' : 'check-circle');
     ?>
-    <div class="product-option" onclick="selectProduct(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars(addslashes($p['product_name'])); ?>', <?php echo $p['current_stock']; ?>)">
+    <div class="product-option" onclick="selectProduct(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars(addslashes($p['product_name'])); ?>', <?php echo $p['current_stock']; ?>, <?php echo $p['unit_price']; ?>, '<?php echo htmlspecialchars($p['product_code']); ?>', '<?php echo htmlspecialchars($p['generic_name'] ?? ''); ?>', '<?php echo htmlspecialchars($p['form'] ?? ''); ?>')">
       <div class="product-option-info">
         <div class="product-option-code"><?php echo htmlspecialchars($p['product_code']); ?></div>
         <div class="product-option-name"><?php echo htmlspecialchars($p['product_name']); ?></div>
@@ -354,49 +295,25 @@ foreach ($products as $p) {
 </div>
 
 <!-- Dispensing Cart -->
-<?php if(!empty($selected_items)): ?>
-<div class="dispensing-cart">
-<h3><i class="fas fa-shopping-cart" style="color:var(--accent)"></i>Dispensing Cart (<?php echo count($selected_items); ?> items)</h3>
-<div class="cart-items">
-<?php $total_value = 0; foreach($selected_items as $item): $item_total = $item['cart_quantity'] * $item['unit_price']; $total_value += $item_total; ?>
-<div class="cart-item">
-  <div class="cart-item-info">
-    <div class="cart-item-code"><?php echo htmlspecialchars($item['product_code']); ?></div>
-    <div class="cart-item-name"><?php echo htmlspecialchars($item['product_name']); ?></div>
-    <div class="cart-item-meta"><?php echo htmlspecialchars($item['generic_name'] ?? '—'); ?> · <?php echo htmlspecialchars($item['form'] ?? '—'); ?></div>
-  </div>
-  <div class="cart-item-qty">
-    <div class="qty-label">Qty</div>
-    <div class="qty-value"><?php echo $item['cart_quantity']; ?></div>
-  </div>
-  <div class="cart-item-price">
-    <div class="price-label">₱<?php echo number_format($item['unit_price'], 2); ?></div>
-    <div class="price-value">₱<?php echo number_format($item_total, 2); ?></div>
-  </div>
-  <form method="POST" style="display:inline">
-    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
-    <input type="hidden" name="action" value="remove_from_cart">
-    <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
-    <button type="submit" class="btn-remove" title="Remove from cart"><i class="fas fa-trash"></i></button>
-  </form>
-</div>
-<?php endforeach; ?>
+<div class="dispensing-cart" id="dispensingCart" style="display:none">
+<h3><i class="fas fa-shopping-cart" style="color:var(--accent)"></i>Dispensing Cart (<span id="cartCount">0</span> items)</h3>
+<div class="cart-items" id="cartItems">
 </div>
 <div class="cart-total">
   <div class="total-label">Total Amount:</div>
-  <div class="total-value">₱<?php echo number_format($total_value, 2); ?></div>
+  <div class="total-value" id="cartTotal">₱0.00</div>
 </div>
-<form method="POST" style="margin-top:16px">
+<form id="dispenseForm" method="POST" style="margin-top:16px">
   <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
   <input type="hidden" name="action" value="dispense_all">
   <input type="hidden" name="prescription_id" value="<?php echo $selected_prescription['id']; ?>">
+  <input type="hidden" name="cart_items" id="cartItemsInput" value="[]">
   <div class="form-actions">
     <button type="button" class="btn btn-secondary" onclick="clearCart()"><i class="fas fa-times"></i> Clear Cart</button>
     <button type="submit" class="btn btn-primary" onclick="return confirm('Confirm dispensing all medicines?')"><i class="fas fa-check"></i> Dispense All & Proceed to Payment</button>
   </div>
 </form>
 </div>
-<?php endif; ?>
 <?php endif; ?>
 <?php endif; ?>
 
@@ -629,7 +546,10 @@ function clearSearch() {
   document.getElementById('searchResults').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3)"><p>Start typing to search products...</p></div>';
 }
 
-function selectProduct(productId, productName, currentStock) {
+// Cart management using JavaScript (localStorage)
+let cart = [];
+
+function selectProduct(productId, productName, currentStock, unitPrice, productCode, genericName, form) {
   document.getElementById('selectedProductId').value = productId;
   document.getElementById('selectedProductName').value = productName + ' (Stock: ' + currentStock + ')';
   
@@ -640,6 +560,17 @@ function selectProduct(productId, productName, currentStock) {
   // Set max quantity
   document.getElementById('quantityInput').max = currentStock;
   document.getElementById('quantityInput').value = 1;
+  
+  // Store product data for cart
+  window.selectedProduct = {
+    product_id: productId,
+    product_name: productName,
+    product_code: productCode,
+    generic_name: genericName,
+    form: form,
+    unit_price: unitPrice,
+    current_stock: currentStock
+  };
 }
 
 function clearSelection() {
@@ -647,11 +578,99 @@ function clearSelection() {
   document.getElementById('selectedProductName').value = '';
   document.getElementById('quantityInput').value = '';
   document.querySelectorAll('.product-option').forEach(option => option.classList.remove('selected'));
+  window.selectedProduct = null;
+}
+
+function addToCart(event) {
+  event.preventDefault();
+  
+  const productId = document.getElementById('selectedProductId').value;
+  const quantity = parseInt(document.getElementById('quantityInput').value);
+  
+  if (!productId || !quantity) {
+    alert('Please select a product and quantity');
+    return;
+  }
+  
+  if (!window.selectedProduct) {
+    alert('Please select a product');
+    return;
+  }
+  
+  // Check if product already in cart
+  const existingItem = cart.find(item => item.product_id === productId);
+  
+  if (existingItem) {
+    existingItem.quantity += quantity;
+  } else {
+    cart.push({
+      product_id: productId,
+      product_code: window.selectedProduct.product_code,
+      product_name: window.selectedProduct.product_name,
+      generic_name: window.selectedProduct.generic_name,
+      form: window.selectedProduct.form,
+      unit_price: window.selectedProduct.unit_price,
+      quantity: quantity
+    });
+  }
+  
+  updateCartDisplay();
+  clearSelection();
+  document.getElementById('addProductForm').reset();
+}
+
+function updateCartDisplay() {
+  const cartContainer = document.getElementById('dispensingCart');
+  const cartItemsContainer = document.getElementById('cartItems');
+  const cartCount = document.getElementById('cartCount');
+  const cartTotal = document.getElementById('cartTotal');
+  const cartItemsInput = document.getElementById('cartItemsInput');
+  
+  if (cart.length === 0) {
+    cartContainer.style.display = 'none';
+    return;
+  }
+  
+  cartContainer.style.display = 'block';
+  cartCount.textContent = cart.length;
+  
+  let totalAmount = 0;
+  let html = '';
+  
+  cart.forEach(item => {
+    const itemTotal = item.quantity * item.unit_price;
+    totalAmount += itemTotal;
+    
+    html += `
+      <div class="cart-item">
+        <div class="cart-item-info">
+          <div class="cart-item-code">${item.product_code}</div>
+          <div class="cart-item-name">${item.product_name}</div>
+          <div class="cart-item-meta">${item.generic_name || '—'} · ${item.form || '—'}</div>
+        </div>
+        <div class="cart-item-qty">
+          <div class="qty-label">Qty</div>
+          <div class="qty-value">${item.quantity}</div>
+        </div>
+        <div class="cart-item-price" style="overflow:hidden;max-width:120px">
+          <div class="price-label">₱${parseFloat(item.unit_price).toFixed(2)}</div>
+          <div class="price-value">₱${itemTotal.toFixed(2)}</div>
+        </div>
+      </div>
+    `;
+  });
+  
+  cartItemsContainer.innerHTML = html;
+  cartTotal.textContent = '₱' + totalAmount.toFixed(2);
+  
+  // Update hidden input with cart data
+  cartItemsInput.value = JSON.stringify(cart);
 }
 
 function clearCart() {
   if (confirm('Clear all items from cart?')) {
-    location.reload();
+    cart = [];
+    updateCartDisplay();
   }
 }
 
